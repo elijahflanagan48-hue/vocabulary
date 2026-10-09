@@ -106,6 +106,21 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .spk{width:34px;height:34px;flex:none;border-radius:10px;background:var(--surf2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px}
 .spk:active{background:var(--pri-soft)}
 
+/* selection / bulk archive */
+.tbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 2px 10px;min-height:24px}
+.tbar .t{font-size:13px;font-weight:700;color:var(--fade);text-transform:uppercase;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lnk{font-size:14.5px;font-weight:700;color:var(--pri);padding:5px 4px;flex:none;border-radius:9px}
+.lnk:active{background:var(--pri-soft)}
+.cbox{width:25px;height:25px;flex:none;border-radius:50%;border:2px solid var(--line2);background:var(--surf);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;transition:.12s}
+.cbox.on{background:var(--pri);border-color:var(--pri)}
+.item.pick{border-color:var(--pri);background:var(--pri-soft)}
+.selbar{position:fixed;left:0;right:0;bottom:0;z-index:30;
+  background:linear-gradient(transparent,var(--bg) 34%);
+  padding:20px 16px calc(14px + env(safe-area-inset-bottom))}
+.selbar .in{max-width:680px;margin:0 auto}
+.btn:disabled{opacity:.5;box-shadow:none}
+
 /* set card on home */
 .setcard{display:flex;align-items:center;gap:14px;background:var(--surf);box-shadow:var(--sh);
   border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:11px}
@@ -288,7 +303,9 @@ async function translate(t){
 
 /* ---------- router ---------- */
 let view={name:'home',tab:'active'};
-function go(name,p={}){view=Object.assign({name,tab:view.tab||'active'},p);render();scrollTo(0,0);}
+let selMode=false;const selIds=new Set();
+function clearSel(){selMode=false;selIds.clear();}
+function go(name,p={}){clearSel();view=Object.assign({name,tab:view.tab||'active'},p);render();scrollTo(0,0);}
 function render(){(VIEWS[view.name]||VIEWS.home)($('#app'));}
 const hdr=(title,back,right='')=>`<header>${back?`<button class="ic back" aria-label="Назад" onclick="${back}">‹</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;
 
@@ -313,32 +330,58 @@ home(app){
 },
 set(app){
   const s=curSet();if(!s)return go('home');
-  const a=active(s),ar=archived(s),arch=view.tab==='arch';
+  const a=active(s),ar=archived(s),arch=view.tab==='arch',pool=arch?ar:a;
   const modes=arch
    ?[['🗂','Карточки','повторить','a',"startCards(true)"],['📝','Тест','повторить','d',"testSetup(true)"],['🧩','Подбор','на время','c',"startMatch(true)"]]
    :[['🗂','Карточки','листать','a',"startCards(false)"],['🎯','Заучивание','до «выучено»','b',"startLearn()"],['📝','Тест','проверка','d',"testSetup(false)"],['🧩','Подбор','на время','c',"startMatch(false)"]];
+  const tbar=selMode
+   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Снять выделение':'Выбрать все'}</button><button class="lnk" onclick="toggleSelMode()">Отмена</button></div>`
+   :(pool.length?`<div class="tbar"><span class="t">${arch?'Выученные · '+pool.length:'В изучении · '+pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Выбрать</button></div>`:'');
   app.innerHTML=hdr(s.name,"go('home')",`<button class="ic" aria-label="Меню" onclick="setMenu()">⋯</button>`)+
    `<div class="seg">
-     <button class="${arch?'':'on'}" onclick="view.tab='active';render()">Актуальные <span class="cnt">${a.length}</span></button>
-     <button class="${arch?'on':''}" onclick="view.tab='arch';render()">Архив <span class="cnt">${ar.length}</span></button></div>`+
-   ((arch?ar:a).length?`<div class="modes">${modes.map(m=>
-     `<button class="mcard" onclick="${m[4]}"><div class="em em-${m[3]}">${m[0]}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`:'')+
-   ((arch?ar:a).length>7?`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="Поиск" oninput="filterList(this.value)"></div>`:'')+
-   `<div id="list">${listHtml(arch?ar:a,arch,'')}</div>`+
-   (arch?'':`<button class="fab" aria-label="Добавить слово" onclick="wordForm()">＋</button>`);
+     <button class="${arch?'':'on'}" onclick="setTab('active')">Актуальные <span class="cnt">${a.length}</span></button>
+     <button class="${arch?'on':''}" onclick="setTab('arch')">Архив <span class="cnt">${ar.length}</span></button></div>`+
+   (selMode?'':(pool.length?`<div class="modes">${modes.map(m=>
+     `<button class="mcard" onclick="${m[4]}"><div class="em em-${m[3]}">${m[0]}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`:''))+
+   tbar+
+   (!selMode&&pool.length>7?`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="Поиск" oninput="filterList(this.value)"></div>`:'')+
+   `<div id="list">${listHtml(pool,arch,'')}</div>`+
+   (selMode?selBar(arch):(arch?'':`<button class="fab" aria-label="Добавить слово" onclick="wordForm()">＋</button>`));
 },
 };
+function setTab(t){view.tab=t;clearSel();render();}
+function selBar(arch){
+  const n=selIds.size;
+  const label=n===0?'Выберите слова':(arch?`↩ Вернуть в изучение (${n})`:`🗄 Перенести в архив (${n})`);
+  return `<div class="selbar"><div class="in"><button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${arch?'false':'true'})">${label}</button></div></div>`;
+}
+function toggleSelMode(){selMode=!selMode;selIds.clear();render();}
+function togglePick(id){if(selIds.has(id))selIds.delete(id);else selIds.add(id);render();}
+function selAll(){const p=poolNow();if(selIds.size>=p.length)selIds.clear();else p.forEach(w=>selIds.add(w.id));render();}
+function bulkArch(toArch){
+  const s=curSet();let n=0;
+  s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);n++;}});
+  save();clearSel();render();
+  toast(toArch?`Перенесено в архив: ${n}`:`Вернули в изучение: ${n}`);
+}
 function listHtml(words,arch,qs){
-  qs=qs.toLowerCase();
+  qs=(qs||'').toLowerCase();
   const ws=qs?words.filter(w=>(w.en+' '+w.ru).toLowerCase().includes(qs)):words;
   if(!words.length)return arch
-    ?`<div class="empty"><div class="big">🗄️</div><b>Архив пока пуст</b><p>Как только слово будет выучено в режимах «Заучивание» или «Тест», оно переедет сюда автоматически.</p></div>`
+    ?`<div class="empty"><div class="big">🗄️</div><b>Архив пока пуст</b><p>Выученные слова попадают сюда автоматически. А ещё можно перенести любые слова вручную — на вкладке «Актуальные» нажмите «Выбрать».</p></div>`
     :`<div class="empty"><div class="big">✍️</div><b>Добавьте первое слово</b><p>Нажмите «＋» внизу, чтобы вписать слово и перевод, или импортируйте список целиком через меню «⋯».</p></div>`;
   if(!ws.length)return `<div class="empty"><p>Ничего не найдено</p></div>`;
-  return ws.map(w=>`<div class="item" onclick="wordForm('${w.id}')">
-    ${arch?'<span class="chk">✓</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`}
-    <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru)}</div></div>
-    <button class="spk" aria-label="Произнести" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('');
+  return ws.map(w=>{
+    const picked=selIds.has(w.id);
+    const left=selMode
+      ?`<span class="cbox ${picked?'on':''}">${picked?'✓':''}</span>`
+      :(arch?'<span class="chk">✓</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`);
+    const onclick=selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`;
+    return `<div class="item ${picked&&selMode?'pick':''}" onclick="${onclick}">
+      ${left}
+      <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru)}</div></div>
+      ${selMode?'':`<button class="spk" aria-label="Произнести" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
+  }).join('');
 }
 function filterList(v){const s=curSet();$('#list').innerHTML=listHtml(view.tab==='arch'?archived(s):active(s),view.tab==='arch',v);}
 
@@ -514,7 +557,8 @@ function mkQ(pool,w,kind,forceDir){
   if(kind==='mc'){const ds=shuffle(others).slice(0,Math.min(3,others.length));
     return{w,type:'mc',dir,opts:shuffle([w,...ds]).map(x=>({t:dir==='en2ru'?x.ru:x.en,c:x===w}))};}
   if(kind==='tf'){const isTrue=Math.random()<.5;const d=isTrue?w:shuffle(others)[0];
-    return{w,type:'tf',dir:'en2ru',shown:d.ru,isTrue};}
+    const td=forceDir==='ru2en'?'ru2en':'en2ru';
+    return{w,type:'tf',dir:td,shown:td==='ru2en'?d.en:d.ru,isTrue};}
   return{w,type:'type',dir};
 }
 function renderQ(box,q,o){
@@ -617,6 +661,7 @@ function testSetup(review){
    <div class="field"><label>Типы вопросов</label><div class="stack">
      ${[['k1','Выбор ответа'],['k2','Написать ответ'],['k3','Верно / неверно']].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
+   <div class="hint">🇷🇺 → 🇬🇧 Слово показывается по-русски — нужно вспомнить и написать (или выбрать) английское.</div>
    ${review?'<div class="hint">Повторение из архива: результаты не меняют прогресс.</div>':''}
    <button class="btn pri" onclick="beginTest(${!!review})">Начать тест</button>`);
 }
@@ -627,7 +672,7 @@ function beginTest(review){
 }
 function runTest(words,kinds,review){
   const pool=poolNow(),app=$('#app'),res=[];let i=0;
-  const qs=words.map(w=>mkQ(pool,w,kinds[Math.random()*kinds.length|0]));
+  const qs=words.map(w=>mkQ(pool,w,kinds[Math.random()*kinds.length|0],'ru2en'));
   function next(){
     if(i>=qs.length)return result();
     app.innerHTML=studyTop('Тест',i/qs.length*100,(i+1)+'/'+qs.length);
