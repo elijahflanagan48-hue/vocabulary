@@ -371,8 +371,11 @@ archive(app){
 };
 function selBar(inArch){
   const n=selIds.size;
-  const label=n===0?'Select words':(inArch?`↩ Move back to learning (${n})`:`🗄 Move to Archive (${n})`);
-  return `<div class="selbar"><div class="in"><button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${label}</button></div></div>`;
+  const moveLabel=inArch?`↩ To learning${n?` (${n})`:''}`:`🗄 To Archive${n?` (${n})`:''}`;
+  return `<div class="selbar"><div class="in row2">
+    <button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${moveLabel}</button>
+    <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">🗑 Delete${n?` (${n})`:''}</button>
+  </div></div>`;
 }
 function toggleSelMode(){selMode=!selMode;selIds.clear();render();}
 function togglePick(id){if(selIds.has(id))selIds.delete(id);else selIds.add(id);render();}
@@ -382,6 +385,13 @@ function bulkArch(toArch){
   S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);n++;}}));
   save();clearSel();render();
   toast(toArch?`Moved to Archive: ${n}`:`Moved back to learning: ${n}`);
+}
+function bulkDelete(){
+  const n=selIds.size;if(!n)return;
+  if(!confirm(`Delete ${n} ${n===1?'word':'words'}? This can't be undone.`))return;
+  S.sets.forEach(s=>{s.words=s.words.filter(w=>!selIds.has(w.id));});
+  save();clearSel();render();
+  toast(`Deleted: ${n} ${n===1?'word':'words'}`);
 }
 function listHtml(words,arch,qs){
   qs=(qs||'').toLowerCase();
@@ -559,8 +569,7 @@ function settingsSheet(){
      <button class="btn" onclick="exportData()">💾 Backup (all lists)</button>
      <button class="btn ghost" onclick="$('#imp-file').click()">📂 Restore from file</button></div>
    <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importFile(this.files[0])">
-   <div class="hint" style="margin-top:14px">Words are stored on this device. Make a backup now and then so you don't lose them.</div>
-   <div class="hint" style="text-align:center;opacity:.65;margin-top:4px">Version 5 · English interface</div>`);
+   <div class="hint" style="margin-top:14px">Words are stored on this device. Make a backup now and then so you don't lose them.</div>`);
 }
 async function exportData(setId){
   closeSheet();
