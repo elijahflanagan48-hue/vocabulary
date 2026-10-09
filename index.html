@@ -6,9 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Словарь">
+<meta name="apple-mobile-web-app-title" content="Vocab">
 <meta name="theme-color" content="#6366f1">
-<title>Словарь</title>
+<title>Vocabulary</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
@@ -249,7 +249,7 @@ function fix(d){
   return d;
 }
 let S=load();
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Нет места в памяти')}};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No storage space left')}};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q1=s=>String(s??'').replace(/[\\']/g,'\\$&');
@@ -313,55 +313,55 @@ let selMode=false;const selIds=new Set();
 function clearSel(){selMode=false;selIds.clear();}
 function go(name,p={}){clearSel();view=Object.assign({name},p);render();scrollTo(0,0);}
 function render(){(VIEWS[view.name]||VIEWS.home)($('#app'));}
-const hdr=(title,back,right='')=>`<header>${back?`<button class="ic back" aria-label="Назад" onclick="${back}">‹</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;
+const hdr=(title,back,right='')=>`<header>${back?`<button class="ic back" aria-label="Back" onclick="${back}">‹</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;
 
 /* ---------- views ---------- */
-const searchBox=`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="Поиск" oninput="filterList(this.value)"></div>`;
+const searchBox=`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="Search" oninput="filterList(this.value)"></div>`;
 const modesHtml=modes=>`<div class="modes">${modes.map(m=>`<button class="mcard" onclick="${m[4]}"><div class="em em-${m[3]}">${m[0]}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`;
 const VIEWS={
 home(app){
   const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
   const arN=archCount();
-  app.innerHTML=hdr('Словарь','',`<button class="ic" aria-label="Настройки" onclick="settingsSheet()">⚙</button>`)+
+  app.innerHTML=hdr('Vocabulary','',`<button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
    (standalone||S.settings.hideBanner?'':
-     `<div class="banner"><span>📲</span><div><b>Добавьте на экран «Домой».</b> В Safari: «Поделиться» → «На экран “Домой”». Тогда словарь всегда под рукой и работает без интернета.</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
+     `<div class="banner"><span>📲</span><div><b>Add to Home Screen.</b> In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
    (S.sets.length?
-     `<div class="subhead"><span class="t">Списки</span></div>`+
+     `<div class="subhead"><span class="t">Lists</span></div>`+
      S.sets.map(s=>{const a=active(s).length,learned=s.words.filter(w=>w.arch).length;return(
        `<div class="setcard" onclick="go('set',{id:'${s.id}'})">
          ${ringSvg(learned,s.words.length)}
          <div class="t"><div class="nm">${esc(s.name)}</div>
-         <div class="meta">${a} в изучении${learned?` · ${learned} выучено`:''}</div></div>
+         <div class="meta">${a} learning${learned?` · ${learned} learned`:''}</div></div>
          <span style="color:var(--fade);font-size:22px">›</span></div>`)}).join('')+
      `<div class="setcard" onclick="go('archive')" style="margin-top:14px">
         <div class="arch-ic">🗄</div>
-        <div class="t"><div class="nm">Архив</div>
-        <div class="meta">${arN?plural(arN,'выученное слово','выученных слова','выученных слов')+' · со всех списков':'выученные слова со всех списков'}</div></div>
+        <div class="t"><div class="nm">Archive</div>
+        <div class="meta">${arN?arN+' '+(arN===1?'word':'words')+' · from all lists':'learned words from all lists'}</div></div>
         <span style="color:var(--fade);font-size:22px">›</span></div>`
-     :`<div class="empty"><div class="big">📖</div><b>Здесь будут ваши списки слов</b><p>Создайте список — например «Unit 1» — и начните выписывать новые слова. Выученные слова будут собираться в общий «Архив».</p></div>`)+
-   `<button class="btn pri" style="margin-top:12px" onclick="newSet()">＋ Новый список</button>`;
+     :`<div class="empty"><div class="big">📖</div><b>Your word lists will live here</b><p>Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.</p></div>`)+
+   `<button class="btn pri" style="margin-top:12px" onclick="newSet()">＋ New list</button>`;
 },
 set(app){
   const s=curSet();if(!s)return go('home');
   const pool=active(s);
-  const modes=[['🗂','Карточки','листать','a',"startCards(false)"],['🎯','Заучивание','до «выучено»','b',"startLearn()"],['📝','Тест','проверка','d',"testSetup(false)"],['🧩','Подбор','на время','c',"startMatch(false)"]];
+  const modes=[['🗂','Flashcards','flip through','a',"startCards(false)"],['🎯','Learn','until mastered','b',"startLearn()"],['📝','Test','check yourself','d',"testSetup(false)"],['🧩','Match','race the clock','c',"startMatch(false)"]];
   const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Снять выделение':'Выбрать все'}</button><button class="lnk" onclick="toggleSelMode()">Отмена</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">В изучении · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Выбрать</button></div>`:'');
-  app.innerHTML=hdr(s.name,"go('home')",`<button class="ic" aria-label="Меню" onclick="setMenu()">⋯</button>`)+
+   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Clear selection':'Select all'}</button><button class="lnk" onclick="toggleSelMode()">Cancel</button></div>`
+   :(pool.length?`<div class="tbar"><span class="t">Learning · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Select</button></div>`:'');
+  app.innerHTML=hdr(s.name,"go('home')",`<button class="ic" aria-label="Menu" onclick="setMenu()">⋯</button>`)+
    (selMode?'':(pool.length?modesHtml(modes):''))+
    tbar+
    (!selMode&&pool.length>7?searchBox:'')+
    `<div id="list">${listHtml(pool,false,'')}</div>`+
-   (selMode?selBar(false):`<button class="fab" aria-label="Добавить слово" onclick="wordForm()">＋</button>`);
+   (selMode?selBar(false):`<button class="fab" aria-label="Add word" onclick="wordForm()">＋</button>`);
 },
 archive(app){
   const items=allArchived(),pool=items.map(x=>x.w);
-  const modes=[['🗂','Карточки','повторить','a',"startCards(true)"],['📝','Тест','повторить','d',"testSetup(true)"],['🧩','Подбор','на время','c',"startMatch(true)"]];
+  const modes=[['🗂','Flashcards','review','a',"startCards(true)"],['📝','Test','review','d',"testSetup(true)"],['🧩','Match','race the clock','c',"startMatch(true)"]];
   const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Снять выделение':'Выбрать все'}</button><button class="lnk" onclick="toggleSelMode()">Отмена</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">Выучено · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Выбрать</button></div>`:'');
-  app.innerHTML=hdr('Архив',"go('home')")+
+   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Clear selection':'Select all'}</button><button class="lnk" onclick="toggleSelMode()">Cancel</button></div>`
+   :(pool.length?`<div class="tbar"><span class="t">Learned · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Select</button></div>`:'');
+  app.innerHTML=hdr('Archive',"go('home')")+
    (selMode?'':(pool.length?modesHtml(modes):''))+
    tbar+
    (!selMode&&pool.length>7?searchBox:'')+
@@ -371,7 +371,7 @@ archive(app){
 };
 function selBar(inArch){
   const n=selIds.size;
-  const label=n===0?'Выберите слова':(inArch?`↩ Вернуть в изучение (${n})`:`🗄 Перенести в архив (${n})`);
+  const label=n===0?'Select words':(inArch?`↩ Move back to learning (${n})`:`🗄 Move to Archive (${n})`);
   return `<div class="selbar"><div class="in"><button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${label}</button></div></div>`;
 }
 function toggleSelMode(){selMode=!selMode;selIds.clear();render();}
@@ -381,13 +381,13 @@ function bulkArch(toArch){
   let n=0;
   S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);n++;}}));
   save();clearSel();render();
-  toast(toArch?`Перенесено в архив: ${n}`:`Вернули в изучение: ${n}`);
+  toast(toArch?`Moved to Archive: ${n}`:`Moved back to learning: ${n}`);
 }
 function listHtml(words,arch,qs){
   qs=(qs||'').toLowerCase();
   const ws=qs?words.filter(w=>(w.en+' '+w.ru).toLowerCase().includes(qs)):words;
-  if(!words.length)return `<div class="empty"><div class="big">✍️</div><b>Добавьте первое слово</b><p>Нажмите «＋» внизу, чтобы вписать слово и перевод, или импортируйте список целиком через меню «⋯».</p></div>`;
-  if(!ws.length)return `<div class="empty"><p>Ничего не найдено</p></div>`;
+  if(!words.length)return `<div class="empty"><div class="big">✍️</div><b>Add your first word</b><p>Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.</p></div>`;
+  if(!ws.length)return `<div class="empty"><p>Nothing found</p></div>`;
   return ws.map(w=>{
     const picked=selIds.has(w.id);
     const left=selMode
@@ -397,14 +397,14 @@ function listHtml(words,arch,qs){
     return `<div class="item ${picked&&selMode?'pick':''}" onclick="${onclick}">
       ${left}
       <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru)}</div></div>
-      ${selMode?'':`<button class="spk" aria-label="Произнести" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
+      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
   }).join('');
 }
 function archListHtml(items,qs){
   qs=(qs||'').toLowerCase();
   const its=qs?items.filter(x=>(x.w.en+' '+x.w.ru).toLowerCase().includes(qs)):items;
-  if(!items.length)return `<div class="empty"><div class="big">🗄️</div><b>Архив пуст</b><p>Сюда собираются выученные слова со всех списков — автоматически в режимах «Заучивание» и «Тест», или когда вы переносите их вручную кнопкой «Выбрать».</p></div>`;
-  if(!its.length)return `<div class="empty"><p>Ничего не найдено</p></div>`;
+  if(!items.length)return `<div class="empty"><div class="big">🗄️</div><b>Archive is empty</b><p>Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.</p></div>`;
+  if(!its.length)return `<div class="empty"><p>Nothing found</p></div>`;
   return its.map(({w,sn})=>{
     const picked=selIds.has(w.id);
     const left=selMode?`<span class="cbox ${picked?'on':''}">${picked?'✓':''}</span>`:'<span class="chk">✓</span>';
@@ -412,7 +412,7 @@ function archListHtml(items,qs){
     return `<div class="item ${picked&&selMode?'pick':''}" onclick="${onclick}">
       ${left}
       <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru)}<span class="src"> · ${esc(sn)}</span></div></div>
-      ${selMode?'':`<button class="spk" aria-label="Произнести" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
+      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
   }).join('');
 }
 function filterList(v){
@@ -427,83 +427,83 @@ function sheet(html){closeSheet();const d=document.createElement('div');d.classN
 function closeSheet(){const s=$('#scrim');if(s)s.remove();}
 
 function newSet(){
-  sheet(`<h2>Новый список</h2>
-   <div class="field"><label>Название</label><input class="inp" id="nm" placeholder="Например, Unit 1" autofocus></div>
-   <button class="btn pri" onclick="createSet()">Создать</button>`);
+  sheet(`<h2>New list</h2>
+   <div class="field"><label>Name</label><input class="inp" id="nm" placeholder="e.g. Unit 1" autofocus></div>
+   <button class="btn pri" onclick="createSet()">Create</button>`);
   setTimeout(()=>$('#nm')&&$('#nm').focus(),60);
 }
-function createSet(){const n=$('#nm').value.trim();if(!n)return toast('Введите название');
+function createSet(){const n=$('#nm').value.trim();if(!n)return toast('Enter a name');
   const s={id:uid(),name:n,words:[]};S.sets.push(s);save();closeSheet();go('set',{id:s.id});}
 
 function setMenu(){
   const s=curSet();
   sheet(`<h2>${esc(s.name)}</h2><div class="stack">
-   <button class="btn" onclick="importSheet()">📥 Импорт списка слов</button>
-   <button class="btn" onclick="exportData('${s.id}')">📤 Отправить ученику (файл)</button>
-   <button class="btn ghost" onclick="renameSet()">Переименовать</button>
-   <button class="btn ghost" onclick="resetProg()">Сбросить прогресс изучения</button>
-   <button class="btn danger ghost" onclick="delSet()">Удалить список</button></div>`);
+   <button class="btn" onclick="importSheet()">📥 Import words</button>
+   <button class="btn" onclick="exportData('${s.id}')">📤 Send to student (file)</button>
+   <button class="btn ghost" onclick="renameSet()">Rename</button>
+   <button class="btn ghost" onclick="resetProg()">Reset progress</button>
+   <button class="btn danger ghost" onclick="delSet()">Delete list</button></div>`);
 }
-function renameSet(){const s=curSet();const n=prompt('Новое название',s.name);if(n&&n.trim()){s.name=n.trim();save();closeSheet();render();}}
-function resetProg(){const s=curSet();if(confirm('Вернуть все слова этого списка из архива в изучение и обнулить прогресс?')){s.words.forEach(w=>{w.box=0;w.arch=false;});save();closeSheet();render();toast('Прогресс сброшен');}}
-function delSet(){const s=curSet();if(confirm(`Удалить «${s.name}» со всеми словами? Отменить нельзя.`)){S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
+function renameSet(){const s=curSet();const n=prompt('New name',s.name);if(n&&n.trim()){s.name=n.trim();save();closeSheet();render();}}
+function resetProg(){const s=curSet();if(confirm('Move all words of this list back from Archive and reset progress?')){s.words.forEach(w=>{w.box=0;w.arch=false;});save();closeSheet();render();toast('Progress reset');}}
+function delSet(){const s=curSet();if(confirm(`Delete “${s.name}” with all its words? This can't be undone.`)){S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
 
 /* ---------- word form ---------- */
 let editId=null,ruTouched=false,trTimer=null,trSeq=0;
 function wordForm(id){
   const w=id?(findWord(id)||{}).w:null;editId=id||null;ruTouched=!!w;
-  sheet(`<h2>${w?'Слово':'Новое слово'}</h2>
-   <div class="field"><label>Слово (English)</label>
+  sheet(`<h2>${w?'Word':'New word'}</h2>
+   <div class="field"><label>Word (English)</label>
      <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="reliable" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
-   <div class="field"><label>Перевод</label>
+   <div class="field"><label>Translation</label>
      <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="надёжный" oninput="ruTouched=true" style="flex:1">
-     <button class="ic" style="width:48px;height:51px" aria-label="Перевести" onclick="doTr(true)">🌐</button></div></div>
-   <div class="hint" id="trSt">Перевод подставится автоматически, когда вы введёте слово</div>
+     <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">🌐</button></div></div>
+   <div class="hint" id="trSt">The translation fills in automatically as you type</div>
    <div class="chips" id="chips"></div>
-   <div class="field"><label>Пример (необязательно)</label>
+   <div class="field"><label>Example (optional)</label>
      <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="a reliable friend" autocapitalize="none"></div>
-   <button class="btn pri" onclick="saveWord()">${w?'Сохранить':'Добавить'}</button>
+   <button class="btn pri" onclick="saveWord()">${w?'Save':'Add'}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
-     ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">↩ В изучение</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">✓ В архив</button>`}
-     <button class="btn danger ghost" onclick="delWord()">Удалить</button></div>`:''}`);
+     ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">↩ To learning</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">🗄 To Archive</button>`}
+     <button class="btn danger ghost" onclick="delWord()">Delete</button></div>`:''}`);
   if(!w)setTimeout(()=>$('#fEn')&&$('#fEn').focus(),60);
 }
 function autoTr(){clearTimeout(trTimer);trTimer=setTimeout(()=>doTr(false),650);}
 async function doTr(force){
   const enEl=$('#fEn');if(!enEl)return;const en=enEl.value.trim();if(!en)return;
-  const seq=++trSeq;const st=$('#trSt');if(st)st.textContent='Перевожу…';
+  const seq=++trSeq;const st=$('#trSt');if(st)st.textContent='Translating…';
   const r=await translate(en);
   if(seq!==trSeq||!$('#fEn')||$('#fEn').value.trim()!==en)return;
-  if(!r){if($('#trSt'))$('#trSt').textContent='⚠ Нет связи с переводчиком — введите перевод вручную';return;}
+  if(!r){if($('#trSt'))$('#trSt').textContent='⚠ Can’t reach the translator — enter the translation manually';return;}
   if(force||(!ruTouched&&!$('#fRu').value)){$('#fRu').value=r.main;ruTouched=false;}
-  if($('#trSt'))$('#trSt').textContent='Варианты — нажмите, чтобы подставить:';
+  if($('#trSt'))$('#trSt').textContent='Options — tap to use:';
   $('#chips').innerHTML=[r.main,...r.alts].map(a=>`<button class="chip" onclick="$('#fRu').value='${q1(a)}';ruTouched=true">${esc(a)}</button>`).join('');
 }
 function saveWord(){
   const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim(),ex=$('#fEx').value.trim();
-  if(!en)return toast('Введите слово');if(!ru)return toast('Введите перевод');
+  if(!en)return toast('Enter a word');if(!ru)return toast('Enter a translation');
   if(editId){const f=findWord(editId);if(f)Object.assign(f.w,{en,ru,ex});save();closeSheet();render();}
-  else{const s=curSet();s.words.unshift(newWord(en,ru,ex));save();render();toast('Добавлено ✓');
+  else{const s=curSet();s.words.unshift(newWord(en,ru,ex));save();render();toast('Added ✓');
     $('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';ruTouched=false;
-    $('#trSt').textContent='Добавьте следующее слово';$('#fEn').focus();}
+    $('#trSt').textContent='Add the next word';$('#fEn').focus();}
 }
-function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;if(!w.arch)w.box=Math.min(w.box,2);else w.box=3;save();closeSheet();render();toast(w.arch?'В архиве ✓':'Вернули в изучение');}
+function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;if(!w.arch)w.box=Math.min(w.box,2);else w.box=3;save();closeSheet();render();toast(w.arch?'Moved to Archive ✓':'Moved back to learning');}
 function delWord(){const f=findWord(editId);if(f)f.s.words=f.s.words.filter(w=>w.id!==editId);save();closeSheet();render();}
 
 /* ---------- IMPORT (Quizlet-style) ---------- */
 let impTerm='auto',impCard='line',impAuto=true;
 function importSheet(){
   impTerm='auto';impCard='line';impAuto=true;
-  sheet(`<h2>Импорт слов</h2>
-   <div class="hint">Вставьте список из Quizlet, Excel или просто текстом. Можно без переводов — они подставятся автоматически.</div>
+  sheet(`<h2>Import words</h2>
+   <div class="hint">Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.</div>
    <div class="field"><textarea class="inp" id="imp" placeholder="apple&#9;яблоко&#10;reliable&#9;надёжный&#10;to give up&#10;book	книга" oninput="impPrev()"></textarea></div>
-   <div class="field"><label>Между словом и переводом</label><div class="sel-opt" id="selT">
-     ${[['auto','Авто'],['tab','Таб ⇥'],['dash','Тире –'],['comma','Запятая'],['eq','= ']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='auto'?'on':''}" onclick="impTerm='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
-   <div class="field"><label>Между карточками</label><div class="sel-opt" id="selC">
-     ${[['line','С новой строки'],['semi','; точка с запятой'],['blank','Пустая строка']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='line'?'on':''}" onclick="impCard='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
-   <div class="toggle"><label>Переводить, если перевод не указан</label><div class="sw on" id="swA" onclick="impAuto=!impAuto;this.classList.toggle('on',impAuto)"><i></i></div></div>
-   <div class="hint" id="impInfo">Предпросмотр появится здесь</div>
-   <button class="btn pri" id="impBtn" onclick="runImport()">Добавить</button>`);
+   <div class="field"><label>Between word and translation</label><div class="sel-opt" id="selT">
+     ${[['auto','Auto'],['tab','Tab ⇥'],['dash','Dash –'],['comma','Comma'],['eq','= ']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='auto'?'on':''}" onclick="impTerm='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
+   <div class="field"><label>Between cards</label><div class="sel-opt" id="selC">
+     ${[['line','New line'],['semi','; semicolon'],['blank','Blank line']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='line'?'on':''}" onclick="impCard='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
+   <div class="toggle"><label>Translate when the translation is missing</label><div class="sw on" id="swA" onclick="impAuto=!impAuto;this.classList.toggle('on',impAuto)"><i></i></div></div>
+   <div class="hint" id="impInfo">Preview will appear here</div>
+   <button class="btn pri" id="impBtn" onclick="runImport()">Add</button>`);
   setTimeout(()=>$('#imp')&&$('#imp').focus(),60);
 }
 function syncSel(){$$('#selT button').forEach(b=>b.classList.toggle('on',b.dataset.v===impTerm));
@@ -532,35 +532,35 @@ function parseImport(){const t=$('#imp').value;return splitCards(t).map(splitPai
 function impPrev(){
   const p=parseImport();const miss=p.filter(x=>!x.ru).length;
   const info=$('#impInfo');if(!info)return;
-  if(!p.length){info.textContent='Предпросмотр появится здесь';return;}
-  const ex=p.slice(0,3).map(x=>`${esc(x.en)} → ${x.ru?esc(x.ru):'<span style="color:var(--warn)">авто</span>'}`).join(' · ');
-  info.innerHTML=`Найдено <b>${p.length}</b> слов${miss?`, из них ${miss} без перевода`:''}.<br>${ex}${p.length>3?' …':''}`;
+  if(!p.length){info.textContent='Preview will appear here';return;}
+  const ex=p.slice(0,3).map(x=>`${esc(x.en)} → ${x.ru?esc(x.ru):'<span style="color:var(--warn)">auto</span>'}`).join(' · ');
+  info.innerHTML=`Found <b>${p.length}</b> ${p.length===1?'word':'words'}${miss?`, ${miss} without translation`:''}.<br>${ex}${p.length>3?' …':''}`;
 }
 async function runImport(){
-  const pairs=parseImport();if(!pairs.length)return toast('Нет слов для импорта');
+  const pairs=parseImport();if(!pairs.length)return toast('Nothing to import');
   const s=curSet(),btn=$('#impBtn');btn.disabled=true;
   let done=0;
   for(const p of pairs){
     let ru=p.ru;
-    if(!ru&&impAuto){btn.textContent=`Перевожу… ${done+1}/${pairs.length}`;const t=await translate(p.en);ru=t?t.main:'';}
+    if(!ru&&impAuto){btn.textContent=`Translating… ${done+1}/${pairs.length}`;const t=await translate(p.en);ru=t?t.main:'';}
     s.words.push(newWord(p.en,ru||'—'));done++;
   }
-  save();closeSheet();render();toast(`Добавлено слов: ${done}`);
+  save();closeSheet();render();toast(`Added: ${done} ${done===1?'word':'words'}`);
 }
 
 /* ---------- settings / backup ---------- */
 function settingsSheet(){
-  sheet(`<h2>Настройки</h2>
-   <div class="field"><label>Автоперевод</label>
+  sheet(`<h2>Settings</h2>
+   <div class="field"><label>Auto-translate</label>
      <select class="inp" onchange="S.settings.prov=this.value;save()">
-       <option value="google" ${S.settings.prov==='google'?'selected':''}>Google (запасной — MyMemory)</option>
-       <option value="mm" ${S.settings.prov==='mm'?'selected':''}>Только MyMemory</option></select></div>
+       <option value="google" ${S.settings.prov==='google'?'selected':''}>Google (fallback: MyMemory)</option>
+       <option value="mm" ${S.settings.prov==='mm'?'selected':''}>MyMemory only</option></select></div>
    <div class="stack" style="margin-top:6px">
-     <button class="btn" onclick="exportData()">💾 Резервная копия (все списки)</button>
-     <button class="btn ghost" onclick="$('#imp-file').click()">📂 Восстановить из файла</button></div>
+     <button class="btn" onclick="exportData()">💾 Backup (all lists)</button>
+     <button class="btn ghost" onclick="$('#imp-file').click()">📂 Restore from file</button></div>
    <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importFile(this.files[0])">
-   <div class="hint" style="margin-top:14px">Слова хранятся в памяти этого устройства. Иногда делайте резервную копию, чтобы не потерять их.</div>
-   <div class="hint" style="text-align:center;opacity:.65;margin-top:4px">Версия 4 · общий архив для всех списков</div>`);
+   <div class="hint" style="margin-top:14px">Words are stored on this device. Make a backup now and then so you don't lose them.</div>
+   <div class="hint" style="text-align:center;opacity:.65;margin-top:4px">Version 5 · English interface</div>`);
 }
 async function exportData(setId){
   closeSheet();
@@ -578,8 +578,8 @@ function importFile(f){
     const d=JSON.parse(r.result);if(!d||!Array.isArray(d.sets))throw 0;
     const clean=fix(d.v?d:migrate(d));
     clean.sets.forEach(ns=>{const i=S.sets.findIndex(x=>x.id===ns.id);if(i>=0)S.sets[i]=ns;else S.sets.push(ns);});
-    save();closeSheet();go('home');toast('Импортировано ✓');
-  }catch(e){toast('Не удалось прочитать файл');}};
+    save();closeSheet();go('home');toast('Imported ✓');
+  }catch(e){toast('Couldn’t read the file');}};
   r.readAsText(f);
 }
 
@@ -598,21 +598,21 @@ function mkQ(pool,w,kind,forceDir){
 }
 function renderQ(box,q,o){
   const w=q.w,en2ru=q.dir==='en2ru',prompt=en2ru?w.en:w.ru,answer=en2ru?w.ru:w.en;
-  let lbl=q.type==='tf'?'Верно ли соответствие?':q.type==='type'?(en2ru?'Напишите перевод':'Напишите по-английски'):(en2ru?'Выберите перевод':'Выберите слово');
+  let lbl=q.type==='tf'?'Is this a correct match?':q.type==='type'?(en2ru?'Type the translation':'Type in English'):(en2ru?'Choose the translation':'Choose the word');
   let h=`<div class="card" style="min-height:min(34vh,200px)"><div class="lbl">${lbl}</div>
     <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
   if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,i)=>`<button class="opt" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
-  if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn" data-tf="1">✓ Верно</button><button class="btn" data-tf="0">✗ Неверно</button></div>`;
-  if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="Ответ" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
-    <div style="height:9px"></div><button class="btn pri" id="tsub">Проверить</button>
-    <div style="height:8px"></div><button class="btn ghost" id="tskip">Не знаю</button></div>`;
+  if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn" data-tf="1">✓ True</button><button class="btn" data-tf="0">✗ False</button></div>`;
+  if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="Answer" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
+    <div style="height:9px"></div><button class="btn pri" id="tsub">Check</button>
+    <div style="height:8px"></div><button class="btn ghost" id="tskip">Don't know</button></div>`;
   h+=`<div id="fbx"></div>`;box.innerHTML=h;
   let done=false;
   const finish=(ok,given)=>{
     if(done)return;done=true;
     if(!o.feedback){o.onDone(ok,given);return;}
     const f=$('#fbx');
-    f.innerHTML=`<div class="fb ${ok?'ok':'bad'}">${ok?'Верно ✓':'Неверно'}${ok?'':`<small>Правильно: ${esc(q.type==='tf'?(q.isTrue?'соответствие верное':'соответствие неверное'):answer)}</small>`}</div>${ok?'':'<button class="btn pri" id="nx">Дальше →</button>'}`;
+    f.innerHTML=`<div class="fb ${ok?'ok':'bad'}">${ok?'Correct ✓':'Wrong'}${ok?'':`<small>Answer: ${esc(q.type==='tf'?(q.isTrue?'the match is correct':'the match is wrong'):answer)}</small>`}</div>${ok?'':'<button class="btn pri" id="nx">Next →</button>'}`;
     if(!en2ru||q.type==='tf')speak(w.en);
     if(ok)setTimeout(()=>o.onDone(ok,given),620);else $('#nx').onclick=()=>o.onDone(ok,given);
   };
@@ -626,32 +626,32 @@ function renderQ(box,q,o){
     $('#tsub').onclick=chk;ta.addEventListener('keydown',e=>{if(e.key==='Enter')chk();});
     $('#tskip').onclick=()=>{if(done)return;ta.disabled=true;finish(false,'');};}
 }
-const studyTop=(title,pct,stat)=>hdr(title,"if(confirm('Выйти из тренировки?'))render()")+
+const studyTop=(title,pct,stat)=>hdr(title,"if(confirm('Exit this session?'))render()")+
   `<div class="topbar"><div class="pbar"><i style="width:${pct}%"></i></div><span class="stat">${stat}</span></div><div id="qb"></div>`;
 
 /* ---------- flashcards ---------- */
 function startCards(review){
-  const pool=poolNow();if(!pool.length)return toast('Нет слов');
+  const pool=poolNow();if(!pool.length)return toast('No words');
   let deck=shuffle(pool),i=0,flip=false,dir='en',unknown=[],total=deck.length;const app=$('#app');
   function draw(){
     if(i>=deck.length){
-      app.innerHTML=hdr('Карточки',"render()")+`<div class="celebrate"><div class="big">${unknown.length?'👍':'🎉'}</div></div>
-        <div class="empty" style="padding-top:0"><b>Колода пройдена</b><p>Не знали: ${unknown.length} из ${total}</p></div>
-        ${unknown.length?`<button class="btn pri" id="rep">Повторить сложные (${unknown.length})</button><div style="height:9px"></div>`:''}
-        <button class="btn ghost" onclick="render()">Готово</button>`;
+      app.innerHTML=hdr('Flashcards',"render()")+`<div class="celebrate"><div class="big">${unknown.length?'👍':'🎉'}</div></div>
+        <div class="empty" style="padding-top:0"><b>Deck complete</b><p>Didn't know: ${unknown.length} of ${total}</p></div>
+        ${unknown.length?`<button class="btn pri" id="rep">Review tough ones (${unknown.length})</button><div style="height:9px"></div>`:''}
+        <button class="btn ghost" onclick="render()">Done</button>`;
       if(unknown.length)$('#rep').onclick=()=>{deck=shuffle(unknown);unknown=[];i=0;total=deck.length;flip=false;draw();};return;
     }
     const w=deck[i];const front=dir==='en'?w.en:w.ru,back=dir==='en'?w.ru:w.en;
-    app.innerHTML=hdr('Карточки',"render()",`<button class="ic" aria-label="Сменить сторону" onclick="window._flip()">⇄</button>`)+
+    app.innerHTML=hdr('Flashcards',"render()",`<button class="ic" aria-label="Flip side" onclick="window._flip()">⇄</button>`)+
      `<div class="topbar"><div class="pbar"><i style="width:${i/deck.length*100}%"></i></div><span class="stat">${i+1}/${deck.length}</span></div>
       <div class="fc"><div class="card" id="cd">
-        ${flip?`<div class="word">${esc(back)}</div>${w.ex?`<div class="ex">${esc(w.ex)}</div>`:''}`:`<div class="word">${esc(front)}</div><div class="tip">нажмите, чтобы перевернуть</div>`}
+        ${flip?`<div class="word">${esc(back)}</div>${w.ex?`<div class="ex">${esc(w.ex)}</div>`:''}`:`<div class="word">${esc(front)}</div><div class="tip">tap to flip</div>`}
       </div></div>
-      <div class="row2"><button class="btn" id="no" style="color:var(--bad)">Не знаю</button><button class="btn" id="yes" style="color:var(--ok)">Знаю ✓</button></div>
-      <div style="height:9px"></div><button class="btn ghost" id="sp">🔊 Произнести</button>`;
+      <div class="row2"><button class="btn" id="no" style="color:var(--bad)">Don't know</button><button class="btn" id="yes" style="color:var(--ok)">Know ✓</button></div>
+      <div style="height:9px"></div><button class="btn ghost" id="sp">🔊 Pronounce</button>`;
     $('#cd').onclick=()=>{flip=!flip;draw();};
     $('#sp').onclick=()=>speak(w.en);
-    $('#yes').onclick=()=>{if(!review){const r=award(w,true);save();if(r==='arch')toast('«'+w.en+'» → в архив ✓');}i++;flip=false;draw();};
+    $('#yes').onclick=()=>{if(!review){const r=award(w,true);save();if(r==='arch')toast('“'+w.en+'” → Archive ✓');}i++;flip=false;draw();};
     $('#no').onclick=()=>{if(!review){award(w,false);save();}unknown.push(w);i++;flip=false;draw();};
     if(!flip&&dir==='en')speak(w.en);
   }
@@ -661,23 +661,23 @@ function startCards(review){
 
 /* ---------- learn (active only) ---------- */
 function startLearn(){
-  const s=curSet();const pool=active(s);if(!pool.length)return toast('Нет слов для изучения');
+  const s=curSet();const pool=active(s);if(!pool.length)return toast('No words to learn');
   let queue=shuffle(pool.filter(w=>w.box<3));if(!queue.length)queue=shuffle(pool);
   const target=queue.reduce((n,w)=>n+(3-w.box),0)||queue.length;let gained=0;const app=$('#app');
   function next(){
     if(!queue.length){
-      app.innerHTML=hdr('Заучивание',"render()")+`<div class="celebrate"><div class="big">🏆</div></div>
-        <div class="empty" style="padding-top:0"><b>Отличная работа!</b><p>Все слова этой сессии выучены и отправлены в архив.</p></div>
-        <button class="btn pri" onclick="render()">Готово</button>`;return;
+      app.innerHTML=hdr('Learn',"render()")+`<div class="celebrate"><div class="big">🏆</div></div>
+        <div class="empty" style="padding-top:0"><b>Great job!</b><p>Every word in this session is mastered and moved to the Archive.</p></div>
+        <button class="btn pri" onclick="render()">Done</button>`;return;
     }
     const w=queue.shift();const kind=w.box===0?'mc':w.box===1?'mc':'type';
     const dir=w.box===0?'en2ru':'ru2en';
-    app.innerHTML=studyTop('Заучивание',Math.min(100,gained/target*100),'выучено '+gained+'/'+target);
+    app.innerHTML=studyTop('Learn',Math.min(100,gained/target*100),'mastered '+gained+'/'+target);
     const q=mkQ(pool,w,kind,dir);
     renderQ($('#qb'),q,{feedback:true,onDone:ok=>{
       const before=w.box;const r=award(w,ok);save();
       if(ok){gained+=Math.max(0,w.box-before);
-        if(r==='arch'){toast('«'+w.en+'» → в архив ✓');}
+        if(r==='arch'){toast('“'+w.en+'” → Archive ✓');}
         else queue.splice(Math.min(queue.length,3+(Math.random()*3|0)),0,w);}
       else queue.splice(Math.min(queue.length,2),0,w);
       next();
@@ -688,21 +688,21 @@ function startLearn(){
 
 /* ---------- test ---------- */
 function testSetup(review){
-  const pool=poolNow();if(!pool.length)return toast('Нет слов');
+  const pool=poolNow();if(!pool.length)return toast('No words');
   const n=pool.length;const opts=[...new Set([5,10,20,n].filter(v=>v<=n))].sort((a,b)=>a-b);
-  sheet(`<h2>Тест</h2>
-   <div class="field"><label>Сколько вопросов</label>
-     <select class="inp" id="tn">${opts.map(v=>`<option value="${v}">${v===n?'Все слова ('+n+')':v}</option>`).join('')}</select></div>
-   <div class="field"><label>Типы вопросов</label><div class="stack">
-     ${[['k1','Выбор ответа'],['k2','Написать ответ'],['k3','Верно / неверно']].map(o=>
+  sheet(`<h2>Test</h2>
+   <div class="field"><label>How many questions</label>
+     <select class="inp" id="tn">${opts.map(v=>`<option value="${v}">${v===n?'All words ('+n+')':v}</option>`).join('')}</select></div>
+   <div class="field"><label>Question types</label><div class="stack">
+     ${[['k1','Multiple choice'],['k2','Type the answer'],['k3','True / false']].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
-   <div class="hint">🇷🇺 → 🇬🇧 Слово показывается по-русски — нужно вспомнить и написать (или выбрать) английское.</div>
-   ${review?'<div class="hint">Повторение из архива: результаты не меняют прогресс.</div>':''}
-   <button class="btn pri" onclick="beginTest(${!!review})">Начать тест</button>`);
+   <div class="hint">🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English.</div>
+   ${review?'<div class="hint">Archive review: results don\'t change progress.</div>':''}
+   <button class="btn pri" onclick="beginTest(${!!review})">Start test</button>`);
 }
 function beginTest(review){
   const kinds=[$('#k1').classList.contains('on')&&'mc',$('#k2').classList.contains('on')&&'type',$('#k3').classList.contains('on')&&'tf'].filter(Boolean);
-  if(!kinds.length)return toast('Выберите хотя бы один тип');
+  if(!kinds.length)return toast('Pick at least one type');
   const n=+$('#tn').value;closeSheet();runTest(shuffle(poolNow()).slice(0,n),kinds,review);
 }
 function runTest(words,kinds,review){
@@ -710,7 +710,7 @@ function runTest(words,kinds,review){
   const qs=words.map(w=>mkQ(pool,w,kinds[Math.random()*kinds.length|0],'ru2en'));
   function next(){
     if(i>=qs.length)return result();
-    app.innerHTML=studyTop('Тест',i/qs.length*100,(i+1)+'/'+qs.length);
+    app.innerHTML=studyTop('Test',i/qs.length*100,(i+1)+'/'+qs.length);
     renderQ($('#qb'),qs[i],{feedback:false,onDone:(ok,g)=>{
       if(!review){const r=award(qs[i].w,ok);if(r==='arch'){/*silent during test*/}save();}
       res.push({w:qs[i].w,ok});i++;next();}});
@@ -718,14 +718,14 @@ function runTest(words,kinds,review){
   function result(){
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100),bad=res.filter(r=>!r.ok);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
-    app.innerHTML=hdr('Результат',"render()")+
+    app.innerHTML=hdr('Result',"render()")+
       `<div class="celebrate"><div class="big">${pct>=90?'🏆':pct>=60?'👍':'💪'}</div></div>
        <div class="big-pct">${pct}%</div>
-       <div class="empty" style="padding:4px 0 16px"><p>${good} из ${res.length} верно${!review&&toArch?` · ${toArch} ушло в архив`:''}</p></div>`+
-      (bad.length?`<div class="subhead"><span class="t">Ошибки — ${bad.length}</span></div>`+
+       <div class="empty" style="padding:4px 0 16px"><p>${good} of ${res.length} correct${!review&&toArch?` · ${toArch} moved to Archive`:''}</p></div>`+
+      (bad.length?`<div class="subhead"><span class="t">Mistakes — ${bad.length}</span></div>`+
         bad.map(r=>`<div class="item"><span class="pips"><i class="pip"></i><i class="pip"></i><i class="pip"></i></span><div class="t"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div><button class="spk" onclick="speak('${q1(r.w.en)}')">🔊</button></div>`).join('')+
-        `<div style="height:10px"></div><button class="btn pri" id="rt">Повторить ошибки</button><div style="height:9px"></div>`:'')+
-      `<button class="btn ghost" onclick="render()">Закрыть</button>`;
+        `<div style="height:10px"></div><button class="btn pri" id="rt">Retry mistakes</button><div style="height:9px"></div>`:'')+
+      `<button class="btn ghost" onclick="render()">Close</button>`;
     if(bad.length)$('#rt').onclick=()=>runTest(shuffle(bad.map(r=>r.w)),kinds,review);
   }
   next();
@@ -733,14 +733,14 @@ function runTest(words,kinds,review){
 
 /* ---------- match ---------- */
 function startMatch(){
-  const pool=poolNow();if(pool.length<3)return toast('Нужно хотя бы 3 слова');
+  const pool=poolNow();if(pool.length<3)return toast('Need at least 3 words');
   const ws=shuffle(pool).slice(0,6);
   const tiles=shuffle(ws.flatMap(w=>[{id:w.id,t:w.en},{id:w.id,t:w.ru}]));
   let sel=null,left=ws.length,t0=Date.now(),miss=0;const app=$('#app');
-  app.innerHTML=hdr('Подбор',"render()",`<span class="stat" id="tm" style="font-size:16px;min-width:64px">0.0с</span>`)+
-    `<div class="hint" style="text-align:center;margin-bottom:12px">Соедините слово и перевод</div>
+  app.innerHTML=hdr('Match',"render()",`<span class="stat" id="tm" style="font-size:16px;min-width:64px">0.0s</span>`)+
+    `<div class="hint" style="text-align:center;margin-bottom:12px">Match each word with its translation</div>
      <div class="tiles">${tiles.map((x,i)=>`<button class="tile" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
-  const iv=setInterval(()=>{const e=$('#tm');if(!e)return clearInterval(iv);e.textContent=((Date.now()-t0)/1000).toFixed(1)+'с';},100);
+  const iv=setInterval(()=>{const e=$('#tm');if(!e)return clearInterval(iv);e.textContent=((Date.now()-t0)/1000).toFixed(1)+'s';},100);
   app.querySelectorAll('.tile').forEach(el=>el.onclick=()=>{
     if(el.classList.contains('done')||el===sel)return;
     const x=tiles[+el.dataset.i];
@@ -748,11 +748,11 @@ function startMatch(){
     const y=tiles[+sel.dataset.i];
     if(x.id===y.id){el.classList.add('done');sel.classList.add('done');sel=null;left--;
       if(!left){clearInterval(iv);const t=((Date.now()-t0)/1000).toFixed(1);
-        app.innerHTML=hdr('Подбор',"render()")+`<div class="celebrate"><div class="big">🎉</div></div>
-          <div class="big-pct" style="font-size:44px">${t}с</div>
-          <div class="empty" style="padding:4px 0 16px"><p>Ошибок: ${miss}</p></div>
-          <button class="btn pri" onclick="startMatch()">Ещё раз</button><div style="height:9px"></div>
-          <button class="btn ghost" onclick="render()">Закрыть</button>`;}}
+        app.innerHTML=hdr('Match',"render()")+`<div class="celebrate"><div class="big">🎉</div></div>
+          <div class="big-pct" style="font-size:44px">${t}s</div>
+          <div class="empty" style="padding:4px 0 16px"><p>Mistakes: ${miss}</p></div>
+          <button class="btn pri" onclick="startMatch()">Again</button><div style="height:9px"></div>
+          <button class="btn ghost" onclick="render()">Close</button>`;}}
     else{miss++;const a=sel;sel=null;a.classList.remove('sel');a.classList.add('no');el.classList.add('no');
       setTimeout(()=>{a.classList.remove('no');el.classList.remove('no');},380);}
   });

@@ -1,12 +1,12 @@
 {
-  "name": "Мои слова",
-  "short_name": "Мои слова",
+  "name": "Vocabulary",
+  "short_name": "Vocab",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f4f5fb",
   "theme_color": "#4f46e5",
-  "lang": "ru",
+  "lang": "en",
   "icons": [
     {"src": "icon-180.png", "sizes": "180x180", "type": "image/png"},
     {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
