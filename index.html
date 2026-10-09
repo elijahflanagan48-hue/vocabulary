@@ -120,6 +120,8 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
   padding:20px 16px calc(14px + env(safe-area-inset-bottom))}
 .selbar .in{max-width:680px;margin:0 auto}
 .btn:disabled{opacity:.5;box-shadow:none}
+.arch-ic{width:46px;height:46px;flex:none;border-radius:50%;background:var(--pri-soft);color:var(--pri-d);display:flex;align-items:center;justify-content:center;font-size:22px}
+.src{color:var(--fade);font-size:12.5px;font-weight:600}
 
 /* set card on home */
 .setcard{display:flex;align-items:center;gap:14px;background:var(--surf);box-shadow:var(--sh);
@@ -252,13 +254,17 @@ const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slic
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q1=s=>String(s??'').replace(/[\\']/g,'\\$&');
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const plural=(n,one,few,many)=>{const m10=n%10,m100=n%100;return n+' '+(m10===1&&m100!==11?one:(m10>=2&&m10<=4&&(m100<10||m100>=20)?few:many));};
 const norm=s=>String(s).toLowerCase().replace(/ё/g,'е').replace(/[.,!?;:"'’()\[\]]/g,'').replace(/\s+/g,' ').trim();
 function okAns(inp,correct,isRu){const n=norm(inp);if(!n)return false;if(norm(correct)===n)return true;return isRu&&correct.split(/[,;\/]/).some(v=>norm(v)===n);}
 const newWord=(en,ru,ex='')=>({id:uid(),en:en.trim(),ru:ru.trim(),ex:ex.trim(),box:0,arch:false,ok:0,bad:0,added:Date.now()});
 const curSet=()=>S.sets.find(s=>s.id===view.id);
 const active=s=>s.words.filter(w=>!w.arch);
 const archived=s=>s.words.filter(w=>w.arch);
-const poolNow=()=>{const s=curSet();return view.tab==='arch'?archived(s):active(s);};
+const allArchived=()=>S.sets.flatMap(s=>s.words.filter(w=>w.arch).map(w=>({w,sn:s.name,sid:s.id})));
+const archCount=()=>S.sets.reduce((n,s)=>n+s.words.filter(w=>w.arch).length,0);
+function findWord(id){for(const s of S.sets){const w=s.words.find(x=>x.id===id);if(w)return{w,s};}return null;}
+function poolNow(){if(view.name==='archive')return allArchived().map(x=>x.w);const s=curSet();return s?active(s):[];}
 
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2300);}
 let _voices=[];function loadVoices(){try{_voices=speechSynthesis.getVoices()}catch(e){}}
@@ -302,80 +308,91 @@ async function translate(t){
 }
 
 /* ---------- router ---------- */
-let view={name:'home',tab:'active'};
+let view={name:'home'};
 let selMode=false;const selIds=new Set();
 function clearSel(){selMode=false;selIds.clear();}
-function go(name,p={}){clearSel();view=Object.assign({name,tab:view.tab||'active'},p);render();scrollTo(0,0);}
+function go(name,p={}){clearSel();view=Object.assign({name},p);render();scrollTo(0,0);}
 function render(){(VIEWS[view.name]||VIEWS.home)($('#app'));}
 const hdr=(title,back,right='')=>`<header>${back?`<button class="ic back" aria-label="Назад" onclick="${back}">‹</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;
 
 /* ---------- views ---------- */
+const searchBox=`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="Поиск" oninput="filterList(this.value)"></div>`;
+const modesHtml=modes=>`<div class="modes">${modes.map(m=>`<button class="mcard" onclick="${m[4]}"><div class="em em-${m[3]}">${m[0]}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`;
 const VIEWS={
 home(app){
   const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
-  const total=S.sets.reduce((n,s)=>n+s.words.length,0);
+  const arN=archCount();
   app.innerHTML=hdr('Словарь','',`<button class="ic" aria-label="Настройки" onclick="settingsSheet()">⚙</button>`)+
    (standalone||S.settings.hideBanner?'':
      `<div class="banner"><span>📲</span><div><b>Добавьте на экран «Домой».</b> В Safari: «Поделиться» → «На экран “Домой”». Тогда словарь всегда под рукой и работает без интернета.</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
    (S.sets.length?
-     `<div class="subhead"><span class="t">Списки · ${total} слов</span></div>`+
-     S.sets.map(s=>{const a=active(s).length,ar=archived(s).length;return(
-       `<div class="setcard" onclick="go('set',{id:'${s.id}',tab:'active'})">
-         ${ringSvg(ar,s.words.length)}
+     `<div class="subhead"><span class="t">Списки</span></div>`+
+     S.sets.map(s=>{const a=active(s).length,learned=s.words.filter(w=>w.arch).length;return(
+       `<div class="setcard" onclick="go('set',{id:'${s.id}'})">
+         ${ringSvg(learned,s.words.length)}
          <div class="t"><div class="nm">${esc(s.name)}</div>
-         <div class="meta">${a} в изучении · ${ar} в архиве</div></div>
-         <span style="color:var(--fade);font-size:22px">›</span></div>`)}).join('')
-     :`<div class="empty"><div class="big">📖</div><b>Здесь будут ваши списки слов</b><p>Создайте список — например «Unit 1» — и начните выписывать новые слова.</p></div>`)+
+         <div class="meta">${a} в изучении${learned?` · ${learned} выучено`:''}</div></div>
+         <span style="color:var(--fade);font-size:22px">›</span></div>`)}).join('')+
+     `<div class="setcard" onclick="go('archive')" style="margin-top:14px">
+        <div class="arch-ic">🗄</div>
+        <div class="t"><div class="nm">Архив</div>
+        <div class="meta">${arN?plural(arN,'выученное слово','выученных слова','выученных слов')+' · со всех списков':'выученные слова со всех списков'}</div></div>
+        <span style="color:var(--fade);font-size:22px">›</span></div>`
+     :`<div class="empty"><div class="big">📖</div><b>Здесь будут ваши списки слов</b><p>Создайте список — например «Unit 1» — и начните выписывать новые слова. Выученные слова будут собираться в общий «Архив».</p></div>`)+
    `<button class="btn pri" style="margin-top:12px" onclick="newSet()">＋ Новый список</button>`;
 },
 set(app){
   const s=curSet();if(!s)return go('home');
-  const a=active(s),ar=archived(s),arch=view.tab==='arch',pool=arch?ar:a;
-  const modes=arch
-   ?[['🗂','Карточки','повторить','a',"startCards(true)"],['📝','Тест','повторить','d',"testSetup(true)"],['🧩','Подбор','на время','c',"startMatch(true)"]]
-   :[['🗂','Карточки','листать','a',"startCards(false)"],['🎯','Заучивание','до «выучено»','b',"startLearn()"],['📝','Тест','проверка','d',"testSetup(false)"],['🧩','Подбор','на время','c',"startMatch(false)"]];
+  const pool=active(s);
+  const modes=[['🗂','Карточки','листать','a',"startCards(false)"],['🎯','Заучивание','до «выучено»','b',"startLearn()"],['📝','Тест','проверка','d',"testSetup(false)"],['🧩','Подбор','на время','c',"startMatch(false)"]];
   const tbar=selMode
    ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Снять выделение':'Выбрать все'}</button><button class="lnk" onclick="toggleSelMode()">Отмена</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">${arch?'Выученные · '+pool.length:'В изучении · '+pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Выбрать</button></div>`:'');
+   :(pool.length?`<div class="tbar"><span class="t">В изучении · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Выбрать</button></div>`:'');
   app.innerHTML=hdr(s.name,"go('home')",`<button class="ic" aria-label="Меню" onclick="setMenu()">⋯</button>`)+
-   `<div class="seg">
-     <button class="${arch?'':'on'}" onclick="setTab('active')">Актуальные <span class="cnt">${a.length}</span></button>
-     <button class="${arch?'on':''}" onclick="setTab('arch')">Архив <span class="cnt">${ar.length}</span></button></div>`+
-   (selMode?'':(pool.length?`<div class="modes">${modes.map(m=>
-     `<button class="mcard" onclick="${m[4]}"><div class="em em-${m[3]}">${m[0]}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`:''))+
+   (selMode?'':(pool.length?modesHtml(modes):''))+
    tbar+
-   (!selMode&&pool.length>7?`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="Поиск" oninput="filterList(this.value)"></div>`:'')+
-   `<div id="list">${listHtml(pool,arch,'')}</div>`+
-   (selMode?selBar(arch):(arch?'':`<button class="fab" aria-label="Добавить слово" onclick="wordForm()">＋</button>`));
+   (!selMode&&pool.length>7?searchBox:'')+
+   `<div id="list">${listHtml(pool,false,'')}</div>`+
+   (selMode?selBar(false):`<button class="fab" aria-label="Добавить слово" onclick="wordForm()">＋</button>`);
+},
+archive(app){
+  const items=allArchived(),pool=items.map(x=>x.w);
+  const modes=[['🗂','Карточки','повторить','a',"startCards(true)"],['📝','Тест','повторить','d',"testSetup(true)"],['🧩','Подбор','на время','c',"startMatch(true)"]];
+  const tbar=selMode
+   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Снять выделение':'Выбрать все'}</button><button class="lnk" onclick="toggleSelMode()">Отмена</button></div>`
+   :(pool.length?`<div class="tbar"><span class="t">Выучено · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Выбрать</button></div>`:'');
+  app.innerHTML=hdr('Архив',"go('home')")+
+   (selMode?'':(pool.length?modesHtml(modes):''))+
+   tbar+
+   (!selMode&&pool.length>7?searchBox:'')+
+   `<div id="list">${archListHtml(items,'')}</div>`+
+   (selMode?selBar(true):'');
 },
 };
-function setTab(t){view.tab=t;clearSel();render();}
-function selBar(arch){
+function selBar(inArch){
   const n=selIds.size;
-  const label=n===0?'Выберите слова':(arch?`↩ Вернуть в изучение (${n})`:`🗄 Перенести в архив (${n})`);
-  return `<div class="selbar"><div class="in"><button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${arch?'false':'true'})">${label}</button></div></div>`;
+  const label=n===0?'Выберите слова':(inArch?`↩ Вернуть в изучение (${n})`:`🗄 Перенести в архив (${n})`);
+  return `<div class="selbar"><div class="in"><button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${label}</button></div></div>`;
 }
 function toggleSelMode(){selMode=!selMode;selIds.clear();render();}
 function togglePick(id){if(selIds.has(id))selIds.delete(id);else selIds.add(id);render();}
 function selAll(){const p=poolNow();if(selIds.size>=p.length)selIds.clear();else p.forEach(w=>selIds.add(w.id));render();}
 function bulkArch(toArch){
-  const s=curSet();let n=0;
-  s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);n++;}});
+  let n=0;
+  S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);n++;}}));
   save();clearSel();render();
   toast(toArch?`Перенесено в архив: ${n}`:`Вернули в изучение: ${n}`);
 }
 function listHtml(words,arch,qs){
   qs=(qs||'').toLowerCase();
   const ws=qs?words.filter(w=>(w.en+' '+w.ru).toLowerCase().includes(qs)):words;
-  if(!words.length)return arch
-    ?`<div class="empty"><div class="big">🗄️</div><b>Архив пока пуст</b><p>Выученные слова попадают сюда автоматически. А ещё можно перенести любые слова вручную — на вкладке «Актуальные» нажмите «Выбрать».</p></div>`
-    :`<div class="empty"><div class="big">✍️</div><b>Добавьте первое слово</b><p>Нажмите «＋» внизу, чтобы вписать слово и перевод, или импортируйте список целиком через меню «⋯».</p></div>`;
+  if(!words.length)return `<div class="empty"><div class="big">✍️</div><b>Добавьте первое слово</b><p>Нажмите «＋» внизу, чтобы вписать слово и перевод, или импортируйте список целиком через меню «⋯».</p></div>`;
   if(!ws.length)return `<div class="empty"><p>Ничего не найдено</p></div>`;
   return ws.map(w=>{
     const picked=selIds.has(w.id);
     const left=selMode
       ?`<span class="cbox ${picked?'on':''}">${picked?'✓':''}</span>`
-      :(arch?'<span class="chk">✓</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`);
+      :`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`;
     const onclick=selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`;
     return `<div class="item ${picked&&selMode?'pick':''}" onclick="${onclick}">
       ${left}
@@ -383,7 +400,25 @@ function listHtml(words,arch,qs){
       ${selMode?'':`<button class="spk" aria-label="Произнести" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
   }).join('');
 }
-function filterList(v){const s=curSet();$('#list').innerHTML=listHtml(view.tab==='arch'?archived(s):active(s),view.tab==='arch',v);}
+function archListHtml(items,qs){
+  qs=(qs||'').toLowerCase();
+  const its=qs?items.filter(x=>(x.w.en+' '+x.w.ru).toLowerCase().includes(qs)):items;
+  if(!items.length)return `<div class="empty"><div class="big">🗄️</div><b>Архив пуст</b><p>Сюда собираются выученные слова со всех списков — автоматически в режимах «Заучивание» и «Тест», или когда вы переносите их вручную кнопкой «Выбрать».</p></div>`;
+  if(!its.length)return `<div class="empty"><p>Ничего не найдено</p></div>`;
+  return its.map(({w,sn})=>{
+    const picked=selIds.has(w.id);
+    const left=selMode?`<span class="cbox ${picked?'on':''}">${picked?'✓':''}</span>`:'<span class="chk">✓</span>';
+    const onclick=selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`;
+    return `<div class="item ${picked&&selMode?'pick':''}" onclick="${onclick}">
+      ${left}
+      <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru)}<span class="src"> · ${esc(sn)}</span></div></div>
+      ${selMode?'':`<button class="spk" aria-label="Произнести" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
+  }).join('');
+}
+function filterList(v){
+  if(view.name==='archive'){$('#list').innerHTML=archListHtml(allArchived(),v);return;}
+  const s=curSet();if(s)$('#list').innerHTML=listHtml(active(s),false,v);
+}
 
 /* ---------- sheets ---------- */
 function sheet(html){closeSheet();const d=document.createElement('div');d.className='scrim';d.id='scrim';
@@ -398,7 +433,7 @@ function newSet(){
   setTimeout(()=>$('#nm')&&$('#nm').focus(),60);
 }
 function createSet(){const n=$('#nm').value.trim();if(!n)return toast('Введите название');
-  const s={id:uid(),name:n,words:[]};S.sets.push(s);save();closeSheet();go('set',{id:s.id,tab:'active'});}
+  const s={id:uid(),name:n,words:[]};S.sets.push(s);save();closeSheet();go('set',{id:s.id});}
 
 function setMenu(){
   const s=curSet();
@@ -410,13 +445,13 @@ function setMenu(){
    <button class="btn danger ghost" onclick="delSet()">Удалить список</button></div>`);
 }
 function renameSet(){const s=curSet();const n=prompt('Новое название',s.name);if(n&&n.trim()){s.name=n.trim();save();closeSheet();render();}}
-function resetProg(){const s=curSet();if(confirm('Вернуть все слова из архива в изучение и обнулить прогресс?')){s.words.forEach(w=>{w.box=0;w.arch=false;});save();closeSheet();render();toast('Прогресс сброшен');}}
+function resetProg(){const s=curSet();if(confirm('Вернуть все слова этого списка из архива в изучение и обнулить прогресс?')){s.words.forEach(w=>{w.box=0;w.arch=false;});save();closeSheet();render();toast('Прогресс сброшен');}}
 function delSet(){const s=curSet();if(confirm(`Удалить «${s.name}» со всеми словами? Отменить нельзя.`)){S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
 
 /* ---------- word form ---------- */
 let editId=null,ruTouched=false,trTimer=null,trSeq=0;
 function wordForm(id){
-  const s=curSet();const w=id?s.words.find(x=>x.id===id):null;editId=id||null;ruTouched=!!w;
+  const w=id?(findWord(id)||{}).w:null;editId=id||null;ruTouched=!!w;
   sheet(`<h2>${w?'Слово':'Новое слово'}</h2>
    <div class="field"><label>Слово (English)</label>
      <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="reliable" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
@@ -447,14 +482,13 @@ async function doTr(force){
 function saveWord(){
   const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim(),ex=$('#fEx').value.trim();
   if(!en)return toast('Введите слово');if(!ru)return toast('Введите перевод');
-  const s=curSet();
-  if(editId){const w=s.words.find(x=>x.id===editId);Object.assign(w,{en,ru,ex});save();closeSheet();render();}
-  else{s.words.unshift(newWord(en,ru,ex));save();render();toast('Добавлено ✓');
+  if(editId){const f=findWord(editId);if(f)Object.assign(f.w,{en,ru,ex});save();closeSheet();render();}
+  else{const s=curSet();s.words.unshift(newWord(en,ru,ex));save();render();toast('Добавлено ✓');
     $('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';ruTouched=false;
     $('#trSt').textContent='Добавьте следующее слово';$('#fEn').focus();}
 }
-function toggleArch(id){const w=curSet().words.find(x=>x.id===id);w.arch=!w.arch;if(!w.arch)w.box=Math.min(w.box,2);else w.box=3;save();closeSheet();render();toast(w.arch?'В архиве ✓':'Вернули в изучение');}
-function delWord(){const s=curSet();s.words=s.words.filter(w=>w.id!==editId);save();closeSheet();render();}
+function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;if(!w.arch)w.box=Math.min(w.box,2);else w.box=3;save();closeSheet();render();toast(w.arch?'В архиве ✓':'Вернули в изучение');}
+function delWord(){const f=findWord(editId);if(f)f.s.words=f.s.words.filter(w=>w.id!==editId);save();closeSheet();render();}
 
 /* ---------- IMPORT (Quizlet-style) ---------- */
 let impTerm='auto',impCard='line',impAuto=true;
@@ -525,7 +559,8 @@ function settingsSheet(){
      <button class="btn" onclick="exportData()">💾 Резервная копия (все списки)</button>
      <button class="btn ghost" onclick="$('#imp-file').click()">📂 Восстановить из файла</button></div>
    <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importFile(this.files[0])">
-   <div class="hint" style="margin-top:14px">Слова хранятся в памяти этого устройства. Иногда делайте резервную копию, чтобы не потерять их.</div>`);
+   <div class="hint" style="margin-top:14px">Слова хранятся в памяти этого устройства. Иногда делайте резервную копию, чтобы не потерять их.</div>
+   <div class="hint" style="text-align:center;opacity:.65;margin-top:4px">Версия 4 · общий архив для всех списков</div>`);
 }
 async function exportData(setId){
   closeSheet();
