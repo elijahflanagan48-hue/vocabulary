@@ -608,13 +608,15 @@ function mkQ(pool,w,kind,forceDir){
 function renderQ(box,q,o){
   const w=q.w,en2ru=q.dir==='en2ru',prompt=en2ru?w.en:w.ru,answer=en2ru?w.ru:w.en;
   let lbl=q.type==='tf'?'Is this a correct match?':q.type==='type'?(en2ru?'Type the translation':'Type in English'):(en2ru?'Choose the translation':'Choose the word');
-  let h=`<div class="card" style="min-height:min(34vh,200px)"><div class="lbl">${lbl}</div>
+  let h=(o.skipped?`<div style="text-align:center;color:var(--warn);font-weight:650;font-size:13.5px;margin:-2px 0 8px">↩ Back to a skipped word</div>`:'')+
+    `<div class="card" style="min-height:min(34vh,200px)"><div class="lbl">${lbl}</div>
     <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
   if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,i)=>`<button class="opt" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
   if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn" data-tf="1">✓ True</button><button class="btn" data-tf="0">✗ False</button></div>`;
   if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="Answer" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
     <div style="height:9px"></div><button class="btn pri" id="tsub">Check</button>
     <div style="height:8px"></div><button class="btn ghost" id="tskip">Don't know</button></div>`;
+  if(o.onSkip)h+=`<div style="height:8px"></div><button class="btn ghost" id="qskip" style="color:var(--mut)">↷ Skip — think later</button>`;
   h+=`<div id="fbx"></div>`;box.innerHTML=h;
   let done=false;
   const finish=(ok,given)=>{
@@ -634,6 +636,7 @@ function renderQ(box,q,o){
     const chk=()=>{if(done)return;const ok=okAns(ta.value,answer,en2ru);ta.disabled=true;finish(ok,ta.value);};
     $('#tsub').onclick=chk;ta.addEventListener('keydown',e=>{if(e.key==='Enter')chk();});
     $('#tskip').onclick=()=>{if(done)return;ta.disabled=true;finish(false,'');};}
+  if(o.onSkip){const sb=$('#qskip');if(sb)sb.onclick=()=>{if(done)return;done=true;o.onSkip();};}
 }
 const studyTop=(title,pct,stat)=>hdr(title,"if(confirm('Exit this session?'))render()")+
   `<div class="topbar"><div class="pbar"><i style="width:${pct}%"></i></div><span class="stat">${stat}</span></div><div id="qb"></div>`;
@@ -715,16 +718,25 @@ function beginTest(review){
   const n=+$('#tn').value;closeSheet();runTest(shuffle(poolNow()).slice(0,n),kinds,review);
 }
 function runTest(words,kinds,review){
-  const pool=poolNow(),app=$('#app'),res=[];let i=0;
+  const pool=poolNow(),app=$('#app');
   const qs=words.map(w=>mkQ(pool,w,kinds[Math.random()*kinds.length|0],'ru2en'));
+  const total=qs.length,results=new Array(total),order=qs.map((_,ix)=>ix),skipped=new Set();
+  let done=0;
   function next(){
-    if(i>=qs.length)return result();
-    app.innerHTML=studyTop('Test',i/qs.length*100,(i+1)+'/'+qs.length);
-    renderQ($('#qb'),qs[i],{feedback:false,onDone:(ok,g)=>{
-      if(!review){const r=award(qs[i].w,ok);if(r==='arch'){/*silent during test*/}save();}
-      res.push({w:qs[i].w,ok});i++;next();}});
+    if(!order.length)return result();
+    const idx=order.shift();
+    const pend=[...skipped].filter(ix=>results[ix]===undefined&&ix!==idx).length;
+    const stat=`${done}/${total}`+(pend?` ↩${pend}`:'');
+    app.innerHTML=studyTop('Test',done/total*100,stat);
+    renderQ($('#qb'),qs[idx],{feedback:false,skipped:skipped.has(idx),
+      onSkip:()=>{skipped.add(idx);order.push(idx);next();},
+      onDone:(ok,g)=>{
+        results[idx]={w:qs[idx].w,ok};done++;skipped.delete(idx);
+        if(!review){award(qs[idx].w,ok);save();}
+        next();}});
   }
   function result(){
+    const res=results.filter(Boolean);
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100),bad=res.filter(r=>!r.ok);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
     app.innerHTML=hdr('Result',"render()")+
