@@ -120,6 +120,9 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
   padding:20px 16px calc(14px + env(safe-area-inset-bottom))}
 .selbar .in{max-width:680px;margin:0 auto}
 .btn:disabled{opacity:.5;box-shadow:none}
+.ans-bad,.ans-ok{font-size:14px;font-weight:650;padding:6px 12px;border-radius:11px;line-height:1.2}
+.ans-bad{background:var(--bad-soft);color:var(--bad)}
+.ans-ok{background:var(--ok-soft);color:var(--ok)}
 .arch-ic{width:46px;height:46px;flex:none;border-radius:50%;background:var(--pri-soft);color:var(--pri-d);display:flex;align-items:center;justify-content:center;font-size:22px}
 .src{color:var(--fade);font-size:12.5px;font-weight:600}
 
@@ -631,7 +634,7 @@ function renderQ(box,q,o){
     const x=q.opts[+b.dataset.i];
     if(o.feedback){box.querySelectorAll('.opt').forEach((bb,i)=>{if(q.opts[i].c)bb.classList.add('ok');});if(!x.c)b.classList.add('bad');}
     finish(x.c,x.t);});
-  if(q.type==='tf')box.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>finish((b.dataset.tf==='1')===q.isTrue,''));
+  if(q.type==='tf')box.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>finish((b.dataset.tf==='1')===q.isTrue,b.dataset.tf==='1'?'True':'False'));
   if(q.type==='type'){const ta=$('#ta');setTimeout(()=>ta&&ta.isConnected&&ta.focus(),60);
     const chk=()=>{if(done)return;const ok=okAns(ta.value,answer,en2ru);ta.disabled=true;finish(ok,ta.value);};
     $('#tsub').onclick=chk;ta.addEventListener('keydown',e=>{if(e.key==='Enter')chk();});
@@ -731,8 +734,10 @@ function runTest(words,kinds,review){
     renderQ($('#qb'),qs[idx],{feedback:false,skipped:skipped.has(idx),
       onSkip:()=>{skipped.add(idx);order.push(idx);next();},
       onDone:(ok,g)=>{
-        results[idx]={w:qs[idx].w,ok};done++;skipped.delete(idx);
-        if(!review){award(qs[idx].w,ok);save();}
+        const qq=qs[idx],en2ru=qq.dir==='en2ru';
+        const correct=qq.type==='tf'?(qq.isTrue?'True':'False'):(en2ru?qq.w.ru:qq.w.en);
+        results[idx]={w:qq.w,ok,given:(g||'').trim(),correct};done++;skipped.delete(idx);
+        if(!review){award(qq.w,ok);save();}
         next();}});
   }
   function result(){
@@ -744,7 +749,13 @@ function runTest(words,kinds,review){
        <div class="big-pct">${pct}%</div>
        <div class="empty" style="padding:4px 0 16px"><p>${good} of ${res.length} correct${!review&&toArch?` · ${toArch} moved to Archive`:''}</p></div>`+
       (bad.length?`<div class="subhead"><span class="t">Mistakes — ${bad.length}</span></div>`+
-        bad.map(r=>`<div class="item"><span class="pips"><i class="pip"></i><i class="pip"></i><i class="pip"></i></span><div class="t"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div><button class="spk" onclick="speak('${q1(r.w.en)}')">🔊</button></div>`).join('')+
+        bad.map(r=>`<div class="item" style="display:block;padding:13px 15px">
+          <div style="display:flex;align-items:center;gap:13px">
+            <div class="t" style="flex:1"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div>
+            <button class="spk" onclick="speak('${q1(r.w.en)}')">🔊</button></div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
+            <span class="ans-bad">✗ ${r.given?esc(r.given):'no answer'}</span>
+            <span class="ans-ok">✓ ${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
         `<div style="height:10px"></div><button class="btn pri" id="rt">Retry mistakes</button><div style="height:9px"></div>`:'')+
       `<button class="btn ghost" onclick="render()">Close</button>`;
     if(bad.length)$('#rt').onclick=()=>runTest(shuffle(bad.map(r=>r.w)),kinds,review);
