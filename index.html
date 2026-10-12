@@ -124,6 +124,14 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .ans-bad,.ans-ok{font-size:14px;font-weight:650;padding:6px 12px;border-radius:11px;line-height:1.2}
 .ans-bad{background:var(--bad-soft);color:var(--bad)}
 .ans-ok{background:var(--ok-soft);color:var(--ok)}
+/* test question palette */
+.qpal{display:flex;gap:7px;overflow-x:auto;margin:0 -16px 12px;padding:2px 16px 4px;-webkit-overflow-scrolling:touch}
+.qpal::-webkit-scrollbar{display:none}
+.qdot{flex:none;min-width:36px;height:36px;padding:0 6px;border-radius:11px;border:1.5px solid var(--line2);background:var(--surf);color:var(--mut);font-weight:700;font-size:14.5px}
+.qdot.on{border-color:var(--pri);color:var(--pri-d);background:var(--pri-soft)}
+.qdot.cur{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.opt.pick{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
+.btn.selp{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
 .arch-ic{width:46px;height:46px;flex:none;border-radius:50%;background:var(--pri-soft);color:var(--pri-d);display:flex;align-items:center;justify-content:center;font-size:22px}
 .src{color:var(--fade);font-size:12.5px;font-weight:600}
 
@@ -493,7 +501,7 @@ set(app){
 },
 archive(app){
   const items=allArchived(),pool=items.map(x=>x.w);
-  const modes=[['🗂','Flashcards','review','a',"startCards(true)"],['📝','Test','review','d',"testSetup(true)"],['🧩','Match','race the clock','c',"startMatch(true)"]];
+  const modes=[['🗂','Flashcards','review','a',"startCards(true)"],['🎯','Learn','revise','b',"startLearn(true)"],['📝','Test','review','d',"testSetup(true)"],['🧩','Match','race the clock','c',"startMatch(true)"]];
   const tbar=selMode
    ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Clear selection':'Select all'}</button><button class="lnk" onclick="toggleSelMode()">Cancel</button></div>`
    :(pool.length?`<div class="tbar"><span class="t">Learned · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Select</button></div>`:'');
@@ -820,27 +828,31 @@ function startCards(review){
 }
 
 /* ---------- learn (active only) ---------- */
-function startLearn(){
-  const s=curSet();const pool=active(s);if(!pool.length)return toast('No words to learn');
-  let queue=shuffle(pool.filter(w=>w.box<3));if(!queue.length)queue=shuffle(pool);
-  const target=queue.reduce((n,w)=>n+(3-w.box),0)||queue.length;let gained=0;const app=$('#app');
+function startLearn(review){
+  const pool=review?poolNow():active(curSet());
+  if(!pool.length)return toast(review?'No words':'No words to learn');
+  const B={};if(review)pool.forEach(w=>B[w.id]=0);
+  const lvl=w=>review?B[w.id]:(w.box||0);
+  let queue=shuffle(pool.filter(w=>lvl(w)<3));if(!queue.length)queue=shuffle(pool);
+  const target=queue.reduce((n,w)=>n+(3-lvl(w)),0)||queue.length;let gained=0;const app=$('#app');
   function next(){
     if(!queue.length){
       app.innerHTML=hdr('Learn',"render()")+
-        `<div class="hero"><div class="hero-emoji">🏆</div><div class="hero-title" style="margin-top:14px">Great job!</div>
-         <div class="hero-sub">Every word this session is mastered and moved to the Archive.</div></div>
+        `<div class="hero"><div class="hero-emoji">🏆</div><div class="hero-title" style="margin-top:14px">${review?'Review complete':'Great job!'}</div>
+         <div class="hero-sub">${review?'You revised every word in this session.':'Every word this session is mastered and moved to the Archive.'}</div></div>
         <div style="height:14px"></div><button class="btn pri" onclick="render()">Done</button>`;
       confetti();return;
     }
-    const w=queue.shift();const kind=w.box===0?'mc':w.box===1?'mc':'type';
-    const dir=w.box===0?'en2ru':'ru2en';
+    const w=queue.shift();const L=lvl(w);const kind=L<=1?'mc':'type';const dir=L===0?'en2ru':'ru2en';
     app.innerHTML=studyTop('Learn',Math.min(100,gained/target*100),'mastered '+gained+'/'+target);
     const q=mkQ(pool,w,kind,dir);
     renderQ($('#qb'),q,{feedback:true,onDone:ok=>{
-      const before=w.box;const r=award(w,ok);save();
-      if(ok){gained+=Math.max(0,w.box-before);
-        if(r==='arch'){toast('“'+w.en+'” → Archive ✓');}
-        else queue.splice(Math.min(queue.length,3+(Math.random()*3|0)),0,w);}
+      const before=lvl(w);
+      if(review){B[w.id]=ok?Math.min(3,before+1):Math.max(0,before-1);}
+      else{const r=award(w,ok);save();if(ok&&r==='arch')toast('“'+w.en+'” → Archive ✓');}
+      const after=lvl(w);
+      if(ok){gained+=Math.max(0,after-before);
+        if(after<3)queue.splice(Math.min(queue.length,3+(Math.random()*3|0)),0,w);}
       else queue.splice(Math.min(queue.length,2),0,w);
       next();
     }});
@@ -858,7 +870,7 @@ function testSetup(review){
    <div class="field"><label>Question types</label><div class="stack">
      ${[['k1','Multiple choice'],['k2','Type the answer'],['k3','True / false']].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
-   <div class="hint">🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English.</div>
+   <div class="hint">🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.</div>
    ${review?'<div class="hint">Archive review: results don\'t change progress.</div>':''}
    <button class="btn pri" onclick="beginTest(${!!review})">Start test</button>`);
 }
@@ -870,25 +882,49 @@ function beginTest(review){
 function runTest(words,kinds,review){
   const pool=poolNow(),app=$('#app');
   const qs=words.map(w=>mkQ(pool,w,kinds[Math.random()*kinds.length|0],'ru2en'));
-  const total=qs.length,results=new Array(total),order=qs.map((_,ix)=>ix),skipped=new Set();
-  let done=0;
-  function next(){
-    if(!order.length)return result();
-    const idx=order.shift();
-    const pend=[...skipped].filter(ix=>results[ix]===undefined&&ix!==idx).length;
-    const stat=`${done}/${total}`+(pend?` ↩${pend}`:'');
-    app.innerHTML=studyTop('Test',done/total*100,stat);
-    renderQ($('#qb'),qs[idx],{feedback:false,skipped:skipped.has(idx),
-      onSkip:()=>{skipped.add(idx);order.push(idx);next();},
-      onDone:(ok,g)=>{
-        const qq=qs[idx],en2ru=qq.dir==='en2ru';
-        const correct=qq.type==='tf'?(qq.isTrue?'True':'False'):(en2ru?qq.w.ru:qq.w.en);
-        results[idx]={w:qq.w,ok,given:(g||'').trim(),correct};done++;skipped.delete(idx);
-        if(!review){award(qq.w,ok);save();}
-        next();}});
+  const total=qs.length;
+  const ans=qs.map(q=>q.type==='type'?'':null);
+  let i=0;
+  const answered=ix=>{const q=qs[ix];return q.type==='type'?(ans[ix]||'').trim()!=='':ans[ix]!==null;};
+  const countAns=()=>{let n=0;for(let k=0;k<total;k++)if(answered(k))n++;return n;};
+  function go2(nx){if(nx<0||nx>=total)return;i=nx;draw();}
+  function finishTest(){const blanks=total-countAns();if(blanks&&!confirm(blanks+(blanks===1?' question is':' questions are')+' still blank. Finish anyway?'))return;result();}
+  function draw(){
+    const q=qs[i],en2ru=q.dir==='en2ru',prompt=en2ru?q.w.en:q.w.ru;
+    const lbl=q.type==='tf'?'Is this a correct match?':q.type==='type'?(en2ru?'Type the translation':'Type in English'):(en2ru?'Choose the translation':'Choose the word');
+    const ca=countAns();
+    const dots=qs.map((_,ix)=>`<button class="qdot ${answered(ix)?'on':''} ${ix===i?'cur':''}" data-ix="${ix}">${ix+1}</button>`).join('');
+    let h=hdr('Test',"if(confirm('Exit this session?'))render()")+
+      `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div><span class="stat">${ca}/${total}</span></div>`+
+      `<div class="qpal">${dots}</div>`+
+      `<div class="card" style="min-height:min(30vh,180px)"><div class="lbl">${lbl}</div>
+        <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
+    if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[i]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
+    if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
+    if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="Answer" value="${esc(ans[i]||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>`;
+    h+=`<div style="height:14px"></div><div class="row2">
+      <button class="btn ghost" id="tback" ${i===0?'disabled':''}>← Back</button>
+      ${i<total-1?`<button class="btn pri" id="tnext">Next →</button>`:`<button class="btn pri tfinbtn">Finish ✓</button>`}</div>
+      ${i<total-1?`<div style="height:9px"></div><button class="btn ghost tfinbtn" style="color:var(--mut)">Finish test</button>`:''}`;
+    app.innerHTML=h;
+    $$('.qdot').forEach(b=>b.onclick=()=>go2(+b.dataset.ix));
+    if(q.type==='mc')$$('.opt').forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.k;draw();});
+    if(q.type==='tf')$$('[data-tf]').forEach(b=>b.onclick=()=>{ans[i]=(b.dataset.tf==='1');draw();});
+    if(q.type==='type'){const ta=$('#ta');if(ta){ta.oninput=()=>{ans[i]=ta.value;};ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&i<total-1)go2(i+1);});setTimeout(()=>ta.isConnected&&ta.focus(),40);}}
+    const bk=$('#tback');if(bk)bk.onclick=()=>go2(i-1);
+    const nx=$('#tnext');if(nx)nx.onclick=()=>go2(i+1);
+    $$('.tfinbtn').forEach(b=>b.onclick=finishTest);
   }
   function result(){
-    const res=results.filter(Boolean);
+    const res=qs.map((q,ix)=>{
+      const en2ru=q.dir==='en2ru',answer=en2ru?q.w.ru:q.w.en;let ok,given;
+      if(q.type==='mc'){const k=ans[ix];ok=k!=null&&q.opts[k].c;given=k!=null?q.opts[k].t:'';}
+      else if(q.type==='tf'){ok=ans[ix]!=null&&ans[ix]===q.isTrue;given=ans[ix]==null?'':(ans[ix]?'True':'False');}
+      else{const v=(ans[ix]||'').trim();ok=v!==''&&okAns(v,answer,en2ru);given=v;}
+      const correct=q.type==='tf'?(q.isTrue?'True':'False'):answer;
+      return {w:q.w,ok,given,correct};
+    });
+    if(!review){res.forEach(r=>award(r.w,r.ok));save();}
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100),bad=res.filter(r=>!r.ok);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
     app.innerHTML=hdr('Result',"render()")+
@@ -907,7 +943,7 @@ function runTest(words,kinds,review){
     if(bad.length)$('#rt').onclick=()=>runTest(shuffle(bad.map(r=>r.w)),kinds,review);
     if(pct>=60)confetti(pct>=90?160:120);
   }
-  next();
+  draw();
 }
 
 /* ---------- match ---------- */
