@@ -11,6 +11,7 @@
 <title>Vocabulary</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
+<script>(function(){try{var s=(JSON.parse(localStorage.getItem('vocab.v2')||'{}').settings)||{};var m=s.theme||'auto',dark;if(m==='dark')dark=true;else if(m==='light')dark=false;else{var h=new Date().getHours();dark=h<7||h>=19;}document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
 :root{
   --bg:#f5f6f9; --surf:#ffffff; --surf2:#fbfbfd;
@@ -24,7 +25,7 @@
   --r:18px; --r-sm:13px;
   --ff:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro","Segoe UI",Roboto,system-ui,sans-serif;
 }
-@media(prefers-color-scheme:dark){:root{
+:root[data-theme="dark"]{
   --bg:#0b0c11; --surf:#161822; --surf2:#1b1e2a;
   --tx:#eef0f7; --mut:#9aa0ae; --fade:#6a7080;
   --line:#242736; --line2:#2d3142;
@@ -32,7 +33,7 @@
   --grad:linear-gradient(135deg,#6366f1,#a78bfa);
   --ok:#34d399; --ok-soft:#113329; --bad:#f87171; --bad-soft:#3a1d1d;
   --sh-sm:0 1px 2px rgba(0,0,0,.3); --sh:0 2px 6px rgba(0,0,0,.3),0 14px 34px rgba(0,0,0,.4);
-}}
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--ff);
@@ -85,7 +86,7 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .mcard small{color:var(--mut);font-size:11.5px;font-weight:500}
 .em-a{background:#eef0ff;color:#4f46e5}.em-b{background:#e7f8f1;color:#059669}
 .em-c{background:#fff1e6;color:#d97706}.em-d{background:#e8f1ff;color:#2563eb}
-@media(prefers-color-scheme:dark){.em-a{background:#22264a}.em-b{background:#0f2e26}.em-c{background:#33240f}.em-d{background:#11223f}}
+:root[data-theme="dark"] .em-a{background:#22264a}:root[data-theme="dark"] .em-b{background:#0f2e26}:root[data-theme="dark"] .em-c{background:#33240f}:root[data-theme="dark"] .em-d{background:#11223f}
 
 /* list / dictionary */
 .subhead{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 8px}
@@ -218,7 +219,42 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   background:#15171f;color:#fff;padding:11px 18px;border-radius:13px;font-size:14px;font-weight:600;z-index:60;
   opacity:0;transition:.25s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:90%;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
-@media(prefers-color-scheme:dark){#toast{background:#2a2e3d}}
+:root[data-theme="dark"] #toast{background:#2a2e3d}
+
+/* theme segmented control */
+.seg3{display:flex;gap:6px;background:var(--surf);border:1px solid var(--line);border-radius:13px;padding:4px;box-shadow:var(--sh-sm)}
+.seg3 button{flex:1;padding:10px 6px;border-radius:9px;font-weight:650;font-size:14.5px;color:var(--mut)}
+.seg3 button.on{background:var(--grad);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+
+/* result hero + score ring */
+.hero{text-align:center;padding:14px 0 6px}
+.hero-emoji{font-size:62px;line-height:1;animation:pop .55s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes pop{0%{transform:scale(0) rotate(-22deg);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.hero-title{font-size:27px;font-weight:850;letter-spacing:-.025em;margin-top:8px}
+.hero-sub{color:var(--mut);font-size:16px;margin-top:5px;font-weight:500}
+.ring-big{display:block;margin:6px auto 2px}
+.rb-track{fill:none;stroke:var(--line2);stroke-width:13}
+.rb-fill{fill:none;stroke:url(#gbig);stroke-width:13;stroke-linecap:round;stroke-dasharray:var(--c);stroke-dashoffset:var(--off);animation:ringfill 1.15s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes ringfill{from{stroke-dashoffset:var(--c)}}
+.rb-pct{font-size:42px;font-weight:850;fill:var(--tx);letter-spacing:-.03em}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+
+/* bigger, fuller desktop layout */
+@media(min-width:720px){
+  body{font-size:17.5px}
+  #app{max-width:780px;padding:0 24px}
+  header h1{font-size:32px}
+  .ic{width:46px;height:46px;font-size:21px}
+  .btn{font-size:17px;padding:16px 20px}
+  .setcard{padding:20px}.setcard .nm{font-size:21px}.setcard .meta{font-size:15px}
+  .item{padding:15px 18px}.item .en{font-size:18.5px}.item .ru{font-size:16px}
+  .mcard{width:120px;padding:17px 14px}.mcard b{font-size:16px}.mcard small{font-size:12.5px}
+  .card .word{font-size:clamp(36px,4.6vw,50px)}
+  .opt{font-size:18px;padding:18px 19px}
+  .hero-title{font-size:32px}.hero-sub{font-size:17px}
+  .rb-pct{font-size:46px}
+  .subhead .t{font-size:14px}
+}
 </style>
 </head>
 <body>
@@ -228,7 +264,7 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const KEY='vocab.v2';
-const DB=()=>({v:2,sets:[],settings:{prov:'google',hideBanner:false}});
+const DB=()=>({v:2,sets:[],settings:{prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null}});
 
 /* ---------- storage + migration ---------- */
 function load(){
@@ -245,7 +281,7 @@ function migrate(d){ // v1 -> v2
   d.v=2;return d;
 }
 function fix(d){
-  d=d||DB();d.settings=Object.assign({prov:'google',hideBanner:false},d.settings||{});
+  d=d||DB();d.settings=Object.assign({prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null},d.settings||{});
   d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,words:(s.words||[]).map(w=>({
     id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now()
   }))}));
@@ -270,8 +306,105 @@ function findWord(id){for(const s of S.sets){const w=s.words.find(x=>x.id===id);
 function poolNow(){if(view.name==='archive')return allArchived().map(x=>x.w);const s=curSet();return s?active(s):[];}
 
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2300);}
-let _voices=[];function loadVoices(){try{_voices=speechSynthesis.getVoices()}catch(e){}}
-function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=.88;const v=_voices.find(x=>/en-US|en_US/.test(x.lang))||_voices.find(x=>/^en/i.test(x.lang));if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+let _voices=[];function loadVoices(){try{_voices=speechSynthesis.getVoices()||[]}catch(e){_voices=[]}}
+function bestVoice(){
+  const target=(S.settings.accent==='us')?'en-us':'en-gb';
+  const en=_voices.filter(v=>/^en/i.test(v.lang||''));
+  if(!en.length)return null;
+  const score=v=>{let s=0;const n=(v.name||'').toLowerCase();
+    if(/\b(enhanced|premium|neural|natural)\b/.test(n))s+=70;
+    if(/\b(siri|ava|allison|samantha|serena|daniel|kate|arthur|oliver|stephanie|aria|jenny|guy|libby|sonia|ryan|nicky|aaron)\b/.test(n))s+=42;
+    if(/\bgoogle\b/.test(n))s+=34;
+    if(/\b(compact|eloquence|fred|albert|zarvox|trinoids|whisper|novelty|bad|bells|boing|bubbles|cellos|wobble|superstar)\b/.test(n))s-=90;
+    return s;};
+  const inTarget=en.filter(v=>(v.lang||'').replace('_','-').toLowerCase()===target);
+  const pool=inTarget.length?inTarget:en;
+  return pool.slice().sort((a,b)=>score(b)-score(a))[0];
+}
+function speak(t){try{const u=new SpeechSynthesisUtterance(t);const v=bestVoice();
+  u.lang=(v&&v.lang)||(S.settings.accent==='us'?'en-US':'en-GB');u.rate=.9;u.pitch=1;
+  if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+
+/* ---------- theme (day/night) ---------- */
+function sunTimes(date,lat,lon){
+  const rad=Math.PI/180,deg=180/Math.PI;
+  const J=date.getTime()/86400000+2440587.5;
+  const n=Math.round(J-2451545.0+0.0008);
+  const Js=n-lon/360;
+  const M=(357.5291+0.98560028*Js)%360;
+  const C=1.9148*Math.sin(M*rad)+0.0200*Math.sin(2*M*rad)+0.0003*Math.sin(3*M*rad);
+  const lam=(M+C+180+102.9372)%360;
+  const Jt=2451545.0+Js+0.0053*Math.sin(M*rad)-0.0069*Math.sin(2*lam*rad);
+  const dec=Math.asin(Math.sin(lam*rad)*Math.sin(23.44*rad));
+  let cH=(Math.sin(-0.833*rad)-Math.sin(lat*rad)*Math.sin(dec))/(Math.cos(lat*rad)*Math.cos(dec));
+  cH=Math.max(-1,Math.min(1,cH));
+  const H=Math.acos(cH)*deg;
+  const toD=x=>new Date((x-2440587.5)*86400000);
+  return {rise:toD(Jt-H/360),set:toD(Jt+H/360)};
+}
+function resolveDark(){
+  const m=(S.settings.theme)||'auto';
+  if(m==='dark')return true;if(m==='light')return false;
+  const now=new Date(),g=S.settings.geo;
+  if(g){try{const t=sunTimes(now,g.lat,g.lon);return now<t.rise||now>t.set;}catch(e){}}
+  const h=now.getHours()+now.getMinutes()/60;return h<7||h>=19;
+}
+let _themeTimer=null;
+function applyTheme(){
+  const dark=resolveDark();
+  document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+  const mc=document.querySelector('meta[name="theme-color"]');if(mc)mc.setAttribute('content',dark?'#0b0c11':'#f5f6f9');
+  clearTimeout(_themeTimer);
+  if(((S.settings.theme)||'auto')==='auto')_themeTimer=setTimeout(applyTheme,60000);
+}
+function themeIcon(){return document.documentElement.getAttribute('data-theme')==='dark'?'☀':'🌙';}
+function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();render();}
+function setTheme(m){S.settings.theme=m;save();applyTheme();if($('#scrim'))settingsSheet();render();}
+function useLocation(){
+  if(!navigator.geolocation)return toast('Location not available');
+  toast('Requesting location…');
+  navigator.geolocation.getCurrentPosition(p=>{
+    S.settings.geo={lat:p.coords.latitude,lon:p.coords.longitude};save();applyTheme();
+    toast('Using your sunrise & sunset');if($('#scrim'))settingsSheet();
+  },()=>toast('Location denied'),{maximumAge:36e5,timeout:8000});
+}
+
+/* ---------- celebration ---------- */
+function bigRing(pct){
+  const sz=176,r=(sz-18)/2,c=2*Math.PI*r,off=c*(1-Math.max(0,Math.min(100,pct))/100);
+  return `<svg class="ring-big" width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="--c:${c.toFixed(1)};--off:${off.toFixed(1)}">
+    <circle class="rb-track" cx="${sz/2}" cy="${sz/2}" r="${r}"/>
+    <circle class="rb-fill" cx="${sz/2}" cy="${sz/2}" r="${r}" transform="rotate(-90 ${sz/2} ${sz/2})"/>
+    <text x="50%" y="52%" text-anchor="middle" dy=".02em" class="rb-pct">${pct}%</text>
+    <defs><linearGradient id="gbig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>`;
+}
+function scoreHero(pct,sub){
+  const em=pct>=90?'🏆':pct>=70?'🎉':pct>=50?'👍':'💪';
+  const ti=pct>=90?'Excellent!':pct>=70?'Great job!':pct>=50?'Good effort':'Keep practising';
+  return `<div class="hero"><div class="hero-emoji">${em}</div>${bigRing(pct)}<div class="hero-title">${ti}</div><div class="hero-sub">${sub}</div></div>`;
+}
+function confetti(n){
+  try{
+    const cv=document.createElement('canvas');cv.className='confetti';
+    const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;
+    cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+    document.body.appendChild(cv);
+    const cols=['#6366f1','#8b5cf6','#10b981','#f59e0b','#ef4444','#3b82f6','#a3e635'];
+    const N=n||120,P=[];
+    for(let i=0;i<N;i++)P.push({x:W/2+(Math.random()-.5)*160,y:H*0.3+(Math.random()-.5)*50,
+      vx:(Math.random()-.5)*11,vy:Math.random()*-9-4,g:0.3+Math.random()*0.12,
+      s:5+Math.random()*7,rot:Math.random()*6.28,vr:(Math.random()-.5)*0.4,
+      col:cols[i%cols.length],sq:Math.random()<.5,life:0});
+    const start=performance.now();let t0=start;
+    function frame(t){const dt=Math.min(34,t-t0);t0=t;ctx.clearRect(0,0,W,H);let alive=0;
+      for(const p of P){p.life+=dt;p.vy+=p.g*(dt/16);p.x+=p.vx*(dt/16);p.y+=p.vy*(dt/16);p.rot+=p.vr;
+        const a=Math.max(0,1-(p.life-1300)/1500);
+        if(p.y<H+24&&a>0){alive++;ctx.save();ctx.globalAlpha=a;ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;
+          if(p.sq)ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.62);else{ctx.beginPath();ctx.arc(0,0,p.s/2,0,6.283);ctx.fill();}ctx.restore();}}
+      if(alive>0&&t-start<3400)requestAnimationFrame(frame);else cv.remove();}
+    requestAnimationFrame(frame);
+  }catch(e){}
+}
 
 /* award: update mastery; returns 'arch' if word just archived */
 function award(w,correct){
@@ -325,7 +458,7 @@ const VIEWS={
 home(app){
   const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
   const arN=archCount();
-  app.innerHTML=hdr('Vocabulary','',`<button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
+  app.innerHTML=hdr('Vocabulary','',`<button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button><button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
    (standalone||S.settings.hideBanner?'':
      `<div class="banner"><span>📲</span><div><b>Add to Home Screen.</b> In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
    (S.sets.length?
@@ -563,7 +696,19 @@ async function runImport(){
 
 /* ---------- settings / backup ---------- */
 function settingsSheet(){
+  const th=S.settings.theme||'auto',ac=S.settings.accent||'uk';
   sheet(`<h2>Settings</h2>
+   <div class="field"><label>Appearance</label>
+     <div class="seg3">
+       <button class="${th==='auto'?'on':''}" onclick="setTheme('auto')">Auto</button>
+       <button class="${th==='light'?'on':''}" onclick="setTheme('light')">☀ Light</button>
+       <button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">🌙 Dark</button></div>
+     ${th==='auto'?`<div class="hint">Light by day, dark at night.${S.settings.geo?' Using your location for exact sunrise & sunset.':` <span onclick="useLocation()" style="color:var(--pri);font-weight:700">Use my location</span> for exact sunrise & sunset.`}</div>`:''}</div>
+   <div class="field"><label>Pronunciation</label>
+     <select class="inp" onchange="S.settings.accent=this.value;save()">
+       <option value="uk" ${ac==='uk'?'selected':''}>British — academic</option>
+       <option value="us" ${ac==='us'?'selected':''}>American</option></select>
+     <div class="hint">The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an <b>Enhanced</b> voice.</div></div>
    <div class="field"><label>Auto-translate</label>
      <select class="inp" onchange="S.settings.prov=this.value;save()">
        <option value="google" ${S.settings.prov==='google'?'selected':''}>Google (fallback: MyMemory)</option>
@@ -681,9 +826,11 @@ function startLearn(){
   const target=queue.reduce((n,w)=>n+(3-w.box),0)||queue.length;let gained=0;const app=$('#app');
   function next(){
     if(!queue.length){
-      app.innerHTML=hdr('Learn',"render()")+`<div class="celebrate"><div class="big">🏆</div></div>
-        <div class="empty" style="padding-top:0"><b>Great job!</b><p>Every word in this session is mastered and moved to the Archive.</p></div>
-        <button class="btn pri" onclick="render()">Done</button>`;return;
+      app.innerHTML=hdr('Learn',"render()")+
+        `<div class="hero"><div class="hero-emoji">🏆</div><div class="hero-title" style="margin-top:14px">Great job!</div>
+         <div class="hero-sub">Every word this session is mastered and moved to the Archive.</div></div>
+        <div style="height:14px"></div><button class="btn pri" onclick="render()">Done</button>`;
+      confetti();return;
     }
     const w=queue.shift();const kind=w.box===0?'mc':w.box===1?'mc':'type';
     const dir=w.box===0?'en2ru':'ru2en';
@@ -745,9 +892,8 @@ function runTest(words,kinds,review){
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100),bad=res.filter(r=>!r.ok);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
     app.innerHTML=hdr('Result',"render()")+
-      `<div class="celebrate"><div class="big">${pct>=90?'🏆':pct>=60?'👍':'💪'}</div></div>
-       <div class="big-pct">${pct}%</div>
-       <div class="empty" style="padding:4px 0 16px"><p>${good} of ${res.length} correct${!review&&toArch?` · ${toArch} moved to Archive`:''}</p></div>`+
+      scoreHero(pct,`${good} of ${res.length} correct${!review&&toArch?` · ${toArch} moved to Archive`:''}`)+
+      `<div style="height:8px"></div>`+
       (bad.length?`<div class="subhead"><span class="t">Mistakes — ${bad.length}</span></div>`+
         bad.map(r=>`<div class="item" style="display:block;padding:13px 15px">
           <div style="display:flex;align-items:center;gap:13px">
@@ -759,6 +905,7 @@ function runTest(words,kinds,review){
         `<div style="height:10px"></div><button class="btn pri" id="rt">Retry mistakes</button><div style="height:9px"></div>`:'')+
       `<button class="btn ghost" onclick="render()">Close</button>`;
     if(bad.length)$('#rt').onclick=()=>runTest(shuffle(bad.map(r=>r.w)),kinds,review);
+    if(pct>=60)confetti(pct>=90?160:120);
   }
   next();
 }
@@ -780,11 +927,12 @@ function startMatch(){
     const y=tiles[+sel.dataset.i];
     if(x.id===y.id){el.classList.add('done');sel.classList.add('done');sel=null;left--;
       if(!left){clearInterval(iv);const t=((Date.now()-t0)/1000).toFixed(1);
-        app.innerHTML=hdr('Match',"render()")+`<div class="celebrate"><div class="big">🎉</div></div>
-          <div class="big-pct" style="font-size:44px">${t}s</div>
-          <div class="empty" style="padding:4px 0 16px"><p>Mistakes: ${miss}</p></div>
-          <button class="btn pri" onclick="startMatch()">Again</button><div style="height:9px"></div>
-          <button class="btn ghost" onclick="render()">Close</button>`;}}
+        app.innerHTML=hdr('Match',"render()")+
+          `<div class="hero"><div class="hero-emoji">🎉</div><div class="big-pct" style="margin:6px 0 0">${t}s</div>
+           <div class="hero-sub">Mistakes: ${miss}</div></div>
+          <div style="height:14px"></div><button class="btn pri" onclick="startMatch()">Again</button><div style="height:9px"></div>
+          <button class="btn ghost" onclick="render()">Close</button>`;
+        confetti(miss===0?150:90);}}
     else{miss++;const a=sel;sel=null;a.classList.remove('sel');a.classList.add('no');el.classList.add('no');
       setTimeout(()=>{a.classList.remove('no');el.classList.remove('no');},380);}
   });
@@ -792,6 +940,8 @@ function startMatch(){
 
 /* ---------- boot ---------- */
 loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
+applyTheme();
+try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.addEventListener&&mq.addEventListener('change',()=>{if((S.settings.theme||'auto')==='auto')applyTheme();});}}catch(e){}
 render();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
