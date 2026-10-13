@@ -594,20 +594,17 @@ async function doSignOut(){
 }
 function acctOrAuth(){if(AUTH.user)acctSheet();else authSheet();}
 
-let authTab='signin',authRole='student';
+let authTab='signin';
 function authSheet(){
   if(!sb)return sheet(`<h2>Account</h2><div class="hint">Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.</div><button class="btn ghost" onclick="closeSheet()">Close</button>`);
-  authTab='signin';authRole='student';drawAuth();
+  authTab='signin';drawAuth();
 }
 function drawAuth(){
   sheet(`<h2>Account</h2>
    <div class="tabs2">
      <button class="${authTab==='signin'?'on':''}" onclick="authTab='signin';drawAuth()">Sign in</button>
      <button class="${authTab==='signup'?'on':''}" onclick="authTab='signup';drawAuth()">Sign up</button></div>
-   ${authTab==='signup'?`<div class="field"><label>I am a</label><div class="sel-opt">
-     <button class="${authRole==='student'?'on':''}" onclick="authRole='student';drawAuth()">🎓 Student</button>
-     <button class="${authRole==='teacher'?'on':''}" onclick="authRole='teacher';drawAuth()">🧑‍🏫 Teacher</button></div></div>
-   <div class="field"><label>Name</label><input class="inp" id="aName" placeholder="Your name"></div>`:''}
+   ${authTab==='signup'?`<div class="field"><label>Name</label><input class="inp" id="aName" placeholder="Your name"></div>`:''}
    <div class="field"><label>Email</label><input class="inp" id="aEmail" type="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="you@example.com"></div>
    <div class="field"><label>Password</label><input class="inp" id="aPass" type="password" placeholder="${authTab==='signup'?'At least 6 characters':'••••••••'}"></div>
    <div class="err" id="aErr"></div>
@@ -633,7 +630,7 @@ async function submitAuth(){
   try{
     if(authTab==='signup'){
       const name=(($('#aName')||{}).value||'').trim()||email.split('@')[0];
-      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{role:authRole,display_name:name}}});
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{display_name:name}}});
       if(error)throw error;
       if(data&&data.session){closeSheet();toast('Account created ✓');}
       else{closeSheet();toast('Check your email to confirm, then sign in');}
