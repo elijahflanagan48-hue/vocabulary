@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Vocab">
 <meta name="theme-color" content="#6366f1">
-<title>Vocabulary</title>
+<title>${t('Vocabulary')}</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -323,10 +323,16 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const KEY='vocab.v2';
+/* ---------- interface language ---------- */
+const RU_DICT={"word":"слово","words2":"слова","words":"слов","question":"вопрос","questions2":"вопроса","questions":"вопросов","day2":"дня","Русский":"Русский","Lists":"Списки","Archive":"Архив","Tricky words":"Сложные слова","Review today":"Повторить сегодня","My students":"Мои ученики","Settings":"Настройки","Account":"Аккаунт","Search":"Поиск","Close":"Закрыть","Done":"Готово","Cancel":"Отмена","Create":"Создать","Add":"Добавить","Save":"Сохранить","Delete":"Удалить","Rename":"Переименовать","Again":"Ещё раз","Keep going":"Продолжить","Check":"Проверить","Answer":"Ответ","Name":"Имя","Email":"Почта","Password":"Пароль","Task":"Задание","Pace":"Темп","Streak":"Серия","Mixed":"Вперемешку","Loading…":"Загрузка…","New list":"Новый список","New name":"Новое название","Your name":"Ваше имя","e.g. Unit 1":"например, Unit 1","you@example.com":"you@example.com","reliable":"reliable","a reliable friend":"a reliable friend","надёжный":"надёжный","Word (English)":"Слово (английский)","Translation":"Перевод","Example (optional)":"Пример (необязательно)","Import words":"Импорт слов","Print a quiz":"Распечатать тест","Reset progress":"Сбросить прогресс","Delete list":"Удалить список","Flashcards":"Карточки","Learn":"Учить","Test":"Тест","Match":"Пары","Review":"Повторение","Result":"Результат","Vocabulary":"Vocabulary","flip through":"листать","until mastered":"до усвоения","check yourself":"проверить себя","race the clock":"на время","review":"повторение","revise":"повторить","until fixed":"пока не закрепится","Select":"Выбрать","Select all":"Выбрать все","Clear selection":"Снять выделение","Learning":"Учу","Learned":"Выучено","Needs work":"Нужно подтянуть","learning":"учу","learned":"выучено","Your word lists will live here":"Здесь будут ваши списки слов","Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.":"Создайте список — например «Unit 1» — и добавляйте слова. Выученные собираются в общий Архив.","Add your first word":"Добавьте первое слово","Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.":"Нажмите ＋ внизу, чтобы ввести слово и перевод, или импортируйте список целиком через меню ⋯.","Nothing found":"Ничего не найдено","Archive is empty":"Архив пуст","Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из всех списков — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».","Nothing tricky right now":"Пока всё даётся легко","Words you keep missing in tests and Learn will gather here, so you can drill exactly those.":"Слова, в которых вы часто ошибаетесь, будут собираться здесь — чтобы отрабатывать именно их.","Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.":"Слова, где ошибок больше, чем верных ответов. Они уйдут отсюда, как только вы начнёте отвечать правильно чаще.","words you keep missing":"слов даются тяжело","learned words from all lists":"выученные слова из всех списков","from all lists":"из всех списков","Add to Home Screen.":"Добавьте на экран «Домой».","In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","Today":"Сегодня","day":"день","days":"дней","Daily goal":"Цель на день","A day counts towards your streak once you've studied this many different words.":"День засчитывается в серию, когда вы разобрали столько разных слов.","Current:":"Сейчас:","best:":"рекорд:","Review schedule":"График повторений","Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.":"Выученные слова возвращаются из Архива через растущие промежутки — так они действительно запоминаются. Если выключить, Архив будет просто хранилищем.","Spaced review":"Интервальные повторения","Gentle":"Щадящий","Standard":"Обычный","Intense":"Интенсивный","Custom":"Свой","Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.":"Спокойный режим, стоит по умолчанию. Переключитесь на «Обычный» или «Интенсивный», если слова успевают забыться.","Your intervals (days, comma separated)":"Свои промежутки (дни через запятую)","Most per session":"Не больше за подход","If you forget a word":"Если слово забыто","Ask again tomorrow":"Спросить завтра","Send back to the list":"Вернуть в список","The word leaves the Archive and goes back into your list to learn again.":"Слово уйдёт из Архива обратно в список — учить заново.","The word stays in the Archive and returns tomorrow.":"Слово останется в Архиве и вернётся завтра.","Enter days, e.g. 1, 3, 7, 14":"Введите дни, например 1, 3, 7, 14","Schedule saved ✓":"График сохранён ✓","Appearance":"Оформление","Auto":"Авто","☀ Light":"☀ Светлая","🌙 Dark":"🌙 Тёмная","Light by day, dark at night.":"Днём светлая, ночью тёмная.","Using your location for exact sunrise & sunset.":"Рассвет и закат вычисляются по вашему местоположению.","Use my location":"Использовать геопозицию","for exact sunrise & sunset.":"— для точного рассвета и заката.","Requesting location…":"Запрашиваю геопозицию…","Location denied":"Доступ к геопозиции запрещён","Location not available":"Геопозиция недоступна","Using your sunrise & sunset":"Считаю по вашему рассвету и закату","Language":"Язык","Pronunciation":"Произношение","British — academic":"Британское — академическое","American":"Американское","The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an":"Голос берётся из вашего устройства. Для самой естественной речи на iPhone: Настройки → Универсальный доступ → Устный контент → Голоса → English → скачайте голос","voice.":"(Enhanced).","Auto-translate":"Автоперевод","Google (fallback: MyMemory)":"Google (запасной — MyMemory)","MyMemory only":"Только MyMemory","The translation fills in automatically as you type":"Перевод подставится сам, пока вы печатаете","Translating…":"Перевожу…","Options — tap to use:":"Варианты — нажмите, чтобы подставить:","Add the next word":"Добавьте следующее слово","Enter a word":"Введите слово","Enter a translation":"Введите перевод","Enter a name":"Введите название","Added ✓":"Добавлено ✓","Progress reset":"Прогресс сброшен","Moved to Archive ✓":"В Архив ✓","Moved back to learning":"Вернул в список","↩ To learning":"↩ В список","🗄 To Archive":"🗄 В Архив","Nothing due right now":"Сейчас нечего повторять","No words":"Нет слов","No words to learn":"Нет слов для изучения","No words in this list":"В этом списке нет слов","Need at least 3 words":"Нужно хотя бы 3 слова","Nothing to import":"Нечего импортировать","Imported ✓":"Импортировано ✓","No storage space left":"На устройстве закончилось место","Couldn’t read the file":"Не удалось прочитать файл","Everything is already filled in":"Всё уже заполнено","Nothing found for these words":"Для этих слов ничего не нашлось","Exit this session?":"Выйти из занятия?","Move all words of this list back from Archive and reset progress?":"Вернуть все слова списка из Архива и обнулить прогресс?","Correct ✓":"Верно ✓","Wrong":"Неверно","Almost — mind the spelling":"Почти — следите за написанием","Correct spelling: ":"Правильное написание: ","Answer: ":"Ответ: ","the match is correct":"пара верна","the match is wrong":"пара неверна","Is this a correct match?":"Пара подобрана верно?","Type the translation":"Напишите перевод","Type in English":"Напишите по-английски","Choose the translation":"Выберите перевод","Choose the word":"Выберите слово","tap to flip":"нажмите, чтобы перевернуть","Don't know":"Не знаю","Know ✓":"Знаю ✓","🔊 Pronounce":"🔊 Произнести","Deck complete":"Колода пройдена","Review tough ones":"Повторить трудные","Great job!":"Отлично!","Review complete":"Повторение завершено","You revised every word in this session.":"Вы повторили все слова этого подхода.","Every word this session is mastered and moved to the Archive.":"Все слова подхода усвоены и ушли в Архив.","Excellent!":"Превосходно!","Good effort":"Неплохо","Keep practising":"Нужно ещё поработать","How many questions":"Сколько вопросов","Question types":"Типы вопросов","Multiple choice":"Выбор из вариантов","Type the answer":"Ввод ответа","True / false":"Верно / неверно","Start test":"Начать тест","Pick at least one type":"Выберите хотя бы один тип","Archive review: results don't change progress.":"Повторение Архива: результат не меняет прогресс.","🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.":"🇷🇺 → 🇬🇧 Слово показывается по-русски — вспомните и напишите (или выберите) английское. Между вопросами можно свободно ходить и править ответы до завершения.","Finish test":"Завершить тест","Finish ✓":"Завершить ✓","Next →":"Дальше →","← Back":"← Назад","Retry mistakes":"Повторить ошибки","Mistakes":"Ошибки","Spelling slips":"Описки","no answer":"нет ответа","Match each word with its translation":"Соедините слово с переводом","Mistakes:":"Ошибок:","Preview will appear here":"Здесь появится предпросмотр","Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.":"Вставьте список из Quizlet, Excel или обычного текста. Переводы можно не писать — подставятся сами.","Between word and translation":"Между словом и переводом","Between cards":"Между карточками","Tab ⇥":"Табуляция ⇥","Dash –":"Тире –","Comma":"Запятая","New line":"Новая строка","; semicolon":"; точка с запятой","Blank line":"Пустая строка","Translate when the translation is missing":"Переводить, если перевода нет","Makes a paper worksheet from this list — print it or save as PDF.":"Сделает бумажный вариант из этого списка — можно распечатать или сохранить в PDF.","🇷🇺 → 🇬🇧 write the English":"🇷🇺 → 🇬🇧 написать английское","🇬🇧 → 🇷🇺 write the Russian":"🇬🇧 → 🇷🇺 написать русское","How many words":"Сколько слов","Answer key on a separate page":"Ключ на отдельной странице","🖨 Print":"🖨 Печать","Answer key":"Ключ к заданию","Name:":"Имя:","Date:":"Дата:","Score:":"Баллы:","Sign in":"Войти","Sign up":"Регистрация","Sign out":"Выйти","Create account":"Создать аккаунт","Please wait…":"Минутку…","An account syncs your words across devices. Using the app without one keeps everything on this device only.":"С аккаунтом слова синхронизируются между устройствами. Без него всё хранится только на этом устройстве.","Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.":"Не получается связаться с сервисом входа. Проверьте интернет — на этом устройстве приложение работает и без него.","Enter email and password":"Введите почту и пароль","This email is already registered — sign in instead.":"Эта почта уже зарегистрирована — войдите.","Wrong email or password.":"Неверная почта или пароль.","Password must be at least 6 characters.":"Пароль должен быть не короче 6 символов.","Confirm your email first — check your inbox.":"Сначала подтвердите почту — проверьте входящие.","That email address doesn’t look right.":"Адрес почты выглядит неправильно.","No connection — try again when you’re online.":"Нет связи — попробуйте, когда появится интернет.","Something went wrong":"Что-то пошло не так","Account created ✓":"Аккаунт создан ✓","Check your email to confirm, then sign in":"Подтвердите почту по письму и войдите","Signed in ✓":"Вы вошли ✓","Signed out":"Вы вышли","Loading your profile…":"Загружаю профиль…","Teacher":"Учитель","Student":"Ученик","words sync automatically":"слова синхронизируются","Your code — give it to students":"Ваш код — дайте его ученикам","A student enters this in their Account to give you access to their lists.":"Ученик вводит его в разделе «Аккаунт», и вы получаете доступ к его спискам.","Link to a teacher":"Привязаться к учителю","Teacher's code":"Код учителя","Your teacher can then see and edit your lists.":"После этого учитель сможет видеть и править ваши списки.","Enter the code":"Введите код","No teacher found with that code":"Учитель с таким кодом не найден","Couldn’t link — try again":"Не удалось привязаться — попробуйте ещё раз","Not signed in":"Вы не вошли","Syncing…":"Синхронизирую…","Synced ✓":"Синхронизировано ✓","No students linked yet":"Пока нет привязанных учеников","Open Account and share your code. Once a student enters it, their lists appear here.":"Откройте «Аккаунт» и передайте свой код. Как только ученик его введёт, его списки появятся здесь.","View & edit their words":"Смотреть и править слова","No lists yet":"Пока нет списков","You can create the first list for this student below.":"Первый список для этого ученика можно создать ниже.","No words yet":"Пока нет слов","Tap ＋ to add the first word.":"Нажмите ＋, чтобы добавить первое слово.","Words this student has mastered will show up here.":"Здесь появятся слова, которые ученик уже усвоил.","New word":"Новое слово","Word":"Слово","Couldn’t save — check your connection":"Не удалось сохранить — проверьте связь","Couldn’t create — check your connection":"Не удалось создать — проверьте связь","Couldn’t delete":"Не удалось удалить","Couldn’t update":"Не удалось обновить","Saved ✓":"Сохранено ✓","Creating…":"Создаю…","Saving…":"Сохраняю…","Delete this word from the student’s list?":"Удалить это слово из списка ученика?","Deleted":"Удалено","active today":"занимался сегодня","active yesterday":"занимался вчера","no activity yet":"ещё не занимался","this week":"за неделю","no words":"нет слов","💾 Backup (all lists)":"💾 Резервная копия (все списки)","📂 Restore from file":"📂 Восстановить из файла","📥 Import words":"📥 Импорт слов","📤 Send to student (file)":"📤 Отправить ученику (файл)","🔄 Sync now":"🔄 Синхронизировать","🧑‍🎓 My students":"🧑‍🎓 Мои ученики","👤 Account":"👤 Аккаунт","👤 Sign in / Sign up":"👤 Войти / Зарегистрироваться","Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.":"Слова хранятся только на этом устройстве. Войдите, чтобы они синхронизировались, — или пользуйтесь локально и время от времени делайте резервную копию.","Your words sync to your account and are available on any device you sign in on.":"Слова привязаны к аккаунту и доступны на любом устройстве, где вы вошли.","＋ New list":"＋ Новый список","＋ New list for":"＋ Новый список для","All":"Все","All words":"Все слова","mastered":"усвоено","due now":"на сегодня","due from the Archive":"из Архива","due for review":"к повторению","Repeats after":"Повторы через","Due now":"Сейчас готово","off":"выкл","At least 6 characters":"Не короче 6 символов","🔈 Pronunciation & examples":"🔈 Транскрипция и примеры","🖨 Print a quiz":"🖨 Распечатать тест","🔁 Review schedule":"🔁 График повторений","🎯 Daily goal":"🎯 Цель на день","🗑 Delete":"🗑 Удалить","view & edit their words":"смотреть и править слова","share your code to link a student":"передайте код, чтобы привязать ученика","learned words":"выученные слова","This list will appear in the student’s app.":"Список появится в приложении ученика.","correct":"верно","moved to Archive":"ушло в Архив","remembered":"вспомнили","back to learning":"вернулось в список","More waiting":"Ещё ждут","Next review":"Следующее повторение","next review":"следующее повторение","Still blank":"Без ответа осталось","Finish anyway?":"Всё равно завершить?","Delete words?":"Удалить слова?","This can't be undone.":"Это нельзя отменить.","Added":"Добавлено","Filled in":"Заполнено","Looking up…":"Ищу…","Found":"Найдено","without translation":"без перевода","Linked to":"Привязались к","Can’t reach the translator — enter the translation manually":"Переводчик недоступен — введите перевод вручную","Didn’t know":"Не знал","active":"занимался","ago":"назад","last seen":"был","today":"сегодня","tomorrow":"завтра","in":"через","week":"неделю","week2":"недели","weeks":"недель","month":"месяц","month2":"месяца","months":"месяцев","English":"English","In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","with mistakes":"с ошибками","ready now":"готово"};
+function t(s){try{if((S.settings.lang||"ru")==="en")return s;}catch(e){}return RU_DICT[s]||s;}
+function plr(n,one,few,many){const a=n%10,b=n%100;return (S.settings.lang||"ru")==="en"?(n===1?one:few):(a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many));}
+const nWords=n=>n+" "+plr(n,t("word"),t("words2"),t("words"));
+
 const SR_PLANS={gentle:[1,3,8,21,45],standard:[1,3,7,16,35],intense:[1,2,4,8,16]};
 const DEF_SR={on:true,plan:'gentle',days:null,limit:20,onFail:'repeat',picked:false};
 const DEF_STATS={day:'',ids:[],streak:0,best:0,goal:10,met:false};
-const DB=()=>({v:2,sets:[],settings:{prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,sr:Object.assign({},DEF_SR),goal:10},stats:Object.assign({},DEF_STATS)});
+const DB=()=>({v:2,sets:[],settings:{prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,lang:'ru',sr:Object.assign({},DEF_SR),goal:10},stats:Object.assign({},DEF_STATS)});
 
 /* ---------- storage + migration ---------- */
 function load(){
@@ -344,7 +350,7 @@ function migrate(d){ // v1 -> v2
 }
 function fix(d){
   d=d||DB();
-  d.settings=Object.assign({prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null},d.settings||{});
+  d.settings=Object.assign({prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,lang:'ru'},d.settings||{});
   d.settings.sr=Object.assign({},DEF_SR,d.settings.sr||{});
   /* nobody has chosen a pace yet → follow the current default */
   if(!d.settings.sr.picked)d.settings.sr.plan=DEF_SR.plan;
@@ -357,7 +363,7 @@ function fix(d){
   return d;
 }
 let S=load();
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No storage space left')};cloudKick();};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast(t('No storage space left'))};cloudKick();};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q1=s=>String(s??'').replace(/[\\']/g,'\\$&');
@@ -440,11 +446,11 @@ function nextDueAt(){
 function whenTxt(ts){
   if(!ts)return '';
   const d=Math.round((ts-Date.now())/DAY);
-  if(d<=0)return 'today';
-  if(d===1)return 'tomorrow';
-  if(d<7)return 'in '+d+' days';
-  if(d<30)return 'in '+Math.round(d/7)+(Math.round(d/7)===1?' week':' weeks');
-  return 'in '+Math.round(d/30)+(Math.round(d/30)===1?' month':' months');
+  if(d<=0)return t('today');
+  if(d===1)return t('tomorrow');
+  if(d<7)return t('in')+' '+d+' '+plr(d,t('day'),t('day2'),t('days'));
+  if(d<30){const w=Math.round(d/7);return t('in')+' '+w+' '+plr(w,t('week'),t('week2'),t('weeks'));}
+  const mo=Math.round(d/30);return t('in')+' '+mo+' '+plr(mo,t('month'),t('month2'),t('months'));
 }
 
 /* ---------- tricky words ---------- */
@@ -528,14 +534,15 @@ function applyTheme(){
 }
 function themeIcon(){return document.documentElement.getAttribute('data-theme')==='dark'?'☀':'🌙';}
 function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();render();}
+function setLang(l){S.settings.lang=l;save();settingsSheet();render();}
 function setTheme(m){S.settings.theme=m;save();applyTheme();if($('#scrim'))settingsSheet();render();}
 function useLocation(){
-  if(!navigator.geolocation)return toast('Location not available');
-  toast('Requesting location…');
+  if(!navigator.geolocation)return toast(t('Location not available'));
+  toast(t('Requesting location…'));
   navigator.geolocation.getCurrentPosition(p=>{
     S.settings.geo={lat:p.coords.latitude,lon:p.coords.longitude};save();applyTheme();
-    toast('Using your sunrise & sunset');if($('#scrim'))settingsSheet();
-  },()=>toast('Location denied'),{maximumAge:36e5,timeout:8000});
+    toast(t('Using your sunrise & sunset'));if($('#scrim'))settingsSheet();
+  },()=>toast(t('Location denied')),{maximumAge:36e5,timeout:8000});
 }
 
 /* ---------- celebration ---------- */
@@ -549,7 +556,7 @@ function bigRing(pct){
 }
 function scoreHero(pct,sub){
   const em=pct>=90?'🏆':pct>=70?'🎉':pct>=50?'👍':'💪';
-  const ti=pct>=90?'Excellent!':pct>=70?'Great job!':pct>=50?'Good effort':'Keep practising';
+  const ti=pct>=90?t('Excellent!'):pct>=70?t('Great job!'):pct>=50?t('Good effort'):t('Keep practising');
   return `<div class="hero"><div class="hero-emoji">${em}</div>${bigRing(pct)}<div class="hero-title">${ti}</div><div class="hero-sub">${sub}</div></div>`;
 }
 function confetti(n){
@@ -734,54 +741,54 @@ async function doSignOut(){
   try{await sb.auth.signOut();}catch(e){}
   try{localStorage.removeItem(PKEY);}catch(e){}
   AUTH={user:null,profile:null,ready:true,students:[]};
-  closeSheet();go('home');toast('Signed out');
+  closeSheet();go('home');toast(t('Signed out'));
 }
 function acctOrAuth(){if(AUTH.user)acctSheet();else authSheet();}
 
 let authTab='signin';
 function authSheet(){
-  if(!sb)return sheet(`<h2>Account</h2><div class="hint">Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.</div><button class="btn ghost" onclick="closeSheet()">Close</button>`);
+  if(!sb)return sheet(`<h2>${t('Account')}</h2><div class="hint">${t("Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.")}</div><button class="btn ghost" onclick="closeSheet()">${t('Close')}</button>`);
   authTab='signin';drawAuth();
 }
 function drawAuth(){
-  sheet(`<h2>Account</h2>
+  sheet(`<h2>${t('Account')}</h2>
    <div class="tabs2">
-     <button class="${authTab==='signin'?'on':''}" onclick="authTab='signin';drawAuth()">Sign in</button>
-     <button class="${authTab==='signup'?'on':''}" onclick="authTab='signup';drawAuth()">Sign up</button></div>
-   ${authTab==='signup'?`<div class="field"><label>Name</label><input class="inp" id="aName" placeholder="Your name"></div>`:''}
-   <div class="field"><label>Email</label><input class="inp" id="aEmail" type="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="you@example.com"></div>
-   <div class="field"><label>Password</label><input class="inp" id="aPass" type="password" placeholder="${authTab==='signup'?'At least 6 characters':'••••••••'}"></div>
+     <button class="${authTab==='signin'?'on':''}" onclick="authTab='signin';drawAuth()">${t('Sign in')}</button>
+     <button class="${authTab==='signup'?'on':''}" onclick="authTab='signup';drawAuth()">${t('Sign up')}</button></div>
+   ${authTab==='signup'?`<div class="field"><label>${t('Name')}</label><input class="inp" id="aName" placeholder="${t('Your name')}"></div>`:''}
+   <div class="field"><label>${t('Email')}</label><input class="inp" id="aEmail" type="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="${t('you@example.com')}"></div>
+   <div class="field"><label>${t('Password')}</label><input class="inp" id="aPass" type="password" placeholder="${authTab===('signup')?t('At least 6 characters'):'••••••••'}"></div>
    <div class="err" id="aErr"></div>
-   <button class="btn pri" id="aBtn" onclick="submitAuth()">${authTab==='signup'?'Create account':'Sign in'}</button>
-   <div class="hint" style="text-align:center;margin-top:12px">An account syncs your words across devices. Using the app without one keeps everything on this device only.</div>`);
+   <button class="btn pri" id="aBtn" onclick="submitAuth()">${authTab==='signup'?t('Create account'):t('Sign in')}</button>
+   <div class="hint" style="text-align:center;margin-top:12px">${t('An account syncs your words across devices. Using the app without one keeps everything on this device only.')}</div>`);
   setTimeout(()=>{const e=$('#'+(authTab==='signup'?'aName':'aEmail'));if(e)e.focus();},60);
 }
 function authErrMsg(e){
   const m=(e&&e.message)||'';
-  if(/already registered|already exists|User already/i.test(m))return 'This email is already registered — sign in instead.';
-  if(/Invalid login/i.test(m))return 'Wrong email or password.';
-  if(/least 6|Password should/i.test(m))return 'Password must be at least 6 characters.';
-  if(/Email not confirmed/i.test(m))return 'Confirm your email first — check your inbox.';
-  if(/valid email|invalid format/i.test(m))return 'That email address doesn’t look right.';
-  if(/Failed to fetch|NetworkError/i.test(m))return 'No connection — try again when you’re online.';
-  return m||'Something went wrong';
+  if(/already registered|already exists|User already/i.test(m))return t('This email is already registered — sign in instead.');
+  if(/Invalid login/i.test(m))return t('Wrong email or password.');
+  if(/least 6|Password should/i.test(m))return t('Password must be at least 6 characters.');
+  if(/Email not confirmed/i.test(m))return t('Confirm your email first — check your inbox.');
+  if(/valid email|invalid format/i.test(m))return t('That email address doesn’t look right.');
+  if(/Failed to fetch|NetworkError/i.test(m))return t('No connection — try again when you’re online.');
+  return m||t('Something went wrong');
 }
 async function submitAuth(){
   const email=($('#aEmail').value||'').trim(),pass=$('#aPass').value||'';
   const err=$('#aErr'),btn=$('#aBtn');err.textContent='';
-  if(!email||!pass){err.textContent='Enter email and password';return;}
-  const label=btn.textContent;btn.textContent='Please wait…';btn.disabled=true;
+  if(!email||!pass){err.textContent=t('Enter email and password');return;}
+  const label=btn.textContent;btn.textContent=t('Please wait…');btn.disabled=true;
   try{
     if(authTab==='signup'){
       const name=(($('#aName')||{}).value||'').trim()||email.split('@')[0];
       const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{display_name:name}}});
       if(error)throw error;
-      if(data&&data.session){closeSheet();toast('Account created ✓');}
-      else{closeSheet();toast('Check your email to confirm, then sign in');}
+      if(data&&data.session){closeSheet();toast(t('Account created ✓'));}
+      else{closeSheet();toast(t('Check your email to confirm, then sign in'));}
     }else{
       const {error}=await sb.auth.signInWithPassword({email,password:pass});
       if(error)throw error;
-      closeSheet();toast('Signed in ✓');
+      closeSheet();toast(t('Signed in ✓'));
     }
   }catch(e){
     err.textContent=authErrMsg(e);btn.textContent=label;btn.disabled=false;
@@ -789,39 +796,39 @@ async function submitAuth(){
 }
 function acctSheet(){
   const p=AUTH.profile,u=AUTH.user;
-  if(!p)return sheet(`<h2>Account</h2><div class="hint">${esc(u?u.email:'')}<br>Loading your profile…</div>
-    <button class="btn ghost" onclick="doSignOut()">Sign out</button>`);
+  if(!p)return sheet(`<h2>${t('Account')}</h2><div class="hint">${esc(u?u.email:'')}<br>${t('Loading your profile…')}</div>
+    <button class="btn ghost" onclick="doSignOut()">${t('Sign out')}</button>`);
   const isT=p.role==='teacher';
   sheet(`<h2>${esc(p.display_name||'Account')}</h2>
-   <div class="hint">${esc(u.email)} · ${isT?'Teacher':'Student'} · words sync automatically</div>
-   ${isT?`<div class="field"><label>Your code — give it to students</label>
+   <div class="hint">${esc(u.email)} · ${isT?t('Teacher'):t('Student')} · ${t('words sync automatically')}</div>
+   ${isT?`<div class="field"><label>${t('Your code — give it to students')}</label>
       <div class="codebox"><b>${esc(p.teacher_code||'—')}</b></div>
-      <div class="hint">A student enters this in their Account to give you access to their lists.</div></div>`
-    :`<div class="field"><label>Link to a teacher</label>
-      <div class="row"><input class="inp" id="tCode" placeholder="Teacher's code" maxlength="8" autocapitalize="characters" autocorrect="off" spellcheck="false" style="flex:1;text-transform:uppercase;letter-spacing:.1em;font-weight:700">
+      <div class="hint">${t('A student enters this in their Account to give you access to their lists.')}</div></div>`
+    :`<div class="field"><label>${t('Link to a teacher')}</label>
+      <div class="row"><input class="inp" id="tCode" placeholder="${t("Teacher's code")}" maxlength="8" autocapitalize="characters" autocorrect="off" spellcheck="false" style="flex:1;text-transform:uppercase;letter-spacing:.1em;font-weight:700">
       <button class="ic" style="width:50px;height:51px" aria-label="Link" onclick="linkTeacher()">✓</button></div>
       <div class="err" id="linkErr"></div>
-      <div class="hint">Your teacher can then see and edit your lists.</div></div>`}
+      <div class="hint">${t('Your teacher can then see and edit your lists.')}</div></div>`}
    <div class="stack" style="margin-top:6px">
-     ${isT?`<button class="btn" onclick="closeSheet();go('students')">🧑‍🎓 My students${AUTH.students.length?` · ${AUTH.students.length}`:''}</button>`:''}
-     <button class="btn" onclick="manualSync()">🔄 Sync now</button>
-     <button class="btn ghost" onclick="doSignOut()">Sign out</button></div>`);
+     ${isT?`<button class="btn" onclick="closeSheet();go('students')">${t('🧑‍🎓 My students')}${AUTH.students.length?` · ${AUTH.students.length}`:''}</button>`:''}
+     <button class="btn" onclick="manualSync()">${t('🔄 Sync now')}</button>
+     <button class="btn ghost" onclick="doSignOut()">${t('Sign out')}</button></div>`);
 }
 async function manualSync(){
-  if(!cloudEnabled())return toast('Not signed in');
-  toast('Syncing…');await cloudPull();await cloudPush();render();toast('Synced ✓');
+  if(!cloudEnabled())return toast(t('Not signed in'));
+  toast(t('Syncing…'));await cloudPull();await cloudPush();render();toast(t('Synced ✓'));
 }
 async function linkTeacher(){
   const code=(($('#tCode')||{}).value||'').trim();
   const err=$('#linkErr');if(err)err.textContent='';
-  if(!code){if(err)err.textContent='Enter the code';return;}
+  if(!code){if(err)err.textContent=t('Enter the code');return;}
   try{
     const {data,error}=await sb.rpc('link_to_teacher',{_code:code});
     if(error)throw error;
     const nm=(data&&data[0]&&data[0].teacher_name)||'your teacher';
-    closeSheet();toast('Linked to '+nm+' ✓');
+    closeSheet();toast(t('Linked to')+' '+nm+' ✓');
   }catch(e){
-    if(err)err.textContent=/INVALID_CODE/.test((e&&e.message)||'')?'No teacher found with that code':'Couldn’t link — try again';
+    if(err)err.textContent=/INVALID_CODE/.test((e&&e.message)||'')?t('No teacher found with that code'):t('Couldn’t link — try again');
   }
 }
 
@@ -852,12 +859,12 @@ async function lookupEn(word){
 async function enrichSet(){
   const s=curSet();if(!s)return;
   const todo=s.words.filter(w=>!w.ipa||!w.ex);
-  if(!todo.length){closeSheet();return toast('Everything is already filled in');}
+  if(!todo.length){closeSheet();return toast(t('Everything is already filled in'));}
   const btn=$('#enBtn');if(btn){btn.disabled=true;}
   let n=0;
   for(let i=0;i<todo.length;i++){
     const w=todo[i];
-    if(btn)btn.textContent=`Looking up… ${i+1}/${todo.length}`;
+    if(btn)btn.textContent=t('Looking up…')+' '+(i+1)+'/'+todo.length;
     const d=await lookupEn(w.en);
     if(d&&(d.ipa||d.ex)){
       if(d.ipa&&!w.ipa)w.ipa=d.ipa;
@@ -866,7 +873,7 @@ async function enrichSet(){
     }
   }
   save();closeSheet();render();
-  toast(n?`Filled in ${n} ${n===1?'word':'words'} ✓`:'Nothing found for these words');
+  toast(n?t('Filled in')+' '+nWords(n)+' ✓':t('Nothing found for these words'));
 }
 
 /* ---------- router ---------- */
@@ -878,15 +885,15 @@ function render(){(VIEWS[view.name]||VIEWS.home)($('#app'));}
 const hdr=(title,back,right='')=>`<header>${back?`<button class="ic back" aria-label="Back" onclick="${back}">‹</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;
 
 /* ---------- views ---------- */
-const searchBox=`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="Search" oninput="filterList(this.value)"></div>`;
+const searchBox=`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="${t('Search')}" oninput="filterList(this.value)"></div>`;
 const modesHtml=modes=>`<div class="modes">${modes.map(m=>`<button class="mcard" onclick="${m[4]}"><div class="em em-${m[3]}">${m[0]}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`;
 function dayStrip(){
   const total=S.sets.reduce((n,s)=>n+s.words.length,0);
   if(!total)return '';
   const goal=S.stats.goal||10,done=todayCount(),pct=Math.min(100,done/goal*100),st=S.stats.streak||0;
   return `<div class="daycard" onclick="goalSheet()">
-    <div class="flame"><div class="n">${st>0?'🔥':'✨'} ${st}</div><div class="c">${st===1?'day':'days'}</div></div>
-    <div class="t"><div class="lbl"><span>Today${done>=goal?' · done ✓':''}</span><b>${done} / ${goal}</b></div>
+    <div class="flame"><div class="n">${st>0?'🔥':'✨'} ${st}</div><div class="c">${plr(st,t('day'),t('day2'),t('days'))}</div></div>
+    <div class="t"><div class="lbl"><span>${t('Today')}${done>=goal?' ✓':''}</span><b>${done} / ${goal}</b></div>
       <div class="pbar"><i style="width:${pct}%"></i></div></div></div>`;
 }
 function reviewCard(){
@@ -894,8 +901,8 @@ function reviewCard(){
   if(!n)return '';
   return `<div class="setcard" onclick="startReview()" style="border-color:var(--pri)">
     <div class="due-ic">🔁</div>
-    <div class="t"><div class="nm">Review today</div>
-      <div class="meta">${n} ${n===1?'word':'words'} due from the Archive</div></div>
+    <div class="t"><div class="nm">${t('Review today')}</div>
+      <div class="meta">${nWords(n)} ${t('due from the Archive')}</div></div>
     <span class="badge">${n}</span></div>`;
 }
 function hardCard(){
@@ -903,39 +910,39 @@ function hardCard(){
   if(n<3)return '';
   return `<div class="setcard" onclick="go('hard')" style="margin-top:14px">
     <div class="arch-ic" style="background:var(--bad-soft);color:var(--bad)">⚡</div>
-    <div class="t"><div class="nm">Tricky words</div>
-      <div class="meta">${n} words you keep missing</div></div>
+    <div class="t"><div class="nm">${t('Tricky words')}</div>
+      <div class="meta">${nWords(n)} ${t('with mistakes')}</div></div>
     <span style="color:var(--fade);font-size:22px">›</span></div>`;
 }
 
 /* ---------- review session (archive, spaced) ---------- */
 function startReview(){
   const list=dueWords();
-  if(!list.length)return toast('Nothing due right now');
+  if(!list.length)return toast(t('Nothing due right now'));
   const pool=S.sets.flatMap(s=>s.words.filter(w=>w.arch));
   let queue=shuffle(list);const total=queue.length;let done=0,good=0,relearn=0;const app=$('#app');
   function next(){
     if(!queue.length){
       const pct=Math.round(good/total*100),nx=nextDueAt();
-      app.innerHTML=hdr('Review',"render()")+
-        scoreHero(pct,`${good} of ${total} remembered${relearn?` · ${relearn} back to learning`:''}`)+
+      app.innerHTML=hdr(t('Review'),"render()")+
+        scoreHero(pct,`${good} / ${total} ${t('remembered')}${relearn?` · ${relearn} ${t('back to learning')}`:''}`)+
         `<div style="height:8px"></div>
-         <div class="hint" style="text-align:center">${dueCount()?`${dueCount()} more waiting — tap Review again.`:(nx?`Next review ${whenTxt(nx)}.`:'')}</div>
+         <div class="hint" style="text-align:center">${dueCount()?t('More waiting')+': '+dueCount()+'.':(nx?t('Next review')+' '+whenTxt(nx)+'.':'')}</div>
          <div style="height:12px"></div>
-         ${dueCount()?`<button class="btn pri" onclick="startReview()">Keep going</button><div style="height:9px"></div>`:''}
-         <button class="btn ghost" onclick="render()">Done</button>`;
+         ${dueCount()?`<button class="btn pri" onclick="startReview()">${t('Keep going')}</button><div style="height:9px"></div>`:''}
+         <button class="btn ghost" onclick="render()">${t('Done')}</button>`;
       if(pct>=60)confetti(pct>=90?160:110);
       return;
     }
     const w=queue.shift();done++;
-    app.innerHTML=studyTop('Review',(done-1)/total*100,(done-1)+'/'+total);
+    app.innerHTML=studyTop(t('Review'),(done-1)/total*100,(done-1)+'/'+total);
     const q=mkQ(pool.length>3?pool:S.sets.flatMap(s=>s.words),w,'type','ru2en');
     renderQ($('#qb'),q,{feedback:true,onDone:ok=>{
       const r=srAnswer(w,ok);
       if(ok){w.ok=(w.ok||0)+1;good++;}else{w.bad=(w.bad||0)+1;if(r==='relearn')relearn++;}
       touch(w);bumpStudy(w.id);save();
-      if(ok)toast('Next review '+whenTxt(w.due));
-      else if(r==='relearn')toast('“'+w.en+'” → back to learning');
+      if(ok)toast(t('Next review')+' '+whenTxt(w.due));
+      else if(r==='relearn')toast('“'+w.en+'” → '+t('back to learning'));
       next();
     }});
   }
@@ -946,40 +953,40 @@ const VIEWS={
 home(app){
   const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
   const arN=archCount();
-  app.innerHTML=hdr('Vocabulary','',`<button class="ic" aria-label="Account" onclick="acctOrAuth()">👤${AUTH.user?'<span class="acct-dot"></span>':''}</button><button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button><button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
+  app.innerHTML=hdr(t('Vocabulary'),'',`<button class="ic" aria-label="Account" onclick="acctOrAuth()">👤${AUTH.user?'<span class="acct-dot"></span>':''}</button><button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button><button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
    (standalone||S.settings.hideBanner?'':
-     `<div class="banner"><span>📲</span><div><b>Add to Home Screen.</b> In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
+     `<div class="banner"><span>📲</span><div><b>${t('Add to Home Screen.')}</b> ${t("In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.")}</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
    dayStrip()+reviewCard()+
    (S.sets.length?
-     `<div class="subhead"><span class="t">Lists</span></div>`+
+     `<div class="subhead"><span class="t">${t('Lists')}</span></div>`+
      S.sets.map(s=>{const a=active(s).length,learned=s.words.filter(w=>w.arch).length;return(
        `<div class="setcard" onclick="go('set',{id:'${s.id}'})">
          ${ringSvg(learned,s.words.length)}
          <div class="t"><div class="nm">${esc(s.name)}</div>
-         <div class="meta">${a} learning${learned?` · ${learned} learned`:''}</div></div>
+         <div class="meta">${a} ${t('learning')}${learned?` · ${learned} ${t('learned')}`:''}</div></div>
          <span style="color:var(--fade);font-size:22px">›</span></div>`)}).join('')+
      `<div class="setcard" onclick="go('archive')" style="margin-top:14px">
         <div class="arch-ic">🗄</div>
-        <div class="t"><div class="nm">Archive</div>
-        <div class="meta">${arN?arN+' '+(arN===1?'word':'words')+(nextDueAt()&&!dueCount()?' · next review '+whenTxt(nextDueAt()):' · from all lists'):'learned words from all lists'}</div></div>
+        <div class="t"><div class="nm">${t('Archive')}</div>
+        <div class="meta">${arN?nWords(arN)+(nextDueAt()&&!dueCount()?' · '+t('next review')+' '+whenTxt(nextDueAt()):' · '+t('from all lists')):t('learned words from all lists')}</div></div>
         <span style="color:var(--fade);font-size:22px">›</span></div>`
-     :`<div class="empty"><div class="big">📖</div><b>Your word lists will live here</b><p>Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.</p></div>`)+
+     :`<div class="empty"><div class="big">📖</div><b>${t('Your word lists will live here')}</b><p>${t('Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.')}</p></div>`)+
    hardCard()+
    (AUTH.profile&&AUTH.profile.role==='teacher'
      ?`<div class="setcard" onclick="go('students')" style="margin-top:14px">
          <div class="arch-ic" style="background:var(--ok-soft);color:var(--ok)">🧑‍🎓</div>
-         <div class="t"><div class="nm">My students</div>
-         <div class="meta">${AUTH.students.length?AUTH.students.length+' linked · view & edit their words':'share your code to link a student'}</div></div>
+         <div class="t"><div class="nm">${t('My students')}</div>
+         <div class="meta">${AUTH.students.length?AUTH.students.length+' · '+t('view & edit their words'):t('share your code to link a student')}</div></div>
          <span style="color:var(--fade);font-size:22px">›</span></div>`:'')+
-   `<button class="btn pri" style="margin-top:12px" onclick="newSet()">＋ New list</button>`;
+   `<button class="btn pri" style="margin-top:12px" onclick="newSet()">${t('＋ New list')}</button>`;
 },
 set(app){
   const s=curSet();if(!s)return go('home');
   const pool=active(s);
-  const modes=[['🗂','Flashcards','flip through','a',"startCards(false)"],['🎯','Learn','until mastered','b',"startLearn()"],['📝','Test','check yourself','d',"testSetup(false)"],['🧩','Match','race the clock','c',"startMatch(false)"]];
+  const modes=[['🗂',t('Flashcards'),t('flip through'),'a',"startCards(false)"],['🎯',t('Learn'),t('until mastered'),'b',"startLearn()"],['📝',t('Test'),t('check yourself'),'d',"testSetup(false)"],['🧩',t('Match'),t('race the clock'),'c',"startMatch(false)"]];
   const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Clear selection':'Select all'}</button><button class="lnk" onclick="toggleSelMode()">Cancel</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">Learning · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Select</button></div>`:'');
+   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
+   :(pool.length?`<div class="tbar"><span class="t">${t('Learning')} · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ ${t('Select')}</button></div>`:'');
   app.innerHTML=hdr(s.name,"go('home')",`<button class="ic" aria-label="Menu" onclick="setMenu()">⋯</button>`)+
    (selMode?'':(pool.length?modesHtml(modes):''))+
    tbar+
@@ -989,15 +996,15 @@ set(app){
 },
 archive(app){
   const items=allArchived(),pool=items.map(x=>x.w);
-  const modes=[['🗂','Flashcards','review','a',"startCards(true)"],['🎯','Learn','revise','b',"startLearn(true)"],['📝','Test','review','d',"testSetup(true)"],['🧩','Match','race the clock','c',"startMatch(true)"]];
+  const modes=[['🗂',t('Flashcards'),t('review'),'a',"startCards(true)"],['🎯',t('Learn'),t('revise'),'b',"startLearn(true)"],['📝',t('Test'),t('review'),'d',"testSetup(true)"],['🧩',t('Match'),t('race the clock'),'c',"startMatch(true)"]];
   const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?'Clear selection':'Select all'}</button><button class="lnk" onclick="toggleSelMode()">Cancel</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">Learned · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ Select</button></div>`:'');
+   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
+   :(pool.length?`<div class="tbar"><span class="t">${t('Learned')} · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ ${t('Select')}</button></div>`:'');
   const due=dueCount();
-  app.innerHTML=hdr('Archive',"go('home')")+
+  app.innerHTML=hdr(t('Archive'),"go('home')")+
    (due?`<div class="setcard" onclick="startReview()" style="border-color:var(--pri);margin-bottom:14px">
-      <div class="due-ic">🔁</div><div class="t"><div class="nm">Review today</div>
-      <div class="meta">${due} ${due===1?'word':'words'} due now</div></div><span class="badge">${due}</span></div>`:'')+
+      <div class="due-ic">🔁</div><div class="t"><div class="nm">${t('Review today')}</div>
+      <div class="meta">${nWords(due)} ${t('due now')}</div></div><span class="badge">${due}</span></div>`:'')+
    (selMode?'':(pool.length?modesHtml(modes):''))+
    tbar+
    (!selMode&&pool.length>7?searchBox:'')+
@@ -1006,17 +1013,17 @@ archive(app){
 },
 hard(app){
   const items=hardItems(),pool=items.map(x=>x.w);
-  const modes=[['🎯','Learn','until fixed','b',"startLearn()"],['📝','Test','check yourself','d',"testSetup(false)"],['🗂','Flashcards','flip through','a',"startCards(false)"],['🧩','Match','race the clock','c',"startMatch(false)"]];
-  app.innerHTML=hdr('Tricky words',"go('home')")+
+  const modes=[['🎯',t('Learn'),t('until fixed'),'b',"startLearn()"],['📝',t('Test'),t('check yourself'),'d',"testSetup(false)"],['🗂',t('Flashcards'),t('flip through'),'a',"startCards(false)"],['🧩',t('Match'),t('race the clock'),'c',"startMatch(false)"]];
+  app.innerHTML=hdr(t('Tricky words'),"go('home')")+
    (pool.length?modesHtml(modes)+
-     `<div class="hint" style="margin:-4px 2px 10px">Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.</div>`+
-     `<div class="tbar"><span class="t">Needs work · ${pool.length}</span></div>`+
+     `<div class="hint" style="margin:-4px 2px 10px">${t('Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.')}</div>`+
+     `<div class="tbar"><span class="t">${t('Needs work')} · ${pool.length}</span></div>`+
      items.map(({w,sn})=>`<div class="item" onclick="wordForm('${w.id}')">
         <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
         <div class="t"><div class="en">${esc(w.en)}</div>
         <div class="ru">${esc(w.ru)}<span class="src"> · ${esc(sn)}</span></div></div>
         <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('')
-    :`<div class="empty"><div class="big">✨</div><b>Nothing tricky right now</b><p>Words you keep missing in tests and Learn will gather here, so you can drill exactly those.</p></div>`);
+    :`<div class="empty"><div class="big">✨</div><b>${t('Nothing tricky right now')}</b><p>${t('Words you keep missing in tests and Learn will gather here, so you can drill exactly those.')}</p></div>`);
 },
 };
 
@@ -1032,20 +1039,20 @@ async function fetchOwner(ownerId){
   }catch(e){return {sets:[],words:[]};}
 }
 function agoTxt(ts){
-  if(!ts)return 'no activity yet';
+  if(!ts)return t('no activity yet');
   const d=Math.floor((Date.now()-ts)/DAY);
-  if(d<=0)return 'active today';
-  if(d===1)return 'active yesterday';
-  if(d<7)return `active ${d} days ago`;
-  if(d<30)return `last seen ${Math.round(d/7)} ${Math.round(d/7)===1?'week':'weeks'} ago`;
-  return `last seen ${Math.round(d/30)} ${Math.round(d/30)===1?'month':'months'} ago`;
+  if(d<=0)return t('active today');
+  if(d===1)return t('active yesterday');
+  if(d<7)return t('active')+' '+d+' '+plr(d,t('day'),t('day2'),t('days'))+' '+t('ago');
+  if(d<30){const w=Math.round(d/7);return t('last seen')+' '+w+' '+plr(w,t('week'),t('week2'),t('weeks'))+' '+t('ago');}
+  const mo=Math.round(d/30);return t('last seen')+' '+mo+' '+plr(mo,t('month'),t('month2'),t('months'))+' '+t('ago');
 }
 VIEWS.students=async function(app){
-  app.innerHTML=hdr('My students',"go('home')")+`<div id="rl"><div class="empty"><p>Loading…</p></div></div>`;
+  app.innerHTML=hdr(t('My students'),"go('home')")+`<div id="rl"><div class="empty"><p>${t('Loading…')}</p></div></div>`;
   await loadStudents();
   const el=$('#rl');if(!el)return;
   if(!AUTH.students.length){
-    el.innerHTML=`<div class="empty"><div class="big">🧑‍🎓</div><b>No students linked yet</b><p>Open Account and share your code. Once a student enters it, their lists appear here.</p></div>`;
+    el.innerHTML=`<div class="empty"><div class="big">🧑‍🎓</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`;
     return;
   }
   const ids=AUTH.students.map(s=>s.id);
@@ -1062,14 +1069,14 @@ VIEWS.students=async function(app){
     return `<div class="roster" onclick="go('tsets',{sid:'${s.id}',sname:'${q1(nm)}'})">
       <div class="av"${stale?' style="background:var(--line2);color:var(--mut)"':''}>${esc(nm.trim().charAt(0).toUpperCase()||'?')}</div>
       <div class="t"><div class="nm">${esc(nm)}</div>
-        <div class="meta">${mine.length} words · ${learned} learned</div>
-        <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${agoTxt(last)}${weekN?` · ${weekN} this week`:''}</div></div>
+        <div class="meta">${nWords(mine.length)} · ${learned} ${t('learned')}</div>
+        <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${agoTxt(last)}${weekN?` · ${weekN} ${t('this week')}`:''}</div></div>
       <span style="color:var(--fade);font-size:22px">›</span></div>`;
   }).join('');
 };
 VIEWS.tsets=async function(app){
   const sid=view.sid,sname=view.sname||'Student';
-  app.innerHTML=hdr(sname,"go('students')")+`<div id="tl"><div class="empty"><p>Loading…</p></div></div>`;
+  app.innerHTML=hdr(sname,"go('students')")+`<div id="tl"><div class="empty"><p>${t('Loading…')}</p></div></div>`;
   const {sets,words}=await fetchOwner(sid);
   TV={sid,sname,setId:null,setName:'',words,sets};
   const el=$('#tl');if(!el)return;
@@ -1080,32 +1087,32 @@ VIEWS.tsets=async function(app){
   const tricky=words.filter(w=>(w.bad||0)>=2&&(w.bad||0)>(w.ok||0)).sort((a,b)=>((b.bad||0)-(b.ok||0))-((a.bad||0)-(a.ok||0))).slice(0,6);
   el.innerHTML=
    `<div class="daycard" style="align-items:flex-start">
-      <div class="t"><div class="lbl"><span>${esc(agoTxt(last))}</span><b>${words.length} words</b></div>
+      <div class="t"><div class="lbl"><span>${esc(agoTxt(last))}</span><b>${nWords(words.length)}</b></div>
       <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:5px">
-        ${archN} learned · ${weekN} touched this week${dueN?` · ${dueN} due for review`:''}</div></div></div>`+
-   (tricky.length?`<div class="subhead"><span class="t">Needs work</span></div>`+
+        ${archN} ${t('learned')} · ${weekN} ${t('this week')}${dueN?` · ${dueN} ${t('due for review')}`:''}</div></div></div>`+
+   (tricky.length?`<div class="subhead"><span class="t">${t('Needs work')}</span></div>`+
      tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
        <div class="t"><div class="en">${esc(w.en)}${w.ipa?` <span class="ipa">${esc(w.ipa)}</span>`:''}</div><div class="ru">${esc(w.ru||'')}</div></div>
        <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('')+
      `<div style="height:14px"></div>`:'')+
    (sets.length
-    ?`<div class="subhead"><span class="t">Lists</span></div>`+sets.map(s=>{
+    ?`<div class="subhead"><span class="t">${t('Lists')}</span></div>`+sets.map(s=>{
         const a=words.filter(w=>w.set_id===s.id&&!w.arch).length,lr=words.filter(w=>w.set_id===s.id&&w.arch).length;
         return `<div class="setcard" onclick="go('twords',{sid:'${sid}',sname:'${q1(sname)}',setId:'${s.id}',setName:'${q1(s.name)}'})">
           ${ringSvg(lr,a+lr)}
-          <div class="t"><div class="nm">${esc(s.name)}</div><div class="meta">${a} learning${lr?` · ${lr} learned`:''}</div></div>
+          <div class="t"><div class="nm">${esc(s.name)}</div><div class="meta">${a} ${t('learning')}${lr?` · ${lr} ${t('learned')}`:''}</div></div>
           <span style="color:var(--fade);font-size:22px">›</span></div>`;}).join('')
-    :`<div class="empty"><div class="big">📖</div><b>No lists yet</b><p>You can create the first list for this student below.</p></div>`)+
+    :`<div class="empty"><div class="big">📖</div><b>${t('No lists yet')}</b><p>${t('You can create the first list for this student below.')}</p></div>`)+
    `<div class="setcard" onclick="go('twords',{sid:'${sid}',sname:'${q1(sname)}',setId:'archive',setName:'Archive'})" style="margin-top:14px">
       <div class="arch-ic">🗄</div>
-      <div class="t"><div class="nm">Archive</div><div class="meta">${archN?archN+' '+(archN===1?'word':'words'):'learned words'}</div></div>
+      <div class="t"><div class="nm">${t('Archive')}</div><div class="meta">${archN?nWords(archN):t('learned words')}</div></div>
       <span style="color:var(--fade);font-size:22px">›</span></div>
-    <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">＋ New list for ${esc(sname)}</button>`;
+    <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">${t('＋ New list for')} ${esc(sname)}</button>`;
 };
 VIEWS.twords=async function(app){
   const {sid,sname,setId,setName}=view;
-  app.innerHTML=hdr(setName,`go('tsets',{sid:'${sid}',sname:'${q1(sname)}'})`)+`<div id="tl"><div class="empty"><p>Loading…</p></div></div>`;
+  app.innerHTML=hdr(setName,`go('tsets',{sid:'${sid}',sname:'${q1(sname)}'})`)+`<div id="tl"><div class="empty"><p>${t('Loading…')}</p></div></div>`;
   const {sets,words}=await fetchOwner(sid);
   TV={sid,sname,setId,setName,words,sets};
   const el=$('#tl');if(!el)return;
@@ -1113,12 +1120,12 @@ VIEWS.twords=async function(app){
   const list=inArch?words.filter(w=>w.arch):words.filter(w=>w.set_id===setId&&!w.arch);
   const setName2=id=>{const s=sets.find(x=>x.id===id);return s?s.name:'';};
   el.innerHTML=(list.length
-    ?`<div class="tbar"><span class="t">${inArch?'Learned':'Learning'} · ${list.length}</span></div>`+
+    ?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span></div>`+
      list.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        ${inArch?'<span class="chk">✓</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`}
        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}${inArch?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
        <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('')
-    :`<div class="empty"><div class="big">${inArch?'🗄️':'✍️'}</div><b>${inArch?'Archive is empty':'No words yet'}</b><p>${inArch?'Words this student has mastered will show up here.':'Tap ＋ to add the first word.'}</p></div>`)+
+    :`<div class="empty"><div class="big">${inArch?'🗄️':'✍️'}</div><b>${inArch?t('Archive is empty'):t('No words yet')}</b><p>${inArch?t('Words this student has mastered will show up here.'):t('Tap ＋ to add the first word.')}</p></div>`)+
    (inArch?'':`<button class="fab" aria-label="Add word" onclick="tWordForm()">＋</button>`);
 };
 function tBack(){
@@ -1127,22 +1134,22 @@ function tBack(){
 }
 function tWordForm(id){
   const w=id?TV.words.find(x=>x.id===id):null;
-  sheet(`<h2>${w?'Word':'New word'}</h2>
-   <div class="field"><label>Word (English)</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="reliable" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
-   <div class="field"><label>Translation</label><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="надёжный"></div>
-   <div class="field"><label>Example (optional)</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="a reliable friend" autocapitalize="none"></div>
+  sheet(`<h2>${w?t('Word'):t('New word')}</h2>
+   <div class="field"><label>${t('Word (English)')}</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="${t('reliable')}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+   <div class="field"><label>${t('Translation')}</label><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="${t('надёжный')}"></div>
+   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${t('a reliable friend')}" autocapitalize="none"></div>
    <div class="err" id="tErr"></div>
-   <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?'Save':'Add'}</button>
+   <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
-     <button class="btn ghost" onclick="tToggleArch('${w.id}',${w.arch?'false':'true'})">${w.arch?'↩ To learning':'🗄 To Archive'}</button>
-     <button class="btn danger ghost" onclick="tDelWord('${w.id}')">Delete</button></div>`:''}`);
+     <button class="btn ghost" onclick="tToggleArch('${w.id}',${w.arch?'false':'true'})">${w.arch?t('↩ To learning'):t('🗄 To Archive')}</button>
+     <button class="btn danger ghost" onclick="tDelWord('${w.id}')">${t('Delete')}</button></div>`:''}`);
   setTimeout(()=>$('#tEn')&&$('#tEn').focus(),60);
 }
 async function tSaveWord(id){
   const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim(),ex=($('#tEx').value||'').trim();
   const err=$('#tErr');
-  if(!en){err.textContent='Enter a word';return;}
-  const btn=$('#tSave');btn.disabled=true;btn.textContent='Saving…';
+  if(!en){err.textContent=t('Enter a word');return;}
+  const btn=$('#tSave');btn.disabled=true;btn.textContent=t('Saving…');
   const now=new Date().toISOString();
   try{
     if(id){
@@ -1153,51 +1160,51 @@ async function tSaveWord(id){
         box:0,arch:false,ok:0,bad:0,position:TV.words.length,deleted:false,updated_at:now});
       if(error)throw error;
     }
-    closeSheet();toast(id?'Saved ✓':'Added ✓');tBack();
+    closeSheet();toast(id?t('Saved ✓'):t('Added ✓'));tBack();
   }catch(e){
-    err.textContent='Couldn’t save — check your connection';btn.disabled=false;btn.textContent=id?'Save':'Add';
+    err.textContent=t('Couldn’t save — check your connection');btn.disabled=false;btn.textContent=id?t('Save'):t('Add');
   }
 }
 async function tToggleArch(id,toArch){
   try{
     await sb.from('words').update({arch:toArch,box:toArch?3:2,updated_at:new Date().toISOString()}).eq('id',id);
-    closeSheet();toast(toArch?'Moved to Archive ✓':'Moved back to learning');tBack();
-  }catch(e){toast('Couldn’t update');}
+    closeSheet();toast(toArch?t('Moved to Archive ✓'):t('Moved back to learning'));tBack();
+  }catch(e){toast(t('Couldn’t update'));}
 }
 async function tDelWord(id){
-  if(!confirm('Delete this word from the student’s list?'))return;
+  if(!confirm(t('Delete this word from the student’s list?')))return;
   try{
     await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).eq('id',id);
-    closeSheet();toast('Deleted');tBack();
-  }catch(e){toast('Couldn’t delete');}
+    closeSheet();toast(t('Deleted'));tBack();
+  }catch(e){toast(t('Couldn’t delete'));}
 }
 function tNewSet(){
-  sheet(`<h2>New list</h2>
-   <div class="hint">This list will appear in ${esc(TV.sname)}'s app.</div>
-   <div class="field"><label>Name</label><input class="inp" id="tNm" placeholder="e.g. Unit 1"></div>
+  sheet(`<h2>${t('New list')}</h2>
+   <div class="hint">${t('This list will appear in the student’s app.')}</div>
+   <div class="field"><label>${t('Name')}</label><input class="inp" id="tNm" placeholder="${t('e.g. Unit 1')}"></div>
    <div class="err" id="tsErr"></div>
-   <button class="btn pri" id="tsBtn" onclick="tCreateSet()">Create</button>`);
+   <button class="btn pri" id="tsBtn" onclick="tCreateSet()">${t('Create')}</button>`);
   setTimeout(()=>$('#tNm')&&$('#tNm').focus(),60);
 }
 async function tCreateSet(){
   const n=($('#tNm').value||'').trim();
-  if(!n){$('#tsErr').textContent='Enter a name';return;}
-  const btn=$('#tsBtn');btn.disabled=true;btn.textContent='Creating…';
+  if(!n){$('#tsErr').textContent=t('Enter a name');return;}
+  const btn=$('#tsBtn');btn.disabled=true;btn.textContent=t('Creating…');
   try{
     const {error}=await sb.from('sets').insert({id:uid(),owner_id:TV.sid,name:n,position:TV.sets.length,deleted:false,updated_at:new Date().toISOString()});
     if(error)throw error;
     closeSheet();go('tsets',{sid:TV.sid,sname:TV.sname});
   }catch(e){
-    $('#tsErr').textContent='Couldn’t create — check your connection';btn.disabled=false;btn.textContent='Create';
+    $('#tsErr').textContent=t('Couldn’t create — check your connection');btn.disabled=false;btn.textContent=t('Create');
   }
 }
 
 function selBar(inArch){
   const n=selIds.size;
-  const moveLabel=inArch?`↩ To learning${n?` (${n})`:''}`:`🗄 To Archive${n?` (${n})`:''}`;
+  const moveLabel=inArch?`${t('↩ To learning')}${n?` (${n})`:''}`:`${t('🗄 To Archive')}${n?` (${n})`:''}`;
   return `<div class="selbar"><div class="in row2">
     <button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${moveLabel}</button>
-    <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">🗑 Delete${n?` (${n})`:''}</button>
+    <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">${t('🗑 Delete')}${n?` (${n})`:''}</button>
   </div></div>`;
 }
 function toggleSelMode(){selMode=!selMode;selIds.clear();render();}
@@ -1210,20 +1217,20 @@ function bulkArch(toArch){
     if(toArch)srStart(w);else{w.due=0;w.rep=0;}
     touch(w);n++;}}));
   save();clearSel();render();
-  toast(toArch?`Moved to Archive: ${n}`:`Moved back to learning: ${n}`);
+  toast((toArch?t('Moved to Archive'):t('Moved back to learning'))+': '+n);
 }
 function bulkDelete(){
   const n=selIds.size;if(!n)return;
-  if(!confirm(`Delete ${n} ${n===1?'word':'words'}? This can't be undone.`))return;
+  if(!confirm(t('Delete words?')+' '+nWords(n)+'. '+t("This can't be undone.")))return;
   S.sets.forEach(s=>{s.words.forEach(w=>{if(selIds.has(w.id))cloudDeleteWord(w);});s.words=s.words.filter(w=>!selIds.has(w.id));});
   save();clearSel();render();
-  toast(`Deleted: ${n} ${n===1?'word':'words'}`);
+  toast(t('Deleted')+': '+nWords(n));
 }
 function listHtml(words,arch,qs){
   qs=(qs||'').toLowerCase();
   const ws=qs?words.filter(w=>(w.en+' '+w.ru).toLowerCase().includes(qs)):words;
-  if(!words.length)return `<div class="empty"><div class="big">✍️</div><b>Add your first word</b><p>Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.</p></div>`;
-  if(!ws.length)return `<div class="empty"><p>Nothing found</p></div>`;
+  if(!words.length)return `<div class="empty"><div class="big">✍️</div><b>${t('Add your first word')}</b><p>${t('Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.')}</p></div>`;
+  if(!ws.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
   return ws.map(w=>{
     const picked=selIds.has(w.id);
     const left=selMode
@@ -1239,8 +1246,8 @@ function listHtml(words,arch,qs){
 function archListHtml(items,qs){
   qs=(qs||'').toLowerCase();
   const its=qs?items.filter(x=>(x.w.en+' '+x.w.ru).toLowerCase().includes(qs)):items;
-  if(!items.length)return `<div class="empty"><div class="big">🗄️</div><b>Archive is empty</b><p>Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.</p></div>`;
-  if(!its.length)return `<div class="empty"><p>Nothing found</p></div>`;
+  if(!items.length)return `<div class="empty"><div class="big">🗄️</div><b>${t('Archive is empty')}</b><p>${t('Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.')}</p></div>`;
+  if(!its.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
   return its.map(({w,sn})=>{
     const picked=selIds.has(w.id);
     const left=selMode?`<span class="cbox ${picked?'on':''}">${picked?'✓':''}</span>`:'<span class="chk">✓</span>';
@@ -1263,60 +1270,60 @@ function sheet(html){closeSheet();const d=document.createElement('div');d.classN
 function closeSheet(){const s=$('#scrim');if(s)s.remove();}
 
 function newSet(){
-  sheet(`<h2>New list</h2>
-   <div class="field"><label>Name</label><input class="inp" id="nm" placeholder="e.g. Unit 1" autofocus></div>
-   <button class="btn pri" onclick="createSet()">Create</button>`);
+  sheet(`<h2>${t('New list')}</h2>
+   <div class="field"><label>${t('Name')}</label><input class="inp" id="nm" placeholder="${t('e.g. Unit 1')}" autofocus></div>
+   <button class="btn pri" onclick="createSet()">${t('Create')}</button>`);
   setTimeout(()=>$('#nm')&&$('#nm').focus(),60);
 }
-function createSet(){const n=$('#nm').value.trim();if(!n)return toast('Enter a name');
+function createSet(){const n=$('#nm').value.trim();if(!n)return toast(t('Enter a name'));
   const s={id:uid(),name:n,words:[],upd:Date.now(),synced:false};S.sets.push(s);save();closeSheet();go('set',{id:s.id});}
 
 function setMenu(){
   const s=curSet();
   const miss=s.words.filter(w=>!w.ipa||!w.ex).length;
   sheet(`<h2>${esc(s.name)}</h2><div class="stack">
-   <button class="btn" onclick="importSheet()">📥 Import words</button>
-   <button class="btn" id="enBtn" onclick="enrichSet()">🔈 Pronunciation & examples${miss?` · ${miss} missing`:' ✓'}</button>
-   <button class="btn" onclick="printSheet()">🖨 Print a quiz</button>
-   <button class="btn" onclick="exportData('${s.id}')">📤 Send to student (file)</button>
-   <button class="btn ghost" onclick="renameSet()">Rename</button>
-   <button class="btn ghost" onclick="resetProg()">Reset progress</button>
-   <button class="btn danger ghost" onclick="delSet()">Delete list</button></div>`);
+   <button class="btn" onclick="importSheet()">${t('📥 Import words')}</button>
+   <button class="btn" id="enBtn" onclick="enrichSet()">${t('🔈 Pronunciation & examples')}${miss?` · ${miss}`:' ✓'}</button>
+   <button class="btn" onclick="printSheet()">${t('🖨 Print a quiz')}</button>
+   <button class="btn" onclick="exportData('${s.id}')">${t('📤 Send to student (file)')}</button>
+   <button class="btn ghost" onclick="renameSet()">${t('Rename')}</button>
+   <button class="btn ghost" onclick="resetProg()">${t('Reset progress')}</button>
+   <button class="btn danger ghost" onclick="delSet()">${t('Delete list')}</button></div>`);
 }
 function renameSet(){const s=curSet();const n=prompt('New name',s.name);if(n&&n.trim()){s.name=n.trim();touch(s);save();closeSheet();render();}}
-function resetProg(){const s=curSet();if(confirm('Move all words of this list back from Archive and reset progress?')){s.words.forEach(w=>{w.box=0;w.arch=false;touch(w);});save();closeSheet();render();toast('Progress reset');}}
-function delSet(){const s=curSet();if(confirm(`Delete “${s.name}” with all its words? This can't be undone.`)){cloudDeleteSet(s);S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
+function resetProg(){const s=curSet();if(confirm(t('Move all words of this list back from Archive and reset progress?'))){s.words.forEach(w=>{w.box=0;w.arch=false;touch(w);});save();closeSheet();render();toast(t('Progress reset'));}}
+function delSet(){const s=curSet();if(confirm(t('Delete list')+' “'+s.name+'”? '+t("This can't be undone."))){cloudDeleteSet(s);S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
 
 /* ---------- word form ---------- */
 let editId=null,ruTouched=false,trTimer=null,trSeq=0,formIpa='';
 function wordForm(id){
   const w=id?(findWord(id)||{}).w:null;editId=id||null;ruTouched=!!w;formIpa=(w&&w.ipa)||'';
-  sheet(`<h2>${w?'Word':'New word'}</h2>
-   <div class="field"><label>Word (English)</label>
-     <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="reliable" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()">
+  sheet(`<h2>${w?t('Word'):t('New word')}</h2>
+   <div class="field"><label>${t('Word (English)')}</label>
+     <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="${t('reliable')}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()">
      <div class="ipa" id="ipaBox" style="margin:5px 3px 0">${formIpa?esc(formIpa):''}</div></div>
-   <div class="field"><label>Translation</label>
-     <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="надёжный" oninput="ruTouched=true" style="flex:1">
+   <div class="field"><label>${t('Translation')}</label>
+     <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="${t('надёжный')}" oninput="ruTouched=true" style="flex:1">
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">🌐</button></div></div>
-   <div class="hint" id="trSt">The translation fills in automatically as you type</div>
+   <div class="hint" id="trSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="chips"></div>
-   <div class="field"><label>Example (optional)</label>
-     <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="a reliable friend" autocapitalize="none"></div>
-   <button class="btn pri" onclick="saveWord()">${w?'Save':'Add'}</button>
+   <div class="field"><label>${t('Example (optional)')}</label>
+     <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${t('a reliable friend')}" autocapitalize="none"></div>
+   <button class="btn pri" onclick="saveWord()">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
-     ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">↩ To learning</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">🗄 To Archive</button>`}
-     <button class="btn danger ghost" onclick="delWord()">Delete</button></div>`:''}`);
+     ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${t('↩ To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${t('🗄 To Archive')}</button>`}
+     <button class="btn danger ghost" onclick="delWord()">${t('Delete')}</button></div>`:''}`);
   if(!w)setTimeout(()=>$('#fEn')&&$('#fEn').focus(),60);
 }
 function autoTr(){clearTimeout(trTimer);trTimer=setTimeout(()=>doTr(false),650);}
 async function doTr(force){
   const enEl=$('#fEn');if(!enEl)return;const en=enEl.value.trim();if(!en)return;
-  const seq=++trSeq;const st=$('#trSt');if(st)st.textContent='Translating…';
+  const seq=++trSeq;const st=$('#trSt');if(st)st.textContent=t('Translating…');
   const r=await translate(en);
   if(seq!==trSeq||!$('#fEn')||$('#fEn').value.trim()!==en)return;
-  if(!r){if($('#trSt'))$('#trSt').textContent='⚠ Can’t reach the translator — enter the translation manually';return;}
+  if(!r){if($('#trSt'))$('#trSt').textContent='⚠ '+t('Can’t reach the translator — enter the translation manually');return;}
   if(force||(!ruTouched&&!$('#fRu').value)){$('#fRu').value=r.main;ruTouched=false;}
-  if($('#trSt'))$('#trSt').textContent='Options — tap to use:';
+  if($('#trSt'))$('#trSt').textContent=t('Options — tap to use:');
   $('#chips').innerHTML=[r.main,...r.alts].map(a=>`<button class="chip" onclick="$('#fRu').value='${q1(a)}';ruTouched=true">${esc(a)}</button>`).join('');
   dictFill(en,seq);
 }
@@ -1328,33 +1335,33 @@ async function dictFill(en,seq){
 }
 function saveWord(){
   const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim(),ex=$('#fEx').value.trim();
-  if(!en)return toast('Enter a word');if(!ru)return toast('Enter a translation');
+  if(!en)return toast(t('Enter a word'));if(!ru)return toast(t('Enter a translation'));
   if(editId){const f=findWord(editId);if(f){Object.assign(f.w,{en,ru,ex,ipa:formIpa||f.w.ipa||''});touch(f.w);}save();closeSheet();render();}
-  else{const s=curSet();s.words.unshift(newWord(en,ru,ex,formIpa));save();render();toast('Added ✓');
+  else{const s=curSet();s.words.unshift(newWord(en,ru,ex,formIpa));save();render();toast(t('Added ✓'));
     formIpa='';$('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';ruTouched=false;
     const ib=$('#ipaBox');if(ib)ib.textContent='';
-    $('#trSt').textContent='Add the next word';$('#fEn').focus();}
+    $('#trSt').textContent=t('Add the next word');$('#fEn').focus();}
 }
 function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;
   if(!w.arch){w.box=Math.min(w.box,2);w.due=0;w.rep=0;}else{w.box=3;srStart(w);}
   touch(w);save();closeSheet();render();
-  toast(w.arch?(w.due?'To Archive ✓ · review '+whenTxt(w.due):'Moved to Archive ✓'):'Moved back to learning');}
+  toast(w.arch?(w.due?t('Moved to Archive ✓')+' · '+whenTxt(w.due):t('Moved to Archive ✓')):t('Moved back to learning'));}
 function delWord(){const f=findWord(editId);if(f){cloudDeleteWord(f.w);f.s.words=f.s.words.filter(w=>w.id!==editId);}save();closeSheet();render();}
 
 /* ---------- IMPORT (Quizlet-style) ---------- */
 let impTerm='auto',impCard='line',impAuto=true;
 function importSheet(){
   impTerm='auto';impCard='line';impAuto=true;
-  sheet(`<h2>Import words</h2>
-   <div class="hint">Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.</div>
+  sheet(`<h2>${t('Import words')}</h2>
+   <div class="hint">${t("Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.")}</div>
    <div class="field"><textarea class="inp" id="imp" placeholder="apple&#9;яблоко&#10;reliable&#9;надёжный&#10;to give up&#10;book	книга" oninput="impPrev()"></textarea></div>
-   <div class="field"><label>Between word and translation</label><div class="sel-opt" id="selT">
-     ${[['auto','Auto'],['tab','Tab ⇥'],['dash','Dash –'],['comma','Comma'],['eq','= ']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='auto'?'on':''}" onclick="impTerm='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
-   <div class="field"><label>Between cards</label><div class="sel-opt" id="selC">
-     ${[['line','New line'],['semi','; semicolon'],['blank','Blank line']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='line'?'on':''}" onclick="impCard='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
-   <div class="toggle"><label>Translate when the translation is missing</label><div class="sw on" id="swA" onclick="impAuto=!impAuto;this.classList.toggle('on',impAuto)"><i></i></div></div>
-   <div class="hint" id="impInfo">Preview will appear here</div>
-   <button class="btn pri" id="impBtn" onclick="runImport()">Add</button>`);
+   <div class="field"><label>${t('Between word and translation')}</label><div class="sel-opt" id="selT">
+     ${[['auto',t('Auto')],['tab',t('Tab ⇥')],['dash',t('Dash –')],['comma',t('Comma')],['eq','= ']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='auto'?'on':''}" onclick="impTerm='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
+   <div class="field"><label>${t('Between cards')}</label><div class="sel-opt" id="selC">
+     ${[['line',t('New line')],['semi',t('; semicolon')],['blank',t('Blank line')]].map(o=>`<button data-v="${o[0]}" class="${o[0]==='line'?'on':''}" onclick="impCard='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
+   <div class="toggle"><label>${t('Translate when the translation is missing')}</label><div class="sw on" id="swA" onclick="impAuto=!impAuto;this.classList.toggle('on',impAuto)"><i></i></div></div>
+   <div class="hint" id="impInfo">${t('Preview will appear here')}</div>
+   <button class="btn pri" id="impBtn" onclick="runImport()">${t('Add')}</button>`);
   setTimeout(()=>$('#imp')&&$('#imp').focus(),60);
 }
 function syncSel(){$$('#selT button').forEach(b=>b.classList.toggle('on',b.dataset.v===impTerm));
@@ -1383,61 +1390,61 @@ function parseImport(){const t=$('#imp').value;return splitCards(t).map(splitPai
 function impPrev(){
   const p=parseImport();const miss=p.filter(x=>!x.ru).length;
   const info=$('#impInfo');if(!info)return;
-  if(!p.length){info.textContent='Preview will appear here';return;}
+  if(!p.length){info.textContent=t('Preview will appear here');return;}
   const ex=p.slice(0,3).map(x=>`${esc(x.en)} → ${x.ru?esc(x.ru):'<span style="color:var(--warn)">auto</span>'}`).join(' · ');
-  info.innerHTML=`Found <b>${p.length}</b> ${p.length===1?'word':'words'}${miss?`, ${miss} without translation`:''}.<br>${ex}${p.length>3?' …':''}`;
+  info.innerHTML=`${t('Found')} <b>${p.length}</b>${miss?`, ${miss} ${t('without translation')}`:''}.<br>${ex}${p.length>3?' …':''}`;
 }
 async function runImport(){
-  const pairs=parseImport();if(!pairs.length)return toast('Nothing to import');
+  const pairs=parseImport();if(!pairs.length)return toast(t('Nothing to import'));
   const s=curSet(),btn=$('#impBtn');btn.disabled=true;
   let done=0;
   for(const p of pairs){
     let ru=p.ru;
-    if(!ru&&impAuto){btn.textContent=`Translating… ${done+1}/${pairs.length}`;const t=await translate(p.en);ru=t?t.main:'';}
+    if(!ru&&impAuto){btn.textContent=t('Translating…')+' '+(done+1)+'/'+pairs.length;const t=await translate(p.en);ru=t?t.main:'';}
     s.words.push(newWord(p.en,ru||'—'));done++;
   }
-  save();closeSheet();render();toast(`Added: ${done} ${done===1?'word':'words'}`);
+  save();closeSheet();render();toast(t('Added')+': '+nWords(done));
 }
 
 /* ---------- daily goal ---------- */
 function goalSheet(){
   const g=S.stats.goal||10;
-  sheet(`<h2>Daily goal</h2>
-   <div class="hint">A day counts towards your streak once you've studied this many different words.</div>
+  sheet(`<h2>${t('Daily goal')}</h2>
+   <div class="hint">${t("A day counts towards your streak once you've studied this many different words.")}</div>
    <div class="sel-opt" style="margin-top:8px">
-     ${[5,10,15,20,30].map(v=>`<button class="${g===v?'on':''}" onclick="setGoal(${v})">${v} words</button>`).join('')}</div>
-   <div class="field" style="margin-top:12px"><label>Streak</label>
-     <div class="hint">Current: <b>${S.stats.streak||0}</b> ${((S.stats.streak||0)===1)?'day':'days'} · best: <b>${S.stats.best||0}</b></div></div>
-   <button class="btn ghost" onclick="closeSheet()">Close</button>`);
+     ${[5,10,15,20,30].map(v=>`<button class="${g===v?'on':''}" onclick="setGoal(${v})">${nWords(v)}</button>`).join('')}</div>
+   <div class="field" style="margin-top:12px"><label>${t('Streak')}</label>
+     <div class="hint">${t('Current:')} <b>${S.stats.streak||0}</b> ${plr(S.stats.streak||0,t('day'),t('day2'),t('days'))} · ${t('best:')} <b>${S.stats.best||0}</b></div></div>
+   <button class="btn ghost" onclick="closeSheet()">${t('Close')}</button>`);
 }
 function setGoal(v){S.stats.goal=v;rollDay();if(!S.stats.met&&S.stats.ids.length>=v){S.stats.met=true;S.stats.streak=(S.stats.streak||0)+1;}save();goalSheet();render();}
 
 /* ---------- review settings ---------- */
 function srSheet(){
   const c=srCfg(),d=srDays();
-  sheet(`<h2>Review schedule</h2>
-   <div class="hint">Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.</div>
-   <div class="toggle" onclick="srSet('on',${c.on?'false':'true'})"><label>Spaced review</label>
+  sheet(`<h2>${t('Review schedule')}</h2>
+   <div class="hint">${t("Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.")}</div>
+   <div class="toggle" onclick="srSet('on',${c.on?'false':'true'})"><label>${t('Spaced review')}</label>
      <div class="sw ${c.on?'on':''}"><i></i></div></div>
    ${c.on?`
-   <div class="field"><label>Pace</label>
+   <div class="field"><label>${t('Pace')}</label>
      <div class="sel-opt">
-       ${[['gentle','Gentle'],['standard','Standard'],['intense','Intense'],['custom','Custom']].map(p=>
+       ${[['gentle',t('Gentle')],['standard',t('Standard')],['intense',t('Intense')],['custom',t('Custom')]].map(p=>
          `<button class="${c.plan===p[0]?'on':''}" onclick="srSet('plan','${p[0]}')">${p[1]}</button>`).join('')}</div>
-     <div class="hint">Repeats after: <b>${d.join(', ')}</b> days.${c.plan==='gentle'?' Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.':''}</div></div>
-   ${c.plan==='custom'?`<div class="field"><label>Your intervals (days, comma separated)</label>
+     <div class="hint">${t('Repeats after')}: <b>${d.join(', ')}</b> ${t('days')}.${c.plan==='gentle'?' '+t('Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.'):''}</div></div>
+   ${c.plan==='custom'?`<div class="field"><label>${t('Your intervals (days, comma separated)')}</label>
      <div class="row"><input class="inp" id="srDays" value="${esc(d.join(', '))}" inputmode="numeric" style="flex:1">
      <button class="ic" style="width:50px;height:51px" aria-label="Save" onclick="srCustom()">✓</button></div></div>`:''}
-   <div class="field"><label>Most per session</label>
+   <div class="field"><label>${t('Most per session')}</label>
      <div class="sel-opt">
        ${[10,20,30,50].map(v=>`<button class="${c.limit===v?'on':''}" onclick="srSet('limit',${v})">${v}</button>`).join('')}</div></div>
-   <div class="field"><label>If you forget a word</label>
+   <div class="field"><label>${t('If you forget a word')}</label>
      <div class="sel-opt">
-       <button class="${c.onFail==='repeat'?'on':''}" onclick="srSet('onFail','repeat')">Ask again tomorrow</button>
-       <button class="${c.onFail==='relearn'?'on':''}" onclick="srSet('onFail','relearn')">Send back to the list</button></div>
-     <div class="hint">${c.onFail==='relearn'?'The word leaves the Archive and goes back into your list to learn again.':'The word stays in the Archive and returns tomorrow.'}</div></div>
-   <div class="hint">Due now: <b>${dueCount()}</b>${nextDueAt()?` · next ${whenTxt(nextDueAt())}`:''}</div>`:''}
-   <button class="btn ghost" style="margin-top:6px" onclick="closeSheet()">Close</button>`);
+       <button class="${c.onFail==='repeat'?'on':''}" onclick="srSet('onFail','repeat')">${t('Ask again tomorrow')}</button>
+       <button class="${c.onFail==='relearn'?'on':''}" onclick="srSet('onFail','relearn')">${t('Send back to the list')}</button></div>
+     <div class="hint">${c.onFail==='relearn'?t('The word leaves the Archive and goes back into your list to learn again.'):t('The word stays in the Archive and returns tomorrow.')}</div></div>
+   <div class="hint">${t('Due now')}: <b>${dueCount()}</b> ${t('ready now')}${nextDueAt()?` · ${whenTxt(nextDueAt())}`:''}</div>`:''}
+   <button class="btn ghost" style="margin-top:6px" onclick="closeSheet()">${t('Close')}</button>`);
 }
 function srSet(k,v){
   S.settings.sr=Object.assign({},srCfg(),{[k]:v});
@@ -1448,40 +1455,45 @@ function srSet(k,v){
 function srCustom(){
   const raw=($('#srDays')||{}).value||'';
   const days=raw.split(/[,\s]+/).map(x=>parseInt(x,10)).filter(x=>x>0&&x<400).slice(0,8);
-  if(!days.length)return toast('Enter days, e.g. 1, 3, 7, 14');
+  if(!days.length)return toast(t('Enter days, e.g. 1, 3, 7, 14'));
   days.sort((a,b)=>a-b);
   S.settings.sr=Object.assign({},srCfg(),{plan:'custom',days});
-  save();srSheet();toast('Schedule saved ✓');
+  save();srSheet();toast(t('Schedule saved ✓'));
 }
 
 /* ---------- settings / backup ---------- */
 function settingsSheet(){
   const th=S.settings.theme||'auto',ac=S.settings.accent||'uk';
-  sheet(`<h2>Settings</h2>
-   <div class="field"><label>Appearance</label>
+  const lg=S.settings.lang||'ru';
+  sheet(`<h2>${t('Settings')}</h2>
+   <div class="field"><label>${t('Language')}</label>
      <div class="seg3">
-       <button class="${th==='auto'?'on':''}" onclick="setTheme('auto')">Auto</button>
-       <button class="${th==='light'?'on':''}" onclick="setTheme('light')">☀ Light</button>
-       <button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">🌙 Dark</button></div>
-     ${th==='auto'?`<div class="hint">Light by day, dark at night.${S.settings.geo?' Using your location for exact sunrise & sunset.':` <span onclick="useLocation()" style="color:var(--pri);font-weight:700">Use my location</span> for exact sunrise & sunset.`}</div>`:''}</div>
-   <div class="field"><label>Pronunciation</label>
+       <button class="${lg==='ru'?'on':''}" onclick="setLang('ru')">Русский</button>
+       <button class="${lg==='en'?'on':''}" onclick="setLang('en')">English</button></div></div>
+   <div class="field"><label>${t('Appearance')}</label>
+     <div class="seg3">
+       <button class="${th==='auto'?'on':''}" onclick="setTheme('auto')">${t('Auto')}</button>
+       <button class="${th==='light'?'on':''}" onclick="setTheme('light')">${t('☀ Light')}</button>
+       <button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">${t('🌙 Dark')}</button></div>
+     ${th==='auto'?`<div class="hint">${t('Light by day, dark at night.')}${S.settings.geo?' '+t('Using your location for exact sunrise & sunset.'):` <span onclick="useLocation()" style="color:var(--pri);font-weight:700">${t('Use my location')}</span> ${t('for exact sunrise & sunset.')}`}</div>`:''}</div>
+   <div class="field"><label>${t('Pronunciation')}</label>
      <select class="inp" onchange="S.settings.accent=this.value;save()">
-       <option value="uk" ${ac==='uk'?'selected':''}>British — academic</option>
-       <option value="us" ${ac==='us'?'selected':''}>American</option></select>
-     <div class="hint">The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an <b>Enhanced</b> voice.</div></div>
-   <div class="field"><label>Auto-translate</label>
+       <option value="uk" ${ac==='uk'?'selected':''}>${t('British — academic')}</option>
+       <option value="us" ${ac==='us'?'selected':''}>${t('American')}</option></select>
+     <div class="hint">${t('The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an')} <b>Enhanced</b> ${t('voice.')}</div></div>
+   <div class="field"><label>${t('Auto-translate')}</label>
      <select class="inp" onchange="S.settings.prov=this.value;save()">
-       <option value="google" ${S.settings.prov==='google'?'selected':''}>Google (fallback: MyMemory)</option>
-       <option value="mm" ${S.settings.prov==='mm'?'selected':''}>MyMemory only</option></select></div>
+       <option value="google" ${S.settings.prov==='google'?'selected':''}>${t('Google (fallback: MyMemory)')}</option>
+       <option value="mm" ${S.settings.prov==='mm'?'selected':''}>${t('MyMemory only')}</option></select></div>
    <div class="stack" style="margin-top:4px">
-     <button class="btn" onclick="closeSheet();srSheet()">🔁 Review schedule${srCfg().on?` · ${srDays().join('/')} days`:' · off'}</button>
-     <button class="btn" onclick="closeSheet();goalSheet()">🎯 Daily goal · ${S.stats.goal||10} words</button></div>
+     <button class="btn" onclick="closeSheet();srSheet()">${t('🔁 Review schedule')}${srCfg().on?` · ${srDays().join('/')}`:' · '+t('off')}</button>
+     <button class="btn" onclick="closeSheet();goalSheet()">${t('🎯 Daily goal')} · ${nWords(S.stats.goal||10)}</button></div>
    <div class="stack" style="margin-top:6px">
-     <button class="btn" onclick="exportData()">💾 Backup (all lists)</button>
-     <button class="btn ghost" onclick="$('#imp-file').click()">📂 Restore from file</button></div>
+     <button class="btn" onclick="exportData()">${t('💾 Backup (all lists)')}</button>
+     <button class="btn ghost" onclick="$('#imp-file').click()">${t('📂 Restore from file')}</button></div>
    <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importFile(this.files[0])">
-   <div class="stack" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet();acctOrAuth()">${AUTH.user?'👤 Account':'👤 Sign in / Sign up'}</button></div>
-   <div class="hint" style="margin-top:14px">${AUTH.user?'Your words sync to your account and are available on any device you sign in on.':'Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.'}</div>`);
+   <div class="stack" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet();acctOrAuth()">${AUTH.user?t('👤 Account'):t('👤 Sign in / Sign up')}</button></div>
+   <div class="hint" style="margin-top:14px">${AUTH.user?t('Your words sync to your account and are available on any device you sign in on.'):t('Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.')}</div>`);
 }
 async function exportData(setId){
   closeSheet();
@@ -1499,28 +1511,28 @@ function importFile(f){
     const d=JSON.parse(r.result);if(!d||!Array.isArray(d.sets))throw 0;
     const clean=fix(d.v?d:migrate(d));
     clean.sets.forEach(ns=>{const i=S.sets.findIndex(x=>x.id===ns.id);if(i>=0)S.sets[i]=ns;else S.sets.push(ns);});
-    save();closeSheet();go('home');toast('Imported ✓');
-  }catch(e){toast('Couldn’t read the file');}};
+    save();closeSheet();go('home');toast(t('Imported ✓'));
+  }catch(e){toast(t('Couldn’t read the file'));}};
   r.readAsText(f);
 }
 
 /* ---------- printable quiz ---------- */
 let prDir='ru2en',prKey=true,prN=20;
 function printSheet(){
-  const s=curSet();if(!s||!s.words.length)return toast('No words in this list');
+  const s=curSet();if(!s||!s.words.length)return toast(t('No words in this list'));
   const max=s.words.length;prN=Math.min(prN,max);
-  sheet(`<h2>Print a quiz</h2>
-   <div class="hint">Makes a paper worksheet from this list — print it or save as PDF.</div>
-   <div class="field"><label>Task</label><div class="sel-opt">
-     <button class="${prDir==='ru2en'?'on':''}" onclick="prDir='ru2en';printSheet()">🇷🇺 → 🇬🇧 write the English</button>
-     <button class="${prDir==='en2ru'?'on':''}" onclick="prDir='en2ru';printSheet()">🇬🇧 → 🇷🇺 write the Russian</button>
-     <button class="${prDir==='mix'?'on':''}" onclick="prDir='mix';printSheet()">Mixed</button></div></div>
-   <div class="field"><label>How many words</label>
+  sheet(`<h2>${t('Print a quiz')}</h2>
+   <div class="hint">${t('Makes a paper worksheet from this list — print it or save as PDF.')}</div>
+   <div class="field"><label>${t('Task')}</label><div class="sel-opt">
+     <button class="${prDir==='ru2en'?'on':''}" onclick="prDir='ru2en';printSheet()">${t('🇷🇺 → 🇬🇧 write the English')}</button>
+     <button class="${prDir==='en2ru'?'on':''}" onclick="prDir='en2ru';printSheet()">${t('🇬🇧 → 🇷🇺 write the Russian')}</button>
+     <button class="${prDir==='mix'?'on':''}" onclick="prDir='mix';printSheet()">${t('Mixed')}</button></div></div>
+   <div class="field"><label>${t('How many words')}</label>
      <select class="inp" id="prN" onchange="prN=+this.value">
-       ${[...new Set([10,20,30,max].filter(v=>v<=max))].sort((a,b)=>a-b).map(v=>`<option value="${v}" ${v===prN?'selected':''}>${v===max?'All ('+max+')':v}</option>`).join('')}</select></div>
+       ${[...new Set([10,20,30,max].filter(v=>v<=max))].sort((a,b)=>a-b).map(v=>`<option value="${v}" ${v===prN?'selected':''}>${v===max?t("All")+" ("+max+")":v}</option>`).join('')}</select></div>
    <div class="toggle" onclick="prKey=!prKey;this.querySelector('.sw').classList.toggle('on',prKey)">
-     <label>Answer key on a separate page</label><div class="sw ${prKey?'on':''}"><i></i></div></div>
-   <button class="btn pri" onclick="doPrint()">🖨 Print</button>`);
+     <label>${t('Answer key on a separate page')}</label><div class="sw ${prKey?'on':''}"><i></i></div></div>
+   <button class="btn pri" onclick="doPrint()">${t('🖨 Print')}</button>`);
 }
 function doPrint(){
   const s=curSet();if(!s)return;
@@ -1533,9 +1545,9 @@ function doPrint(){
   const old=document.getElementById('printarea');if(old)old.remove();
   const box=document.createElement('div');box.id='printarea';
   box.innerHTML=`<h1>${esc(s.name)}</h1>
-    <div class="sub">Name: ______________________________　　Date: ${d}　　Score: ____ / ${rows.length}</div>
+    <div class="sub">${t('Name:')} ______________________　${t('Date:')} ${d}　${t('Score:')} ____ / ${rows.length}</div>
     <ol>${rows.map(r=>`<li>${esc(r.q)} <span class="blank"></span></li>`).join('')}</ol>
-    ${prKey?`<div class="key"><b>Answer key — ${esc(s.name)}</b><br>${rows.map((r,i)=>`${i+1}. ${esc(r.a)}`).join(' · ')}</div>`:''}`;
+    ${prKey?`<div class="key"><b>${t('Answer key')} — ${esc(s.name)}</b><br>${rows.map((r,i)=>`${i+1}. ${esc(r.a)}`).join(' · ')}</div>`:''}`;
   document.body.appendChild(box);
   closeSheet();
   setTimeout(()=>{try{window.print();}catch(e){}setTimeout(()=>box.remove(),800);},120);
@@ -1556,14 +1568,14 @@ function mkQ(pool,w,kind,forceDir){
 }
 function renderQ(box,q,o){
   const w=q.w,en2ru=q.dir==='en2ru',prompt=en2ru?w.en:w.ru,answer=en2ru?w.ru:w.en;
-  let lbl=q.type==='tf'?'Is this a correct match?':q.type==='type'?(en2ru?'Type the translation':'Type in English'):(en2ru?'Choose the translation':'Choose the word');
+  let lbl=q.type==='tf'?t('Is this a correct match?'):q.type==='type'?(en2ru?t('Type the translation'):t('Type in English')):(en2ru?t('Choose the translation'):t('Choose the word'));
   let h=`<div class="card" style="min-height:min(34vh,200px)"><div class="lbl">${lbl}</div>
     <div class="word">${esc(prompt)}</div>${(en2ru&&w.ipa)?`<div class="ipa">${esc(w.ipa)}</div>`:''}${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
   if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,i)=>`<button class="opt" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
   if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn" data-tf="1">✓ True</button><button class="btn" data-tf="0">✗ False</button></div>`;
-  if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="Answer" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
-    <div style="height:9px"></div><button class="btn pri" id="tsub">Check</button>
-    <div style="height:8px"></div><button class="btn ghost" id="tskip">Don't know</button></div>`;
+  if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
+    <div style="height:9px"></div><button class="btn pri" id="tsub">${t('Check')}</button>
+    <div style="height:8px"></div><button class="btn ghost" id="tskip">${t("Don't know")}</button></div>`;
   if(o.onSkip)h+=`<div style="height:8px"></div><button class="btn ghost" id="qskip" style="color:var(--mut)">↷ Skip — think later</button>`;
   h+=`<div id="fbx"></div>`;box.innerHTML=h;
   let done=false;
@@ -1572,10 +1584,10 @@ function renderQ(box,q,o){
     if(!o.feedback){o.onDone(ok,given,near);return;}
     const f=$('#fbx');
     const cls=near?'near':(ok?'ok':'bad');
-    const title=near?'Almost — mind the spelling':(ok?'Correct ✓':'Wrong');
-    const ans=esc(q.type==='tf'?(q.isTrue?'the match is correct':'the match is wrong'):answer);
-    f.innerHTML=`<div class="fb ${cls}">${title}${(ok&&!near)?'':`<small>${near?'Correct spelling: ':'Answer: '}${ans}</small>`}</div>`+
-      (ok?'':'<button class="btn pri" id="nx">Next →</button>');
+    const title=near?t('Almost — mind the spelling'):(ok?t('Correct ✓'):t('Wrong'));
+    const ans=esc(q.type==='tf'?(q.isTrue?t('the match is correct'):t('the match is wrong')):answer);
+    f.innerHTML=`<div class="fb ${cls}">${title}${(ok&&!near)?'':`<small>${near?t('Correct spelling: '):t('Answer: ')}${ans}</small>`}</div>`+
+      (ok?'':`<button class="btn pri" id="nx">${t("Next →")}</button>`);
     if(!en2ru||q.type==='tf')speak(w.en);
     if(ok)setTimeout(()=>o.onDone(ok,given,near),near?1500:620);else $('#nx').onclick=()=>o.onDone(ok,given,near);
   };
@@ -1590,34 +1602,34 @@ function renderQ(box,q,o){
     $('#tskip').onclick=()=>{if(done)return;ta.disabled=true;finish(false,'');};}
   if(o.onSkip){const sb=$('#qskip');if(sb)sb.onclick=()=>{if(done)return;done=true;o.onSkip();};}
 }
-const studyTop=(title,pct,stat)=>hdr(title,"if(confirm('Exit this session?'))render()")+
+const studyTop=(title,pct,stat)=>hdr(title,"if(confirm(t('Exit this session?')))render()")+
   `<div class="topbar"><div class="pbar"><i style="width:${pct}%"></i></div><span class="stat">${stat}</span></div><div id="qb"></div>`;
 
 /* ---------- flashcards ---------- */
 function startCards(review){
-  const pool=poolNow();if(!pool.length)return toast('No words');
+  const pool=poolNow();if(!pool.length)return toast(t('No words'));
   let deck=shuffle(pool),i=0,flip=false,dir='en',unknown=[],total=deck.length;const app=$('#app');
   function draw(){
     if(i>=deck.length){
-      app.innerHTML=hdr('Flashcards',"render()")+`<div class="celebrate"><div class="big">${unknown.length?'👍':'🎉'}</div></div>
-        <div class="empty" style="padding-top:0"><b>Deck complete</b><p>Didn't know: ${unknown.length} of ${total}</p></div>
-        ${unknown.length?`<button class="btn pri" id="rep">Review tough ones (${unknown.length})</button><div style="height:9px"></div>`:''}
-        <button class="btn ghost" onclick="render()">Done</button>`;
+      app.innerHTML=hdr(t('Flashcards'),"render()")+`<div class="celebrate"><div class="big">${unknown.length?'👍':'🎉'}</div></div>
+        <div class="empty" style="padding-top:0"><b>${t('Deck complete')}</b><p>${t('Didn’t know')}: ${unknown.length} / ${total}</p></div>
+        ${unknown.length?`<button class="btn pri" id="rep">${t('Review tough ones')} (${unknown.length})</button><div style="height:9px"></div>`:''}
+        <button class="btn ghost" onclick="render()">${t('Done')}</button>`;
       if(unknown.length)$('#rep').onclick=()=>{deck=shuffle(unknown);unknown=[];i=0;total=deck.length;flip=false;draw();};return;
     }
     const w=deck[i];const front=dir==='en'?w.en:w.ru,back=dir==='en'?w.ru:w.en;
-    app.innerHTML=hdr('Flashcards',"render()",`<button class="ic" aria-label="Flip side" onclick="window._flip()">⇄</button>`)+
+    app.innerHTML=hdr(t('Flashcards'),"render()",`<button class="ic" aria-label="Flip side" onclick="window._flip()">⇄</button>`)+
      `<div class="topbar"><div class="pbar"><i style="width:${i/deck.length*100}%"></i></div><span class="stat">${i+1}/${deck.length}</span></div>
       <div class="fc"><div class="card" id="cd">
         ${flip
           ?`<div class="word">${esc(back)}</div>${(dir==='ru'&&w.ipa)?`<div class="ipa">${esc(w.ipa)}</div>`:''}${w.ex?`<div class="ex">${esc(w.ex)}</div>`:''}`
-          :`<div class="word">${esc(front)}</div>${(dir==='en'&&w.ipa)?`<div class="ipa">${esc(w.ipa)}</div>`:''}<div class="tip">tap to flip</div>`}
+          :`<div class="word">${esc(front)}</div>${(dir==='en'&&w.ipa)?`<div class="ipa">${esc(w.ipa)}</div>`:''}<div class="tip">${t('tap to flip')}</div>`}
       </div></div>
-      <div class="row2"><button class="btn" id="no" style="color:var(--bad)">Don't know</button><button class="btn" id="yes" style="color:var(--ok)">Know ✓</button></div>
-      <div style="height:9px"></div><button class="btn ghost" id="sp">🔊 Pronounce</button>`;
+      <div class="row2"><button class="btn" id="no" style="color:var(--bad)">${t("Don't know")}</button><button class="btn" id="yes" style="color:var(--ok)">${t('Know ✓')}</button></div>
+      <div style="height:9px"></div><button class="btn ghost" id="sp">${t('🔊 Pronounce')}</button>`;
     $('#cd').onclick=()=>{flip=!flip;draw();};
     $('#sp').onclick=()=>speak(w.en);
-    $('#yes').onclick=()=>{if(!review){const r=award(w,true);save();if(r==='arch')toast('“'+w.en+'” → Archive ✓');}i++;flip=false;draw();};
+    $('#yes').onclick=()=>{if(!review){const r=award(w,true);save();if(r==='arch')toast('“'+w.en+'” → '+t('Archive')+' ✓');}i++;flip=false;draw();};
     $('#no').onclick=()=>{if(!review){award(w,false);save();}unknown.push(w);i++;flip=false;draw();};
     if(!flip&&dir==='en')speak(w.en);
   }
@@ -1628,26 +1640,26 @@ function startCards(review){
 /* ---------- learn (active only) ---------- */
 function startLearn(review){
   const pool=review?poolNow():(view.name==='set'?active(curSet()):poolNow());
-  if(!pool.length)return toast(review?'No words':'No words to learn');
+  if(!pool.length)return toast(review?t('No words'):t('No words to learn'));
   const B={};if(review)pool.forEach(w=>B[w.id]=0);
   const lvl=w=>review?B[w.id]:(w.box||0);
   let queue=shuffle(pool.filter(w=>lvl(w)<3));if(!queue.length)queue=shuffle(pool);
   const target=queue.reduce((n,w)=>n+(3-lvl(w)),0)||queue.length;let gained=0;const app=$('#app');
   function next(){
     if(!queue.length){
-      app.innerHTML=hdr('Learn',"render()")+
-        `<div class="hero"><div class="hero-emoji">🏆</div><div class="hero-title" style="margin-top:14px">${review?'Review complete':'Great job!'}</div>
-         <div class="hero-sub">${review?'You revised every word in this session.':'Every word this session is mastered and moved to the Archive.'}</div></div>
-        <div style="height:14px"></div><button class="btn pri" onclick="render()">Done</button>`;
+      app.innerHTML=hdr(t('Learn'),"render()")+
+        `<div class="hero"><div class="hero-emoji">🏆</div><div class="hero-title" style="margin-top:14px">${review?t('Review complete'):t('Great job!')}</div>
+         <div class="hero-sub">${review?t('You revised every word in this session.'):t('Every word this session is mastered and moved to the Archive.')}</div></div>
+        <div style="height:14px"></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;
       confetti();return;
     }
     const w=queue.shift();const L=lvl(w);const kind=L<=1?'mc':'type';const dir=L===0?'en2ru':'ru2en';
-    app.innerHTML=studyTop('Learn',Math.min(100,gained/target*100),'mastered '+gained+'/'+target);
+    app.innerHTML=studyTop(t('Learn'),Math.min(100,gained/target*100),t('mastered')+' '+gained+'/'+target);
     const q=mkQ(pool,w,kind,dir);
     renderQ($('#qb'),q,{feedback:true,onDone:ok=>{
       const before=lvl(w);
       if(review){B[w.id]=ok?Math.min(3,before+1):Math.max(0,before-1);}
-      else{const r=award(w,ok);save();if(ok&&r==='arch')toast('“'+w.en+'” → Archive ✓');}
+      else{const r=award(w,ok);save();if(ok&&r==='arch')toast('“'+w.en+'” → '+t('Archive')+' ✓');}
       const after=lvl(w);
       if(ok){gained+=Math.max(0,after-before);
         if(after<3)queue.splice(Math.min(queue.length,3+(Math.random()*3|0)),0,w);}
@@ -1660,21 +1672,21 @@ function startLearn(review){
 
 /* ---------- test ---------- */
 function testSetup(review){
-  const pool=poolNow();if(!pool.length)return toast('No words');
+  const pool=poolNow();if(!pool.length)return toast(t('No words'));
   const n=pool.length;const opts=[...new Set([5,10,20,n].filter(v=>v<=n))].sort((a,b)=>a-b);
-  sheet(`<h2>Test</h2>
-   <div class="field"><label>How many questions</label>
-     <select class="inp" id="tn">${opts.map(v=>`<option value="${v}">${v===n?'All words ('+n+')':v}</option>`).join('')}</select></div>
-   <div class="field"><label>Question types</label><div class="stack">
-     ${[['k1','Multiple choice'],['k2','Type the answer'],['k3','True / false']].map(o=>
+  sheet(`<h2>${t('Test')}</h2>
+   <div class="field"><label>${t('How many questions')}</label>
+     <select class="inp" id="tn">${opts.map(v=>`<option value="${v}">${v===n?t('All words')+' ('+n+')':v}</option>`).join('')}</select></div>
+   <div class="field"><label>${t('Question types')}</label><div class="stack">
+     ${[['k1',t('Multiple choice')],['k2',t('Type the answer')],['k3',t('True / false')]].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
-   <div class="hint">🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.</div>
-   ${review?'<div class="hint">Archive review: results don\'t change progress.</div>':''}
-   <button class="btn pri" onclick="beginTest(${!!review})">Start test</button>`);
+   <div class="hint">${t('🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.')}</div>
+   ${review?'<div class="hint">'+t('Archive review: results don\'t change progress.')+'</div>':''}
+   <button class="btn pri" onclick="beginTest(${!!review})">${t('Start test')}</button>`);
 }
 function beginTest(review){
   const kinds=[$('#k1').classList.contains('on')&&'mc',$('#k2').classList.contains('on')&&'type',$('#k3').classList.contains('on')&&'tf'].filter(Boolean);
-  if(!kinds.length)return toast('Pick at least one type');
+  if(!kinds.length)return toast(t('Pick at least one type'));
   const n=+$('#tn').value;closeSheet();runTest(shuffle(poolNow()).slice(0,n),kinds,review);
 }
 function runTest(words,kinds,review){
@@ -1686,24 +1698,24 @@ function runTest(words,kinds,review){
   const answered=ix=>{const q=qs[ix];return q.type==='type'?(ans[ix]||'').trim()!=='':ans[ix]!==null;};
   const countAns=()=>{let n=0;for(let k=0;k<total;k++)if(answered(k))n++;return n;};
   function go2(nx){if(nx<0||nx>=total)return;i=nx;draw();}
-  function finishTest(){const blanks=total-countAns();if(blanks&&!confirm(blanks+(blanks===1?' question is':' questions are')+' still blank. Finish anyway?'))return;result();}
+  function finishTest(){const blanks=total-countAns();if(blanks&&!confirm(t('Still blank')+': '+blanks+'. '+t('Finish anyway?')))return;result();}
   function draw(){
     const q=qs[i],en2ru=q.dir==='en2ru',prompt=en2ru?q.w.en:q.w.ru;
-    const lbl=q.type==='tf'?'Is this a correct match?':q.type==='type'?(en2ru?'Type the translation':'Type in English'):(en2ru?'Choose the translation':'Choose the word');
+    const lbl=q.type==='tf'?t('Is this a correct match?'):q.type==='type'?(en2ru?t('Type the translation'):t('Type in English')):(en2ru?t('Choose the translation'):t('Choose the word'));
     const ca=countAns();
     const dots=qs.map((_,ix)=>`<button class="qdot ${answered(ix)?'on':''} ${ix===i?'cur':''}" data-ix="${ix}">${ix+1}</button>`).join('');
-    let h=hdr('Test',"if(confirm('Exit this session?'))render()")+
+    let h=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()")+
       `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div><span class="stat">${ca}/${total}</span></div>`+
       `<div class="qpal">${dots}</div>`+
       `<div class="card" style="min-height:min(30vh,180px)"><div class="lbl">${lbl}</div>
         <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
     if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[i]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
     if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
-    if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="Answer" value="${esc(ans[i]||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>`;
+    if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" value="${esc(ans[i]||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>`;
     h+=`<div style="height:14px"></div><div class="row2">
-      <button class="btn ghost" id="tback" ${i===0?'disabled':''}>← Back</button>
-      ${i<total-1?`<button class="btn pri" id="tnext">Next →</button>`:`<button class="btn pri tfinbtn">Finish ✓</button>`}</div>
-      ${i<total-1?`<div style="height:9px"></div><button class="btn ghost tfinbtn" style="color:var(--mut)">Finish test</button>`:''}`;
+      <button class="btn ghost" id="tback" ${i===0?'disabled':''}>${t('← Back')}</button>
+      ${i<total-1?`<button class="btn pri" id="tnext">${t('Next →')}</button>`:`<button class="btn pri tfinbtn">${t('Finish ✓')}</button>`}</div>
+      ${i<total-1?`<div style="height:9px"></div><button class="btn ghost tfinbtn" style="color:var(--mut)">${t('Finish test')}</button>`:''}`;
     app.innerHTML=h;
     $$('.qdot').forEach(b=>b.onclick=()=>go2(+b.dataset.ix));
     if(q.type==='mc')$$('.opt').forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.k;draw();});
@@ -1726,10 +1738,10 @@ function runTest(words,kinds,review){
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100),bad=res.filter(r=>!r.ok);
     const slips=res.filter(r=>r.ok&&r.near);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
-    app.innerHTML=hdr('Result',"render()")+
-      scoreHero(pct,`${good} of ${res.length} correct${!review&&toArch?` · ${toArch} moved to Archive`:''}`)+
+    app.innerHTML=hdr(t('Result'),"render()")+
+      scoreHero(pct,`${good} / ${res.length} ${t('correct')}${!review&&toArch?` · ${toArch} ${t('moved to Archive')}`:''}`)+
       `<div style="height:8px"></div>`+
-      (slips.length?`<div class="subhead"><span class="t">Spelling slips — ${slips.length}</span></div>`+
+      (slips.length?`<div class="subhead"><span class="t">${t('Spelling slips')} — ${slips.length}</span></div>`+
         slips.map(r=>`<div class="item" style="display:block;padding:13px 15px">
           <div style="display:flex;align-items:center;gap:13px">
             <div class="t" style="flex:1"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div>
@@ -1738,16 +1750,16 @@ function runTest(words,kinds,review){
             <span class="ans-bad near">✎ ${esc(r.given)}</span>
             <span class="ans-ok">✓ ${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
         `<div style="height:10px"></div>`:'')+
-      (bad.length?`<div class="subhead"><span class="t">Mistakes — ${bad.length}</span></div>`+
+      (bad.length?`<div class="subhead"><span class="t">${t('Mistakes')} — ${bad.length}</span></div>`+
         bad.map(r=>`<div class="item" style="display:block;padding:13px 15px">
           <div style="display:flex;align-items:center;gap:13px">
             <div class="t" style="flex:1"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div>
             <button class="spk" onclick="speak('${q1(r.w.en)}')">🔊</button></div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
-            <span class="ans-bad">✗ ${r.given?esc(r.given):'no answer'}</span>
+            <span class="ans-bad">✗ ${r.given?esc(r.given):t('no answer')}</span>
             <span class="ans-ok">✓ ${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
-        `<div style="height:10px"></div><button class="btn pri" id="rt">Retry mistakes</button><div style="height:9px"></div>`:'')+
-      `<button class="btn ghost" onclick="render()">Close</button>`;
+        `<div style="height:10px"></div><button class="btn pri" id="rt">${t('Retry mistakes')}</button><div style="height:9px"></div>`:'')+
+      `<button class="btn ghost" onclick="render()">${t('Close')}</button>`;
     if(bad.length)$('#rt').onclick=()=>runTest(shuffle(bad.map(r=>r.w)),kinds,review);
     if(pct>=60)confetti(pct>=90?160:120);
   }
@@ -1756,12 +1768,12 @@ function runTest(words,kinds,review){
 
 /* ---------- match ---------- */
 function startMatch(){
-  const pool=poolNow();if(pool.length<3)return toast('Need at least 3 words');
+  const pool=poolNow();if(pool.length<3)return toast(t('Need at least 3 words'));
   const ws=shuffle(pool).slice(0,6);
   const tiles=shuffle(ws.flatMap(w=>[{id:w.id,t:w.en},{id:w.id,t:w.ru}]));
   let sel=null,left=ws.length,t0=Date.now(),miss=0;const app=$('#app');
-  app.innerHTML=hdr('Match',"render()",`<span class="stat" id="tm" style="font-size:16px;min-width:64px">0.0s</span>`)+
-    `<div class="hint" style="text-align:center;margin-bottom:12px">Match each word with its translation</div>
+  app.innerHTML=hdr(t('Match'),"render()",`<span class="stat" id="tm" style="font-size:16px;min-width:64px">0.0s</span>`)+
+    `<div class="hint" style="text-align:center;margin-bottom:12px">${t('Match each word with its translation')}</div>
      <div class="tiles">${tiles.map((x,i)=>`<button class="tile" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
   const iv=setInterval(()=>{const e=$('#tm');if(!e)return clearInterval(iv);e.textContent=((Date.now()-t0)/1000).toFixed(1)+'s';},100);
   app.querySelectorAll('.tile').forEach(el=>el.onclick=()=>{
@@ -1771,11 +1783,11 @@ function startMatch(){
     const y=tiles[+sel.dataset.i];
     if(x.id===y.id){el.classList.add('done');sel.classList.add('done');sel=null;left--;
       if(!left){clearInterval(iv);const t=((Date.now()-t0)/1000).toFixed(1);
-        app.innerHTML=hdr('Match',"render()")+
+        app.innerHTML=hdr(t('Match'),"render()")+
           `<div class="hero"><div class="hero-emoji">🎉</div><div class="big-pct" style="margin:6px 0 0">${t}s</div>
-           <div class="hero-sub">Mistakes: ${miss}</div></div>
-          <div style="height:14px"></div><button class="btn pri" onclick="startMatch()">Again</button><div style="height:9px"></div>
-          <button class="btn ghost" onclick="render()">Close</button>`;
+           <div class="hero-sub">${t('Mistakes')}: ${miss}</div></div>
+          <div style="height:14px"></div><button class="btn pri" onclick="startMatch()">${t('Again')}</button><div style="height:9px"></div>
+          <button class="btn ghost" onclick="render()">${t('Close')}</button>`;
         confetti(miss===0?150:90);}}
     else{miss++;const a=sel;sel=null;a.classList.remove('sel');a.classList.add('no');el.classList.add('no');
       setTimeout(()=>{a.classList.remove('no');el.classList.remove('no');},380);}
