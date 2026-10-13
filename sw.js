@@ -1,8 +1,13 @@
-const CACHE = 'vocab-v13';
+const CACHE = 'vocab-v14';
 const FILES = ['./', './index.html', './manifest.json', './icon-180.png', './icon-512.png'];
+const EXTERNAL = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(FILES).then(() => Promise.all(EXTERNAL.map(u => c.add(u).catch(() => {})))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
@@ -15,7 +20,24 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+  if (req.method !== 'GET') return;
+
+  // the sign-in / sync library: network first, cached copy when offline
+  if (new URL(req.url).origin !== location.origin) {
+    if (EXTERNAL.some(u => req.url.startsWith(u))) {
+      e.respondWith(
+        fetch(req)
+          .then(res => {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(req, copy));
+            return res;
+          })
+          .catch(() => caches.match(req))
+      );
+    }
+    return;
+  }
+
   e.respondWith(
     fetch(req)
       .then(res => {

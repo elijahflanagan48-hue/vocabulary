@@ -11,6 +11,7 @@
 <title>Vocabulary</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>(function(){try{var s=(JSON.parse(localStorage.getItem('vocab.v2')||'{}').settings)||{};var m=s.theme||'auto',dark;if(m==='dark')dark=true;else if(m==='light')dark=false;else{var h=new Date().getHours();dark=h<7||h>=19;}document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
 :root{
@@ -134,6 +135,21 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .btn.selp{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
 .arch-ic{width:46px;height:46px;flex:none;border-radius:50%;background:var(--pri-soft);color:var(--pri-d);display:flex;align-items:center;justify-content:center;font-size:22px}
 .src{color:var(--fade);font-size:12.5px;font-weight:600}
+
+/* account */
+.acct-dot{position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:var(--ok);border:2px solid var(--bg)}
+.ic{position:relative}
+.tabs2{display:flex;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;box-shadow:var(--sh-sm);margin-bottom:14px}
+.tabs2 button{flex:1;padding:10px 6px;border-radius:10px;font-weight:650;font-size:15px;color:var(--mut)}
+.tabs2 button.on{background:var(--grad);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.codebox{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--pri-soft);border-radius:15px;padding:16px;margin:4px 0 12px}
+.codebox b{font-size:28px;font-weight:850;letter-spacing:.08em;color:var(--pri-d)}
+.roster{display:flex;align-items:center;gap:13px;background:var(--surf);box-shadow:var(--sh-sm);border:1px solid var(--line);border-radius:15px;padding:13px 15px;margin-bottom:9px}
+.roster .av{width:40px;height:40px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex:none}
+.roster .t{flex:1;min-width:0}
+.roster .nm{font-weight:700;font-size:16px}
+.roster .meta{color:var(--mut);font-size:13px}
+.err{color:var(--bad);font-size:13.5px;font-weight:600;margin:2px 2px 8px;min-height:17px}
 
 /* set card on home */
 .setcard{display:flex;align-items:center;gap:14px;background:var(--surf);box-shadow:var(--sh);
@@ -290,13 +306,14 @@ function migrate(d){ // v1 -> v2
 }
 function fix(d){
   d=d||DB();d.settings=Object.assign({prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null},d.settings||{});
-  d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,words:(s.words||[]).map(w=>({
-    id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now()
+  d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map(w=>({
+    id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),
+    upd:w.upd||Date.now(),synced:!!w.synced
   }))}));
   return d;
 }
 let S=load();
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No storage space left')}};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No storage space left')};cloudKick();};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q1=s=>String(s??'').replace(/[\\']/g,'\\$&');
@@ -304,7 +321,8 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(
 const plural=(n,one,few,many)=>{const m10=n%10,m100=n%100;return n+' '+(m10===1&&m100!==11?one:(m10>=2&&m10<=4&&(m100<10||m100>=20)?few:many));};
 const norm=s=>String(s).toLowerCase().replace(/ё/g,'е').replace(/[.,!?;:"'’()\[\]]/g,'').replace(/\s+/g,' ').trim();
 function okAns(inp,correct,isRu){const n=norm(inp);if(!n)return false;if(norm(correct)===n)return true;return isRu&&correct.split(/[,;\/]/).some(v=>norm(v)===n);}
-const newWord=(en,ru,ex='')=>({id:uid(),en:en.trim(),ru:ru.trim(),ex:ex.trim(),box:0,arch:false,ok:0,bad:0,added:Date.now()});
+const newWord=(en,ru,ex='')=>({id:uid(),en:en.trim(),ru:ru.trim(),ex:ex.trim(),box:0,arch:false,ok:0,bad:0,added:Date.now(),upd:Date.now(),synced:false});
+const touch=x=>{x.upd=Date.now();x.synced=false;};
 const curSet=()=>S.sets.find(s=>s.id===view.id);
 const active=s=>s.words.filter(w=>!w.arch);
 const archived=s=>s.words.filter(w=>w.arch);
@@ -416,6 +434,7 @@ function confetti(n){
 
 /* award: update mastery; returns 'arch' if word just archived */
 function award(w,correct){
+  touch(w);
   if(correct){w.ok++;w.box=Math.min(3,w.box+1);if(w.box>=3&&!w.arch){w.arch=true;return 'arch';}}
   else{w.bad++;w.box=Math.max(0,w.box-1);}
   return '';
@@ -451,6 +470,220 @@ async function translate(t){
   return null;
 }
 
+/* ---------- cloud: account + sync ---------- */
+const SB_URL='https://sbpqwwsnvbpfwqoxfpza.supabase.co';
+const SB_KEY='sb_publishable_H3ue62zAaSeDFN2UGcfcWA_HlMlw2-5';
+let sb=null;
+try{sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_KEY):null;}catch(e){sb=null;}
+let AUTH={user:null,profile:null,ready:false,students:[]};
+let syncing=false;
+function cloudEnabled(){return !!(sb&&AUTH.user);}
+
+let _pushTimer=null;
+function cloudKick(){
+  if(!cloudEnabled())return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(()=>{cloudPush();},1400);
+}
+async function cloudPush(){
+  if(!cloudEnabled()||syncing)return;
+  syncing=true;
+  try{
+    const me=AUTH.user.id;
+    if(S.sets.length){
+      const rows=S.sets.map((s,i)=>({id:s.id,owner_id:me,name:s.name,position:i,deleted:false,updated_at:new Date(s.upd||Date.now()).toISOString()}));
+      const {error}=await sb.from('sets').upsert(rows);
+      if(!error)S.sets.forEach(s=>s.synced=true);
+    }
+    const wr=[];
+    S.sets.forEach(s=>s.words.forEach((w,i)=>wr.push({id:w.id,set_id:s.id,owner_id:me,en:w.en,ru:w.ru||'',ex:w.ex||'',
+      box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,position:i,deleted:false,updated_at:new Date(w.upd||Date.now()).toISOString()})));
+    for(let i=0;i<wr.length;i+=200){
+      const chunk=wr.slice(i,i+200);
+      const {error}=await sb.from('words').upsert(chunk);
+      if(!error)chunk.forEach(r=>{const f=findWord(r.id);if(f)f.w.synced=true;});
+    }
+    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  }catch(e){}
+  syncing=false;
+}
+async function cloudPull(){
+  if(!cloudEnabled()||syncing)return;
+  syncing=true;
+  try{
+    const me=AUTH.user.id;
+    const [rs,rw]=await Promise.all([
+      sb.from('sets').select('*').eq('owner_id',me).eq('deleted',false),
+      sb.from('words').select('*').eq('owner_id',me).eq('deleted',false)
+    ]);
+    if(rs.error||rw.error){syncing=false;return;}
+    const cs=rs.data||[],cw=rw.data||[];
+    const setIds=new Set(cs.map(x=>x.id)),wordIds=new Set(cw.map(x=>x.id));
+    cs.forEach(c=>{
+      const u=+new Date(c.updated_at),l=S.sets.find(x=>x.id===c.id);
+      if(!l)S.sets.push({id:c.id,name:c.name,words:[],upd:u,synced:true});
+      else if(u>(l.upd||0)){l.name=c.name;l.upd=u;l.synced=true;}
+    });
+    S.sets=S.sets.filter(s=>setIds.has(s.id)||!s.synced);
+    cw.forEach(c=>{
+      const s=S.sets.find(x=>x.id===c.set_id);if(!s)return;
+      const u=+new Date(c.updated_at),l=s.words.find(x=>x.id===c.id);
+      if(!l)s.words.push({id:c.id,en:c.en,ru:c.ru||'',ex:c.ex||'',box:c.box||0,arch:!!c.arch,ok:c.ok||0,bad:c.bad||0,added:u,upd:u,synced:true});
+      else if(u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',box:c.box||0,arch:!!c.arch,ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
+    });
+    S.sets.forEach(s=>{s.words=s.words.filter(w=>wordIds.has(w.id)||!w.synced);});
+    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  }catch(e){}
+  syncing=false;
+}
+async function cloudDeleteSet(s){
+  if(!cloudEnabled())return;
+  try{
+    const t=new Date().toISOString();
+    await sb.from('words').update({deleted:true,updated_at:t}).eq('set_id',s.id);
+    await sb.from('sets').update({deleted:true,updated_at:t}).eq('id',s.id);
+  }catch(e){}
+}
+async function cloudDeleteWord(w){
+  if(!cloudEnabled())return;
+  try{await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).eq('id',w.id);}catch(e){}
+}
+
+/* ---------- auth ---------- */
+async function authInit(){
+  if(!sb)return;
+  try{
+    const {data}=await sb.auth.getSession();
+    if(data&&data.session)await onSignedIn(data.session.user);
+  }catch(e){}
+  try{
+    sb.auth.onAuthStateChange((ev,sess)=>{
+      if(ev==='SIGNED_IN'&&sess&&(!AUTH.user||AUTH.user.id!==sess.user.id))onSignedIn(sess.user);
+      if(ev==='SIGNED_OUT'){AUTH={user:null,profile:null,ready:true,students:[]};render();}
+    });
+  }catch(e){}
+}
+const PKEY='vocab.profile';
+async function onSignedIn(user){
+  AUTH.user=user;AUTH.ready=true;
+  try{const c=JSON.parse(localStorage.getItem(PKEY)||'null');if(c&&c.id===user.id)AUTH.profile=c;}catch(e){}
+  try{
+    const {data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();
+    if(data){AUTH.profile=data;try{localStorage.setItem(PKEY,JSON.stringify(data));}catch(e){}}
+  }catch(e){}
+  if(AUTH.profile&&AUTH.profile.role==='teacher')await loadStudents();
+  render();
+  await cloudPull();
+  await cloudPush();
+  render();
+}
+async function loadStudents(){
+  try{
+    const {data:links}=await sb.from('links').select('student_id').eq('teacher_id',AUTH.user.id);
+    const ids=(links||[]).map(l=>l.student_id);
+    if(!ids.length){AUTH.students=[];return;}
+    const {data:profs}=await sb.from('profiles').select('id,display_name').in('id',ids);
+    AUTH.students=profs||[];
+  }catch(e){AUTH.students=[];}
+}
+async function doSignOut(){
+  try{await sb.auth.signOut();}catch(e){}
+  try{localStorage.removeItem(PKEY);}catch(e){}
+  AUTH={user:null,profile:null,ready:true,students:[]};
+  closeSheet();go('home');toast('Signed out');
+}
+function acctOrAuth(){if(AUTH.user)acctSheet();else authSheet();}
+
+let authTab='signin',authRole='student';
+function authSheet(){
+  if(!sb)return sheet(`<h2>Account</h2><div class="hint">Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.</div><button class="btn ghost" onclick="closeSheet()">Close</button>`);
+  authTab='signin';authRole='student';drawAuth();
+}
+function drawAuth(){
+  sheet(`<h2>Account</h2>
+   <div class="tabs2">
+     <button class="${authTab==='signin'?'on':''}" onclick="authTab='signin';drawAuth()">Sign in</button>
+     <button class="${authTab==='signup'?'on':''}" onclick="authTab='signup';drawAuth()">Sign up</button></div>
+   ${authTab==='signup'?`<div class="field"><label>I am a</label><div class="sel-opt">
+     <button class="${authRole==='student'?'on':''}" onclick="authRole='student';drawAuth()">🎓 Student</button>
+     <button class="${authRole==='teacher'?'on':''}" onclick="authRole='teacher';drawAuth()">🧑‍🏫 Teacher</button></div></div>
+   <div class="field"><label>Name</label><input class="inp" id="aName" placeholder="Your name"></div>`:''}
+   <div class="field"><label>Email</label><input class="inp" id="aEmail" type="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="you@example.com"></div>
+   <div class="field"><label>Password</label><input class="inp" id="aPass" type="password" placeholder="${authTab==='signup'?'At least 6 characters':'••••••••'}"></div>
+   <div class="err" id="aErr"></div>
+   <button class="btn pri" id="aBtn" onclick="submitAuth()">${authTab==='signup'?'Create account':'Sign in'}</button>
+   <div class="hint" style="text-align:center;margin-top:12px">An account syncs your words across devices. Using the app without one keeps everything on this device only.</div>`);
+  setTimeout(()=>{const e=$('#'+(authTab==='signup'?'aName':'aEmail'));if(e)e.focus();},60);
+}
+function authErrMsg(e){
+  const m=(e&&e.message)||'';
+  if(/already registered|already exists|User already/i.test(m))return 'This email is already registered — sign in instead.';
+  if(/Invalid login/i.test(m))return 'Wrong email or password.';
+  if(/least 6|Password should/i.test(m))return 'Password must be at least 6 characters.';
+  if(/Email not confirmed/i.test(m))return 'Confirm your email first — check your inbox.';
+  if(/valid email|invalid format/i.test(m))return 'That email address doesn’t look right.';
+  if(/Failed to fetch|NetworkError/i.test(m))return 'No connection — try again when you’re online.';
+  return m||'Something went wrong';
+}
+async function submitAuth(){
+  const email=($('#aEmail').value||'').trim(),pass=$('#aPass').value||'';
+  const err=$('#aErr'),btn=$('#aBtn');err.textContent='';
+  if(!email||!pass){err.textContent='Enter email and password';return;}
+  const label=btn.textContent;btn.textContent='Please wait…';btn.disabled=true;
+  try{
+    if(authTab==='signup'){
+      const name=(($('#aName')||{}).value||'').trim()||email.split('@')[0];
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{role:authRole,display_name:name}}});
+      if(error)throw error;
+      if(data&&data.session){closeSheet();toast('Account created ✓');}
+      else{closeSheet();toast('Check your email to confirm, then sign in');}
+    }else{
+      const {error}=await sb.auth.signInWithPassword({email,password:pass});
+      if(error)throw error;
+      closeSheet();toast('Signed in ✓');
+    }
+  }catch(e){
+    err.textContent=authErrMsg(e);btn.textContent=label;btn.disabled=false;
+  }
+}
+function acctSheet(){
+  const p=AUTH.profile,u=AUTH.user;
+  if(!p)return sheet(`<h2>Account</h2><div class="hint">${esc(u?u.email:'')}<br>Loading your profile…</div>
+    <button class="btn ghost" onclick="doSignOut()">Sign out</button>`);
+  const isT=p.role==='teacher';
+  sheet(`<h2>${esc(p.display_name||'Account')}</h2>
+   <div class="hint">${esc(u.email)} · ${isT?'Teacher':'Student'} · words sync automatically</div>
+   ${isT?`<div class="field"><label>Your code — give it to students</label>
+      <div class="codebox"><b>${esc(p.teacher_code||'—')}</b></div>
+      <div class="hint">A student enters this in their Account to give you access to their lists.</div></div>`
+    :`<div class="field"><label>Link to a teacher</label>
+      <div class="row"><input class="inp" id="tCode" placeholder="Teacher's code" maxlength="8" autocapitalize="characters" autocorrect="off" spellcheck="false" style="flex:1;text-transform:uppercase;letter-spacing:.1em;font-weight:700">
+      <button class="ic" style="width:50px;height:51px" aria-label="Link" onclick="linkTeacher()">✓</button></div>
+      <div class="err" id="linkErr"></div>
+      <div class="hint">Your teacher can then see and edit your lists.</div></div>`}
+   <div class="stack" style="margin-top:6px">
+     ${isT?`<button class="btn" onclick="closeSheet();go('students')">🧑‍🎓 My students${AUTH.students.length?` · ${AUTH.students.length}`:''}</button>`:''}
+     <button class="btn" onclick="manualSync()">🔄 Sync now</button>
+     <button class="btn ghost" onclick="doSignOut()">Sign out</button></div>`);
+}
+async function manualSync(){
+  if(!cloudEnabled())return toast('Not signed in');
+  toast('Syncing…');await cloudPull();await cloudPush();render();toast('Synced ✓');
+}
+async function linkTeacher(){
+  const code=(($('#tCode')||{}).value||'').trim();
+  const err=$('#linkErr');if(err)err.textContent='';
+  if(!code){if(err)err.textContent='Enter the code';return;}
+  try{
+    const {data,error}=await sb.rpc('link_to_teacher',{_code:code});
+    if(error)throw error;
+    const nm=(data&&data[0]&&data[0].teacher_name)||'your teacher';
+    closeSheet();toast('Linked to '+nm+' ✓');
+  }catch(e){
+    if(err)err.textContent=/INVALID_CODE/.test((e&&e.message)||'')?'No teacher found with that code':'Couldn’t link — try again';
+  }
+}
+
 /* ---------- router ---------- */
 let view={name:'home'};
 let selMode=false;const selIds=new Set();
@@ -466,7 +699,7 @@ const VIEWS={
 home(app){
   const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
   const arN=archCount();
-  app.innerHTML=hdr('Vocabulary','',`<button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button><button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
+  app.innerHTML=hdr('Vocabulary','',`<button class="ic" aria-label="Account" onclick="acctOrAuth()">👤${AUTH.user?'<span class="acct-dot"></span>':''}</button><button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button><button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
    (standalone||S.settings.hideBanner?'':
      `<div class="banner"><span>📲</span><div><b>Add to Home Screen.</b> In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
    (S.sets.length?
@@ -483,6 +716,12 @@ home(app){
         <div class="meta">${arN?arN+' '+(arN===1?'word':'words')+' · from all lists':'learned words from all lists'}</div></div>
         <span style="color:var(--fade);font-size:22px">›</span></div>`
      :`<div class="empty"><div class="big">📖</div><b>Your word lists will live here</b><p>Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.</p></div>`)+
+   (AUTH.profile&&AUTH.profile.role==='teacher'
+     ?`<div class="setcard" onclick="go('students')" style="margin-top:14px">
+         <div class="arch-ic" style="background:var(--ok-soft);color:var(--ok)">🧑‍🎓</div>
+         <div class="t"><div class="nm">My students</div>
+         <div class="meta">${AUTH.students.length?AUTH.students.length+' linked · view & edit their words':'share your code to link a student'}</div></div>
+         <span style="color:var(--fade);font-size:22px">›</span></div>`:'')+
    `<button class="btn pri" style="margin-top:12px" onclick="newSet()">＋ New list</button>`;
 },
 set(app){
@@ -513,6 +752,141 @@ archive(app){
    (selMode?selBar(true):'');
 },
 };
+
+/* ---------- teacher: student dictionaries (live from cloud) ---------- */
+let TV={sid:null,sname:'',setId:null,setName:'',words:[],sets:[]};
+async function fetchOwner(ownerId){
+  try{
+    const [rs,rw]=await Promise.all([
+      sb.from('sets').select('*').eq('owner_id',ownerId).eq('deleted',false),
+      sb.from('words').select('*').eq('owner_id',ownerId).eq('deleted',false)
+    ]);
+    return {sets:(rs.data||[]).sort((a,b)=>(a.position||0)-(b.position||0)),words:rw.data||[]};
+  }catch(e){return {sets:[],words:[]};}
+}
+VIEWS.students=async function(app){
+  app.innerHTML=hdr('My students',"go('home')")+`<div id="rl"><div class="empty"><p>Loading…</p></div></div>`;
+  await loadStudents();
+  const el=$('#rl');if(!el)return;
+  if(!AUTH.students.length){
+    el.innerHTML=`<div class="empty"><div class="big">🧑‍🎓</div><b>No students linked yet</b><p>Open Account and share your code. Once a student enters it, their lists appear here.</p></div>`;
+    return;
+  }
+  el.innerHTML=AUTH.students.map(s=>{
+    const nm=s.display_name||'Student';
+    return `<div class="roster" onclick="go('tsets',{sid:'${s.id}',sname:'${q1(nm)}'})">
+      <div class="av">${esc(nm.trim().charAt(0).toUpperCase()||'?')}</div>
+      <div class="t"><div class="nm">${esc(nm)}</div><div class="meta">View & edit their words</div></div>
+      <span style="color:var(--fade);font-size:22px">›</span></div>`;
+  }).join('');
+};
+VIEWS.tsets=async function(app){
+  const sid=view.sid,sname=view.sname||'Student';
+  app.innerHTML=hdr(sname,"go('students')")+`<div id="tl"><div class="empty"><p>Loading…</p></div></div>`;
+  const {sets,words}=await fetchOwner(sid);
+  TV={sid,sname,setId:null,setName:'',words,sets};
+  const el=$('#tl');if(!el)return;
+  const archN=words.filter(w=>w.arch).length;
+  el.innerHTML=(sets.length
+    ?`<div class="subhead"><span class="t">Lists</span></div>`+sets.map(s=>{
+        const a=words.filter(w=>w.set_id===s.id&&!w.arch).length,lr=words.filter(w=>w.set_id===s.id&&w.arch).length;
+        return `<div class="setcard" onclick="go('twords',{sid:'${sid}',sname:'${q1(sname)}',setId:'${s.id}',setName:'${q1(s.name)}'})">
+          ${ringSvg(lr,a+lr)}
+          <div class="t"><div class="nm">${esc(s.name)}</div><div class="meta">${a} learning${lr?` · ${lr} learned`:''}</div></div>
+          <span style="color:var(--fade);font-size:22px">›</span></div>`;}).join('')
+    :`<div class="empty"><div class="big">📖</div><b>No lists yet</b><p>You can create the first list for this student below.</p></div>`)+
+   `<div class="setcard" onclick="go('twords',{sid:'${sid}',sname:'${q1(sname)}',setId:'archive',setName:'Archive'})" style="margin-top:14px">
+      <div class="arch-ic">🗄</div>
+      <div class="t"><div class="nm">Archive</div><div class="meta">${archN?archN+' '+(archN===1?'word':'words'):'learned words'}</div></div>
+      <span style="color:var(--fade);font-size:22px">›</span></div>
+    <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">＋ New list for ${esc(sname)}</button>`;
+};
+VIEWS.twords=async function(app){
+  const {sid,sname,setId,setName}=view;
+  app.innerHTML=hdr(setName,`go('tsets',{sid:'${sid}',sname:'${q1(sname)}'})`)+`<div id="tl"><div class="empty"><p>Loading…</p></div></div>`;
+  const {sets,words}=await fetchOwner(sid);
+  TV={sid,sname,setId,setName,words,sets};
+  const el=$('#tl');if(!el)return;
+  const inArch=setId==='archive';
+  const list=inArch?words.filter(w=>w.arch):words.filter(w=>w.set_id===setId&&!w.arch);
+  const setName2=id=>{const s=sets.find(x=>x.id===id);return s?s.name:'';};
+  el.innerHTML=(list.length
+    ?`<div class="tbar"><span class="t">${inArch?'Learned':'Learning'} · ${list.length}</span></div>`+
+     list.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
+       ${inArch?'<span class="chk">✓</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`}
+       <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}${inArch?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
+       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('')
+    :`<div class="empty"><div class="big">${inArch?'🗄️':'✍️'}</div><b>${inArch?'Archive is empty':'No words yet'}</b><p>${inArch?'Words this student has mastered will show up here.':'Tap ＋ to add the first word.'}</p></div>`)+
+   (inArch?'':`<button class="fab" aria-label="Add word" onclick="tWordForm()">＋</button>`);
+};
+function tBack(){go('twords',{sid:TV.sid,sname:TV.sname,setId:TV.setId,setName:TV.setName});}
+function tWordForm(id){
+  const w=id?TV.words.find(x=>x.id===id):null;
+  sheet(`<h2>${w?'Word':'New word'}</h2>
+   <div class="field"><label>Word (English)</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="reliable" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+   <div class="field"><label>Translation</label><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="надёжный"></div>
+   <div class="field"><label>Example (optional)</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="a reliable friend" autocapitalize="none"></div>
+   <div class="err" id="tErr"></div>
+   <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?'Save':'Add'}</button>
+   ${w?`<div style="height:9px"></div><div class="row2">
+     <button class="btn ghost" onclick="tToggleArch('${w.id}',${w.arch?'false':'true'})">${w.arch?'↩ To learning':'🗄 To Archive'}</button>
+     <button class="btn danger ghost" onclick="tDelWord('${w.id}')">Delete</button></div>`:''}`);
+  setTimeout(()=>$('#tEn')&&$('#tEn').focus(),60);
+}
+async function tSaveWord(id){
+  const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim(),ex=($('#tEx').value||'').trim();
+  const err=$('#tErr');
+  if(!en){err.textContent='Enter a word';return;}
+  const btn=$('#tSave');btn.disabled=true;btn.textContent='Saving…';
+  const now=new Date().toISOString();
+  try{
+    if(id){
+      const {error}=await sb.from('words').update({en,ru,ex,updated_at:now}).eq('id',id);
+      if(error)throw error;
+    }else{
+      const {error}=await sb.from('words').insert({id:uid(),set_id:TV.setId,owner_id:TV.sid,en,ru,ex,
+        box:0,arch:false,ok:0,bad:0,position:TV.words.length,deleted:false,updated_at:now});
+      if(error)throw error;
+    }
+    closeSheet();toast(id?'Saved ✓':'Added ✓');tBack();
+  }catch(e){
+    err.textContent='Couldn’t save — check your connection';btn.disabled=false;btn.textContent=id?'Save':'Add';
+  }
+}
+async function tToggleArch(id,toArch){
+  try{
+    await sb.from('words').update({arch:toArch,box:toArch?3:2,updated_at:new Date().toISOString()}).eq('id',id);
+    closeSheet();toast(toArch?'Moved to Archive ✓':'Moved back to learning');tBack();
+  }catch(e){toast('Couldn’t update');}
+}
+async function tDelWord(id){
+  if(!confirm('Delete this word from the student’s list?'))return;
+  try{
+    await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).eq('id',id);
+    closeSheet();toast('Deleted');tBack();
+  }catch(e){toast('Couldn’t delete');}
+}
+function tNewSet(){
+  sheet(`<h2>New list</h2>
+   <div class="hint">This list will appear in ${esc(TV.sname)}'s app.</div>
+   <div class="field"><label>Name</label><input class="inp" id="tNm" placeholder="e.g. Unit 1"></div>
+   <div class="err" id="tsErr"></div>
+   <button class="btn pri" id="tsBtn" onclick="tCreateSet()">Create</button>`);
+  setTimeout(()=>$('#tNm')&&$('#tNm').focus(),60);
+}
+async function tCreateSet(){
+  const n=($('#tNm').value||'').trim();
+  if(!n){$('#tsErr').textContent='Enter a name';return;}
+  const btn=$('#tsBtn');btn.disabled=true;btn.textContent='Creating…';
+  try{
+    const {error}=await sb.from('sets').insert({id:uid(),owner_id:TV.sid,name:n,position:TV.sets.length,deleted:false,updated_at:new Date().toISOString()});
+    if(error)throw error;
+    closeSheet();go('tsets',{sid:TV.sid,sname:TV.sname});
+  }catch(e){
+    $('#tsErr').textContent='Couldn’t create — check your connection';btn.disabled=false;btn.textContent='Create';
+  }
+}
+
 function selBar(inArch){
   const n=selIds.size;
   const moveLabel=inArch?`↩ To learning${n?` (${n})`:''}`:`🗄 To Archive${n?` (${n})`:''}`;
@@ -526,14 +900,14 @@ function togglePick(id){if(selIds.has(id))selIds.delete(id);else selIds.add(id);
 function selAll(){const p=poolNow();if(selIds.size>=p.length)selIds.clear();else p.forEach(w=>selIds.add(w.id));render();}
 function bulkArch(toArch){
   let n=0;
-  S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);n++;}}));
+  S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);touch(w);n++;}}));
   save();clearSel();render();
   toast(toArch?`Moved to Archive: ${n}`:`Moved back to learning: ${n}`);
 }
 function bulkDelete(){
   const n=selIds.size;if(!n)return;
   if(!confirm(`Delete ${n} ${n===1?'word':'words'}? This can't be undone.`))return;
-  S.sets.forEach(s=>{s.words=s.words.filter(w=>!selIds.has(w.id));});
+  S.sets.forEach(s=>{s.words.forEach(w=>{if(selIds.has(w.id))cloudDeleteWord(w);});s.words=s.words.filter(w=>!selIds.has(w.id));});
   save();clearSel();render();
   toast(`Deleted: ${n} ${n===1?'word':'words'}`);
 }
@@ -587,7 +961,7 @@ function newSet(){
   setTimeout(()=>$('#nm')&&$('#nm').focus(),60);
 }
 function createSet(){const n=$('#nm').value.trim();if(!n)return toast('Enter a name');
-  const s={id:uid(),name:n,words:[]};S.sets.push(s);save();closeSheet();go('set',{id:s.id});}
+  const s={id:uid(),name:n,words:[],upd:Date.now(),synced:false};S.sets.push(s);save();closeSheet();go('set',{id:s.id});}
 
 function setMenu(){
   const s=curSet();
@@ -598,9 +972,9 @@ function setMenu(){
    <button class="btn ghost" onclick="resetProg()">Reset progress</button>
    <button class="btn danger ghost" onclick="delSet()">Delete list</button></div>`);
 }
-function renameSet(){const s=curSet();const n=prompt('New name',s.name);if(n&&n.trim()){s.name=n.trim();save();closeSheet();render();}}
-function resetProg(){const s=curSet();if(confirm('Move all words of this list back from Archive and reset progress?')){s.words.forEach(w=>{w.box=0;w.arch=false;});save();closeSheet();render();toast('Progress reset');}}
-function delSet(){const s=curSet();if(confirm(`Delete “${s.name}” with all its words? This can't be undone.`)){S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
+function renameSet(){const s=curSet();const n=prompt('New name',s.name);if(n&&n.trim()){s.name=n.trim();touch(s);save();closeSheet();render();}}
+function resetProg(){const s=curSet();if(confirm('Move all words of this list back from Archive and reset progress?')){s.words.forEach(w=>{w.box=0;w.arch=false;touch(w);});save();closeSheet();render();toast('Progress reset');}}
+function delSet(){const s=curSet();if(confirm(`Delete “${s.name}” with all its words? This can't be undone.`)){cloudDeleteSet(s);S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
 
 /* ---------- word form ---------- */
 let editId=null,ruTouched=false,trTimer=null,trSeq=0;
@@ -636,13 +1010,13 @@ async function doTr(force){
 function saveWord(){
   const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim(),ex=$('#fEx').value.trim();
   if(!en)return toast('Enter a word');if(!ru)return toast('Enter a translation');
-  if(editId){const f=findWord(editId);if(f)Object.assign(f.w,{en,ru,ex});save();closeSheet();render();}
+  if(editId){const f=findWord(editId);if(f){Object.assign(f.w,{en,ru,ex});touch(f.w);}save();closeSheet();render();}
   else{const s=curSet();s.words.unshift(newWord(en,ru,ex));save();render();toast('Added ✓');
     $('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';ruTouched=false;
     $('#trSt').textContent='Add the next word';$('#fEn').focus();}
 }
-function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;if(!w.arch)w.box=Math.min(w.box,2);else w.box=3;save();closeSheet();render();toast(w.arch?'Moved to Archive ✓':'Moved back to learning');}
-function delWord(){const f=findWord(editId);if(f)f.s.words=f.s.words.filter(w=>w.id!==editId);save();closeSheet();render();}
+function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;if(!w.arch)w.box=Math.min(w.box,2);else w.box=3;touch(w);save();closeSheet();render();toast(w.arch?'Moved to Archive ✓':'Moved back to learning');}
+function delWord(){const f=findWord(editId);if(f){cloudDeleteWord(f.w);f.s.words=f.s.words.filter(w=>w.id!==editId);}save();closeSheet();render();}
 
 /* ---------- IMPORT (Quizlet-style) ---------- */
 let impTerm='auto',impCard='line',impAuto=true;
@@ -725,7 +1099,8 @@ function settingsSheet(){
      <button class="btn" onclick="exportData()">💾 Backup (all lists)</button>
      <button class="btn ghost" onclick="$('#imp-file').click()">📂 Restore from file</button></div>
    <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importFile(this.files[0])">
-   <div class="hint" style="margin-top:14px">Words are stored on this device. Make a backup now and then so you don't lose them.</div>`);
+   <div class="stack" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet();acctOrAuth()">${AUTH.user?'👤 Account':'👤 Sign in / Sign up'}</button></div>
+   <div class="hint" style="margin-top:14px">${AUTH.user?'Your words sync to your account and are available on any device you sign in on.':'Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.'}</div>`);
 }
 async function exportData(setId){
   closeSheet();
@@ -979,6 +1354,9 @@ loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
 applyTheme();
 try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.addEventListener&&mq.addEventListener('change',()=>{if((S.settings.theme||'auto')==='auto')applyTheme();});}}catch(e){}
 render();
+authInit();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled())cloudPull().then(render);});
+setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull();},150000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
