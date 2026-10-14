@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Vocab">
-<meta name="theme-color" content="#6366f1">
+<meta name="theme-color" content="#0e3b2c">
 <title>Vocabulary</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -18,27 +18,38 @@
 <script>(function(){try{var s=(JSON.parse(localStorage.getItem('vocab.v2')||'{}').settings)||{};var m=s.theme||'auto',dark;if(m==='dark')dark=true;else if(m==='light')dark=false;else{var h=new Date().getHours();dark=h<7||h>=19;}document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
 :root{
-  --bg:#f5f6f9; --surf:#ffffff; --surf2:#fbfbfd;
-  --tx:#0f1222; --mut:#6b7280; --fade:#9aa0ae;
-  --line:#ebedf2; --line2:#e2e5ec;
-  --pri:#6366f1; --pri-d:#4f46e5; --pri-soft:#eef0ff;
-  --grad:linear-gradient(135deg,#6366f1,#8b5cf6);
-  --ok:#10b981; --ok-soft:#e7f8f1; --bad:#ef4444; --bad-soft:#fdecec;
-  --warn:#f59e0b; --info:#3b82f6;
-  --sh-sm:0 1px 2px rgba(16,24,40,.05); --sh:0 2px 4px rgba(16,24,40,.04),0 10px 28px rgba(16,24,40,.06);
-  --r:18px; --r-sm:13px;
+  --bg:#f2f4f0; --surf:#ffffff; --surf2:#f7f9f5;
+  --tx:#0e1a14; --mut:#5b6b61; --fade:#8e9d93;
+  --line:#e4e9e2; --line2:#d5ded3;
+  --pri:#0e3b2c; --pri-d:#0a2c21; --pri-soft:#e7efe9; --on-pri:#ffffff;
+  --acc:#d4f25a; --acc-ink:#0e3b2c; --mint:#8ef0a8;
+  --grad:linear-gradient(135deg,#0e3b2c,#2f7d4f 60%,#d4f25a);
+  --ok:#1e7a52; --ok-soft:#e4f2ea; --bad:#b33f2b; --bad-soft:#f9e8e4;
+  --warn:#a9700f; --info:#1f6f8b;
+  --word:#0e1a14; --card-bg:#0e3b2c; --card-tx:#f3f8f1; --card-mut:#9cc6ad;
+  --sh-sm:0 1px 2px rgba(14,26,20,.04); --sh:0 10px 30px rgba(14,26,20,.10),0 2px 6px rgba(14,26,20,.05);
+  --r:16px; --r-sm:12px;
   --ff:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro","Segoe UI",Roboto,system-ui,sans-serif;
+  --ff-serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;
 }
 :root[data-theme="dark"]{
-  --bg:#0b0c11; --surf:#161822; --surf2:#1b1e2a;
-  --tx:#eef0f7; --mut:#9aa0ae; --fade:#6a7080;
-  --line:#242736; --line2:#2d3142;
-  --pri:#818cf8; --pri-d:#6366f1; --pri-soft:#232648;
-  --grad:linear-gradient(135deg,#6366f1,#a78bfa);
-  --ok:#34d399; --ok-soft:#113329; --bad:#f87171; --bad-soft:#3a1d1d;
-  --sh-sm:0 1px 2px rgba(0,0,0,.3); --sh:0 2px 6px rgba(0,0,0,.3),0 14px 34px rgba(0,0,0,.4);
+  --bg:#0a120d; --surf:#111b15; --surf2:#16231b;
+  --tx:#e9f0ea; --mut:#93a69a; --fade:#6d8075;
+  --line:#1d2b23; --line2:#26362c;
+  --pri:#58b887; --pri-d:#8ef0a8; --pri-soft:#15291f; --on-pri:#04190f;
+  --acc:#d4f25a; --acc-ink:#0e3b2c; --mint:#8ef0a8;
+  --grad:linear-gradient(135deg,#2f7d4f,#6fc995 62%,#c3e46a);
+  --ok:#4ed38f; --ok-soft:#0f2a1e; --bad:#e8806a; --bad-soft:#2c1511;
+  --word:#f1f7f1; --card-bg:#132c22; --card-tx:#eef6ee; --card-mut:#8fb79e;
+  --sh-sm:0 1px 2px rgba(0,0,0,.35); --sh:0 14px 34px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+.i{display:block;flex:none}
+.btn .i{margin-right:-1px}
+.seg3 button,.seg button,.tabs2 button{display:flex;align-items:center;justify-content:center;gap:7px}
+.flame .n{display:flex;align-items:center;gap:5px;justify-content:center}
+.lnk{display:inline-flex;align-items:center;gap:6px}
+.item .pips,.item .chk,.item .cbox{align-self:center}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--ff);
   font-size:16px;line-height:1.45;letter-spacing:-.01em;
@@ -53,21 +64,22 @@ input,textarea,select{font-family:inherit;font-size:16px}
 header{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;
   padding:calc(12px + env(safe-area-inset-top)) 0 12px;
   background:linear-gradient(var(--bg) 72%,transparent)}
-header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spacing:-.03em;
+header h1{flex:1;min-width:0;margin:0;font-size:25px;font-weight:700;letter-spacing:-.022em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ic{width:42px;height:42px;flex:none;border-radius:13px;background:var(--surf);box-shadow:var(--sh-sm);
-  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--tx)}
+.ic{width:40px;height:40px;flex:none;border-radius:11px;background:transparent;
+  border:1px solid transparent;display:flex;align-items:center;justify-content:center;color:var(--mut)}
+.ic:hover{color:var(--tx);background:var(--surf2)}
 .ic{transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .18s ease}
 .ic:active{transform:scale(.94);transition-duration:.08s}
 .back{font-size:26px;font-weight:600;color:var(--pri)}
 
 /* buttons */
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
-  padding:15px 18px;border-radius:15px;background:var(--surf);box-shadow:var(--sh-sm);
-  border:1px solid var(--line);font-weight:650;font-size:16px;letter-spacing:-.01em}
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  padding:14px 18px;border-radius:var(--r-sm);background:var(--surf);
+  border:1px solid var(--line2);font-weight:600;font-size:16px;letter-spacing:-.01em}
 .btn{transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease}
 .btn:active{transform:scale(.975);transition-duration:.08s}
-.btn.pri{background:var(--grad);color:#fff;border:0;box-shadow:0 6px 18px rgba(99,102,241,.35)}
+.btn.pri{background:var(--pri);color:var(--on-pri);border:1px solid transparent;font-weight:650}
 .btn.ghost{background:transparent;box-shadow:none;border-color:var(--line2)}
 .btn.danger{color:var(--bad)}
 .btn.sm{width:auto;padding:10px 14px;font-size:14.5px}
@@ -77,7 +89,7 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .seg{display:flex;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;box-shadow:var(--sh-sm);margin:2px 0 14px}
 .seg button{flex:1;padding:9px 6px;border-radius:10px;font-weight:650;font-size:15px;color:var(--mut);display:flex;align-items:center;justify-content:center;gap:6px}
 .seg button{transition:background-color .2s ease,color .2s ease,box-shadow .2s ease}
-.seg button.on{background:var(--grad);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.seg button.on{background:var(--pri);color:var(--on-pri)}
 .seg .cnt{font-size:12px;font-weight:700;opacity:.9;background:rgba(255,255,255,.22);padding:1px 7px;border-radius:9px}
 .seg button:not(.on) .cnt{background:var(--line2);color:var(--mut)}
 
@@ -85,41 +97,39 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .modes{display:flex;gap:10px;overflow-x:auto;padding:2px 0 14px;margin:0 -16px;
   padding-left:16px;padding-right:16px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
 .modes::-webkit-scrollbar{display:none}
-.mcard{flex:none;scroll-snap-align:start;width:104px;padding:14px 12px;border-radius:17px;background:var(--surf);
-  box-shadow:var(--sh-sm);border:1px solid var(--line);text-align:left}
+.mcard{flex:none;scroll-snap-align:start;width:104px;padding:13px 12px;border-radius:var(--r-sm);background:var(--surf);
+  border:1px solid var(--line);text-align:left}
 .mcard{transition:transform .24s cubic-bezier(.22,1,.36,1),box-shadow .2s ease}
 .mcard:active{transform:scale(.965);transition-duration:.08s}
-.mcard .em{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:9px}
+.mcard .em{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:var(--surf2);border:1px solid var(--line);color:var(--pri)}
 .mcard b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.01em}
 .mcard small{color:var(--mut);font-size:11.5px;font-weight:500}
-.em-a{background:#eef0ff;color:#4f46e5}.em-b{background:#e7f8f1;color:#059669}
-.em-c{background:#fff1e6;color:#d97706}.em-d{background:#e8f1ff;color:#2563eb}
-:root[data-theme="dark"] .em-a{background:#22264a}:root[data-theme="dark"] .em-b{background:#0f2e26}:root[data-theme="dark"] .em-c{background:#33240f}:root[data-theme="dark"] .em-d{background:#11223f}
+.mcard:hover .em{background:var(--pri-soft)}
 
 /* list / dictionary */
 .subhead{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 8px}
-.subhead .t{font-size:13px;font-weight:700;color:var(--fade);text-transform:uppercase;letter-spacing:.06em}
+.subhead .t{font-size:13.5px;font-weight:600;color:var(--fade);letter-spacing:0}
 .search{display:flex;align-items:center;gap:8px;background:var(--surf);border:1px solid var(--line);border-radius:13px;padding:0 13px;margin-bottom:10px;box-shadow:var(--sh-sm)}
 .search input{flex:1;border:0;background:none;padding:12px 0;outline:none;color:var(--tx)}
 .search svg{width:17px;height:17px;fill:var(--fade);flex:none}
-.item{display:flex;align-items:center;gap:13px;background:var(--surf);box-shadow:var(--sh-sm);
-  border:1px solid var(--line);border-radius:15px;padding:13px 15px;margin-bottom:9px}
+.item{display:flex;align-items:center;gap:13px;background:var(--surf);
+  border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px;margin-bottom:8px}
 .item{transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .18s ease,border-color .18s ease}
 .item:active{background:var(--surf2);transform:scale(.99);transition-duration:.08s}
 .item .t{flex:1;min-width:0}
-.item .en{font-weight:700;font-size:16.5px;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .en{font-family:var(--ff-serif);font-weight:600;font-size:17px;letter-spacing:-.005em;color:var(--word);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item .ru{color:var(--mut);font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pips{display:flex;gap:3px;flex:none}
 .pip{width:7px;height:7px;border-radius:50%;background:var(--line2)}
-.pip.on1{background:var(--warn)}.pip.on2{background:var(--info)}.pip.on3{background:var(--ok)}
-.chk{width:24px;height:24px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
-.spk{width:34px;height:34px;flex:none;border-radius:10px;background:var(--surf2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px}
+.pip.on1{background:var(--line2)}.pip.on2{background:var(--pri);opacity:.55}.pip.on3{background:var(--pri)}
+.chk{width:24px;height:24px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none}
+.spk{width:34px;height:34px;flex:none;border-radius:9px;background:transparent;border:1px solid var(--line);color:var(--mut);display:flex;align-items:center;justify-content:center}
 .spk{transition:transform .22s cubic-bezier(.22,1,.36,1),background-color .18s ease}
-.spk:active{background:var(--pri-soft);transform:scale(.92);transition-duration:.08s}
+.spk:active{background:var(--pri-soft);color:var(--pri);transform:scale(.92);transition-duration:.08s}
 
 /* selection / bulk archive */
 .tbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 2px 10px;min-height:24px}
-.tbar .t{font-size:13px;font-weight:700;color:var(--fade);text-transform:uppercase;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbar .t{font-size:13.5px;font-weight:600;color:var(--fade);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lnk{font-size:14.5px;font-weight:700;color:var(--pri);padding:5px 4px;flex:none;border-radius:9px}
 .lnk:active{background:var(--pri-soft)}
 .cbox{width:25px;height:25px;flex:none;border-radius:50%;border:2px solid var(--line2);background:var(--surf);
@@ -132,8 +142,8 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .selbar .in{max-width:680px;margin:0 auto}
 .btn:disabled{opacity:.5;box-shadow:none}
 .ans-bad,.ans-ok{font-size:14px;font-weight:650;padding:6px 12px;border-radius:11px;line-height:1.2}
-.ans-bad{background:var(--bad-soft);color:var(--bad)}
-.ans-ok{background:var(--ok-soft);color:var(--ok)}
+.ans-bad{background:var(--bad-soft);color:var(--bad);font-family:var(--ff-serif)}
+.ans-ok{background:var(--ok-soft);color:var(--ok);font-family:var(--ff-serif)}
 /* test question palette */
 .qpalbox{display:flex;align-items:flex-start;gap:8px;margin:0 0 12px}
 .qpal{position:relative;flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:7px;max-height:79px;overflow:hidden;
@@ -149,10 +159,10 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .qdot.on{border-color:var(--pri);color:var(--pri-d);background:var(--pri-soft)}
 .qdot{transition:transform .2s cubic-bezier(.22,1,.36,1),background-color .18s ease,border-color .18s ease,color .18s ease}
 .qdot:active{transform:scale(.92);transition-duration:.08s}
-.qdot.cur{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.qdot.cur{background:var(--pri);color:var(--on-pri);border-color:transparent}
 .opt.pick{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
 .btn.selp{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
-.arch-ic{width:46px;height:46px;flex:none;border-radius:50%;background:var(--pri-soft);color:var(--pri-d);display:flex;align-items:center;justify-content:center;font-size:22px}
+.arch-ic{width:44px;height:44px;flex:none;border-radius:13px;background:var(--surf2);border:1px solid var(--line);color:var(--mut);display:flex;align-items:center;justify-content:center}
 .src{color:var(--fade);font-size:12.5px;font-weight:600}
 
 /* account */
@@ -161,13 +171,13 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .tabs2{display:flex;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;box-shadow:var(--sh-sm);margin-bottom:14px}
 .tabs2 button{flex:1;padding:10px 6px;border-radius:10px;font-weight:650;font-size:15px;color:var(--mut)}
 .tabs2 button{transition:background-color .2s ease,color .2s ease,box-shadow .2s ease}
-.tabs2 button.on{background:var(--grad);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
-.codebox{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--pri-soft);border-radius:15px;padding:16px;margin:4px 0 12px}
-.codebox b{font-size:28px;font-weight:850;letter-spacing:.08em;color:var(--pri-d)}
+.tabs2 button.on{background:var(--pri);color:var(--on-pri)}
+.codebox{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--pri-soft);border:1px solid var(--line);border-radius:var(--r-sm);padding:18px;margin:4px 0 12px}
+.codebox b{font-family:var(--ff-serif);font-size:30px;font-weight:600;letter-spacing:.1em;color:var(--pri)}
 .roster{display:flex;align-items:center;gap:13px;background:var(--surf);box-shadow:var(--sh-sm);border:1px solid var(--line);border-radius:15px;padding:13px 15px;margin-bottom:9px}
 .roster{transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .18s ease}
 .roster:active{transform:scale(.99);transition-duration:.08s}
-.roster .av{width:40px;height:40px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex:none}
+.roster .av{width:40px;height:40px;border-radius:12px;background:var(--pri-soft);color:var(--pri);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex:none}
 .roster .t{flex:1;min-width:0}
 .roster .nm{font-weight:700;font-size:16px}
 .roster .meta{color:var(--mut);font-size:13px}
@@ -182,12 +192,12 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .daycard .pbar{margin-top:7px}
 .flame{display:flex;flex-direction:column;align-items:center;gap:1px;flex:none;min-width:40px}
 .flame .n{font-size:17px;font-weight:850;letter-spacing:-.02em;line-height:1}
-.flame .c{font-size:10px;color:var(--fade);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-.due-ic{width:46px;height:46px;flex:none;border-radius:50%;background:var(--grad);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 4px 12px rgba(99,102,241,.35)}
-.badge{background:var(--pri);color:#fff;border-radius:9px;padding:2px 8px;font-size:12.5px;font-weight:800;flex:none}
+.flame .c{font-size:11px;color:var(--fade);font-weight:500}
+.due-ic{width:44px;height:44px;flex:none;border-radius:13px;background:var(--pri);color:var(--on-pri);
+  display:flex;align-items:center;justify-content:center}
+.badge{background:var(--pri-soft);color:var(--pri);border-radius:8px;padding:3px 9px;font-size:12.5px;font-weight:700;flex:none}
 .ipa{color:var(--fade);font-size:13.5px;font-weight:500;font-style:normal}
-.card .ipa{font-size:17px;margin-top:8px}
+.card .ipa{font-size:16.5px;margin-top:10px;color:var(--card-mut)}
 .near{background:#fff4e0;color:#b45309}
 :root[data-theme="dark"] .near{background:#3a2c10;color:#fbbf24}
 .fb.near{background:#fff4e0;color:#b45309}
@@ -209,8 +219,8 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 }
 
 /* set card on home */
-.setcard{display:flex;align-items:center;gap:14px;background:var(--surf);box-shadow:var(--sh);
-  border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:11px}
+.setcard{display:flex;align-items:center;gap:14px;background:var(--surf);
+  border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:10px}
 .setcard{transition:transform .24s cubic-bezier(.22,1,.36,1),box-shadow .2s ease,border-color .2s ease}
 .setcard:active{transform:scale(.985);transition-duration:.08s}
 .setcard .t{flex:1;min-width:0}
@@ -220,19 +230,21 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 
 /* empty */
 .empty{text-align:center;color:var(--mut);padding:46px 24px}
-.empty .big{font-size:52px;margin-bottom:10px;filter:grayscale(.1)}
+.empty .big{width:56px;height:56px;margin:0 auto 14px;border-radius:16px;background:var(--surf);border:1px solid var(--line);color:var(--fade);display:flex;align-items:center;justify-content:center}
 .empty b{display:block;color:var(--tx);font-size:18px;font-weight:700;margin-bottom:5px;letter-spacing:-.02em}
 .empty p{margin:0;font-size:14.5px;line-height:1.5}
 
 /* banner */
-.banner{display:flex;gap:11px;background:var(--pri-soft);border-radius:15px;padding:13px 15px;margin-bottom:14px;font-size:14px;line-height:1.5;align-items:flex-start}
+.banner{display:flex;gap:12px;background:var(--surf);border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px;margin-bottom:14px;font-size:14px;line-height:1.5;align-items:flex-start;color:var(--mut)}
+.banner b{color:var(--tx)}
+.banner .ib{color:var(--pri);flex:none;margin-top:1px}
 .banner .x{margin-left:auto;font-size:18px;color:var(--pri);flex:none;padding:0 2px}
 .banner b{font-weight:700}
 
 /* fab */
-.fab{position:fixed;right:20px;bottom:calc(22px + env(safe-area-inset-bottom));z-index:15;
-  width:60px;height:60px;border-radius:20px;background:var(--grad);color:#fff;font-size:30px;font-weight:300;
-  box-shadow:0 8px 22px rgba(99,102,241,.45);display:flex;align-items:center;justify-content:center;line-height:1}
+.fab{position:fixed;right:20px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:15;
+  width:56px;height:56px;border-radius:18px;background:var(--pri);color:var(--on-pri);
+  box-shadow:0 10px 26px rgba(14,59,44,.30);display:flex;align-items:center;justify-content:center;line-height:1}
 .fab{transition:transform .26s cubic-bezier(.22,1,.36,1),box-shadow .2s ease}
 .fab:active{transform:scale(.93);transition-duration:.08s}
 
@@ -250,7 +262,7 @@ header h1{flex:1;min-width:0;margin:0;font-size:26px;font-weight:800;letter-spac
 .grip{width:38px;height:5px;border-radius:9px;background:var(--line2);margin:4px auto 14px}
 .sheet h2{margin:0 0 14px;font-size:21px;font-weight:800;letter-spacing:-.03em}
 .field{margin-bottom:11px}
-.field label{display:block;font-size:12.5px;font-weight:700;color:var(--fade);text-transform:uppercase;letter-spacing:.05em;margin:0 2px 6px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin:0 2px 7px}
 .inp{width:100%;padding:14px;border-radius:14px;border:1px solid var(--line2);background:var(--surf);color:var(--tx);outline:none;transition:border-color .15s}
 .inp:focus{border-color:var(--pri)}
 textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
@@ -280,12 +292,12 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .pbar i{display:block;height:100%;background:var(--grad);border-radius:6px;transition:width .45s cubic-bezier(.22,1,.36,1)}
 .stat{font-size:14px;font-weight:700;color:var(--mut);flex:none;min-width:52px;text-align:right}
 .fc{perspective:1200px;margin:12px 0}
-.card{background:var(--surf);border:1px solid var(--line);border-radius:26px;min-height:min(60vh,340px);
+.card{background:var(--card-bg);border:1px solid transparent;border-radius:22px;min-height:min(60vh,340px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;box-shadow:var(--sh)}
-.card .word{font-size:clamp(28px,8vw,40px);font-weight:800;letter-spacing:-.03em;line-height:1.15}
-.card .ex{font-size:16px;font-weight:400;color:var(--mut);margin-top:16px;line-height:1.4;font-style:italic}
-.card .tip{font-size:13.5px;color:var(--fade);margin-top:18px;font-weight:500}
-.card .lbl{font-size:12.5px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px}
+.card .word{font-family:var(--ff-serif);font-size:clamp(30px,8.4vw,44px);font-weight:600;letter-spacing:-.015em;line-height:1.12;color:var(--card-tx)}
+.card .ex{font-family:var(--ff-serif);font-size:16.5px;font-weight:400;color:var(--card-mut);margin-top:18px;line-height:1.45;font-style:italic}
+.card .tip{font-size:13.5px;color:var(--card-mut);opacity:.8;margin-top:20px;font-weight:450}
+.card .lbl{font-size:13.5px;font-weight:500;color:var(--card-mut);margin-bottom:18px}
 .opt{display:flex;align-items:center;width:100%;text-align:left;background:var(--surf);border:1.5px solid var(--line2);
   border-radius:15px;padding:16px 17px;margin-bottom:10px;font-size:17px;font-weight:600;box-shadow:var(--sh-sm);
   transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .18s ease,border-color .18s ease,color .18s ease}
@@ -306,7 +318,6 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .tile.done{opacity:0;pointer-events:none;transform:scale(.8);transition:.3s}
 .tile.no{border-color:var(--bad);background:var(--bad-soft);animation:shake .3s}
 @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
-.celebrate{text-align:center;padding:30px 0 6px}.celebrate .big{font-size:66px}
 
 #toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom));transform:translate(-50%,10px);
   background:#15171f;color:#fff;padding:11px 18px;border-radius:13px;font-size:14px;font-weight:600;z-index:60;
@@ -318,11 +329,12 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .seg3{display:flex;gap:6px;background:var(--surf);border:1px solid var(--line);border-radius:13px;padding:4px;box-shadow:var(--sh-sm)}
 .seg3 button{flex:1;padding:10px 6px;border-radius:9px;font-weight:650;font-size:14.5px;color:var(--mut)}
 .seg3 button{transition:background-color .2s ease,color .2s ease,box-shadow .2s ease}
-.seg3 button.on{background:var(--grad);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.seg3 button.on{background:var(--pri);color:var(--on-pri)}
 
 /* result hero + score ring */
 .hero{text-align:center;padding:14px 0 6px}
-.hero-emoji{font-size:62px;line-height:1;animation:pop .5s cubic-bezier(.22,1,.36,1) both}
+.hero-ic{width:62px;height:62px;margin:0 auto;border-radius:20px;background:var(--pri-soft);color:var(--pri);
+  display:flex;align-items:center;justify-content:center;animation:pop .5s cubic-bezier(.22,1,.36,1) both}
 @keyframes pop{0%{transform:scale(.76);opacity:0}100%{transform:scale(1);opacity:1}}
 @keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .viewin{animation:viewin .26s cubic-bezier(.22,1,.36,1)}
@@ -336,12 +348,62 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .rb-track{fill:none;stroke:var(--line2);stroke-width:13}
 .rb-fill{fill:none;stroke:url(#gbig);stroke-width:13;stroke-linecap:round;stroke-dasharray:var(--c);stroke-dashoffset:var(--off);animation:ringfill 1.15s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes ringfill{from{stroke-dashoffset:var(--c)}}
-.rb-pct{font-size:42px;font-weight:850;fill:var(--tx);letter-spacing:-.03em}
+.rb-pct{font-family:var(--ff-serif);font-size:40px;font-weight:600;fill:var(--tx);letter-spacing:-.01em}
+:root[data-theme="dark"] #g stop:first-child,:root[data-theme="dark"] #gbig stop:first-child{stop-color:#2f7d4f}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
 
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+/* bottom navigation */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;gap:2px;
+  padding:6px 10px calc(6px + env(safe-area-inset-bottom));background:var(--surf);border-top:1px solid var(--line)}
+.tab{flex:1;max-width:130px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 4px;border-radius:12px;color:var(--fade);font-size:11.5px;font-weight:600;
+  transition:color .18s ease,background-color .18s ease}
+.tab.on{color:var(--pri)}
+.tab:active{background:var(--surf2)}
+
+/* today: the one thing to do */
+.sess{background:var(--card-bg);color:var(--card-tx);border-radius:20px;padding:28px 20px 20px;text-align:center;margin-bottom:14px}
+.sess-n{font-family:var(--ff-serif);font-size:60px;line-height:1;font-weight:600;color:var(--acc);letter-spacing:-.02em}
+.sess-t{color:var(--card-mut);font-size:15px;margin-top:8px}
+.sess .btn{margin-top:20px;background:var(--acc);color:var(--acc-ink);border-color:transparent;font-weight:700}
+.sess .btn:active{background:var(--acc)}
+.sess-m{color:var(--card-mut);font-size:13.5px;margin-top:13px;min-height:18px}
+.sess.done{padding:26px 20px 20px}
+.sess.done .btn{background:transparent;color:var(--card-tx);border:1px solid rgba(255,255,255,.22)}
+.sess-ic{width:52px;height:52px;margin:0 auto 14px;border-radius:16px;background:rgba(255,255,255,.08);
+  color:var(--acc);display:flex;align-items:center;justify-content:center}
+.sess.done .sess-t{color:var(--card-tx);font-size:19px;font-weight:650}
+
+/* a settings-style row that leads somewhere */
+.rowlink{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+  background:var(--surf);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:14px 15px;margin-bottom:8px;font-size:15.5px;font-weight:600;color:var(--tx);
+  transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .18s ease}
+.rowlink:active{transform:scale(.99);transition-duration:.08s;background:var(--surf2)}
+.rowlink>span{display:flex;align-items:center;gap:11px;min-width:0}
+.rowlink>span .i{color:var(--mut)}
+.rowlink em{font-style:normal;color:var(--mut);font-weight:500;font-size:14px;flex:none}
+.rowlink .i:last-child{color:var(--fade)}
+
+/* dictionary filters */
+.chips-row{display:flex;gap:7px;overflow-x:auto;margin:0 -16px 10px;padding:2px 16px 4px;-webkit-overflow-scrolling:touch}
+.chips-row::-webkit-scrollbar{display:none}
+.fchip{flex:none;padding:8px 14px;border-radius:11px;border:1px solid var(--line2);background:var(--surf);
+  color:var(--mut);font-size:14.5px;font-weight:600;white-space:nowrap;
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease}
+.fchip.on{background:var(--pri);border-color:transparent;color:var(--on-pri)}
+.seg4{display:flex;gap:4px;background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.seg4 button{flex:1;padding:8px 4px;border-radius:9px;font-weight:600;font-size:13.5px;color:var(--mut);
+  transition:background-color .2s ease,color .2s ease}
+.seg4 button.on{background:var(--pri-soft);color:var(--pri)}
+
+/* modes live in one sheet now */
+.modes-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.modes-grid .mcard{width:auto}
 
 /* bigger, fuller desktop layout */
 @media(min-width:720px){
@@ -358,6 +420,8 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   .hero-title{font-size:32px}.hero-sub{font-size:17px}
   .rb-pct{font-size:46px}
   .subhead .t{font-size:14px}
+  .tab{font-size:12.5px}
+  .sess-n{font-size:66px}
 }
 </style>
 </head>
@@ -369,7 +433,7 @@ const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const KEY='vocab.v2';
 /* ---------- interface language ---------- */
-const RU_DICT={"word":"слово","words2":"слова","words":"слов","question":"вопрос","questions2":"вопроса","questions":"вопросов","day2":"дня","Русский":"Русский","Lists":"Списки","Archive":"Архив","Tricky words":"Сложные слова","Review today":"Повторить сегодня","My students":"Мои ученики","Settings":"Настройки","Account":"Аккаунт","Search":"Поиск","Close":"Закрыть","Done":"Готово","Cancel":"Отмена","Create":"Создать","Add":"Добавить","Save":"Сохранить","Delete":"Удалить","Rename":"Переименовать","Again":"Ещё раз","Keep going":"Продолжить","Check":"Проверить","Answer":"Ответ","Name":"Имя","Email":"Почта","Password":"Пароль","Task":"Задание","Pace":"Темп","Streak":"Серия","Mixed":"Вперемешку","Loading…":"Загрузка…","New list":"Новый список","New name":"Новое название","Your name":"Ваше имя","e.g. Unit 1":"например, Unit 1","you@example.com":"you@example.com","reliable":"reliable","a reliable friend":"a reliable friend","надёжный":"надёжный","Word (English)":"Слово (английский)","Translation":"Перевод","Example (optional)":"Пример (необязательно)","Import words":"Импорт слов","Print a quiz":"Распечатать тест","Reset progress":"Сбросить прогресс","Delete list":"Удалить список","Flashcards":"Карточки","Learn":"Учить","Test":"Тест","Match":"Пары","Review":"Повторение","Result":"Результат","Vocabulary":"Vocabulary","flip through":"листать","until mastered":"до усвоения","check yourself":"проверить себя","race the clock":"на время","review":"повторение","revise":"повторить","until fixed":"пока не закрепится","Select":"Выбрать","Select all":"Выбрать все","Clear selection":"Снять выделение","Learning":"Учу","Learned":"Выучено","Needs work":"Нужно подтянуть","learning":"учу","learned":"выучено","Your word lists will live here":"Здесь будут ваши списки слов","Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.":"Создайте список — например «Unit 1» — и добавляйте слова. Выученные собираются в общий Архив.","Add your first word":"Добавьте первое слово","Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.":"Нажмите ＋ внизу, чтобы ввести слово и перевод, или импортируйте список целиком через меню ⋯.","Nothing found":"Ничего не найдено","Archive is empty":"Архив пуст","Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из всех списков — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».","Nothing tricky right now":"Пока всё даётся легко","Words you keep missing in tests and Learn will gather here, so you can drill exactly those.":"Слова, в которых вы часто ошибаетесь, будут собираться здесь — чтобы отрабатывать именно их.","Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.":"Слова, где ошибок больше, чем верных ответов. Они уйдут отсюда, как только вы начнёте отвечать правильно чаще.","words you keep missing":"слов даются тяжело","learned words from all lists":"выученные слова из всех списков","from all lists":"из всех списков","Add to Home Screen.":"Добавьте на экран «Домой».","In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","Today":"Сегодня","day":"день","days":"дней","Daily goal":"Цель на день","A day counts towards your streak once you've studied this many different words.":"День засчитывается в серию, когда вы разобрали столько разных слов.","Current:":"Сейчас:","best:":"рекорд:","Review schedule":"График повторений","Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.":"Выученные слова возвращаются из Архива через растущие промежутки — так они действительно запоминаются. Если выключить, Архив будет просто хранилищем.","Spaced review":"Интервальные повторения","Gentle":"Щадящий","Standard":"Обычный","Intense":"Интенсивный","Custom":"Свой","Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.":"Спокойный режим, стоит по умолчанию. Переключитесь на «Обычный» или «Интенсивный», если слова успевают забыться.","Your intervals (days, comma separated)":"Свои промежутки (дни через запятую)","Most per session":"Не больше за подход","If you forget a word":"Если слово забыто","Ask again tomorrow":"Спросить завтра","Send back to the list":"Вернуть в список","The word leaves the Archive and goes back into your list to learn again.":"Слово уйдёт из Архива обратно в список — учить заново.","The word stays in the Archive and returns tomorrow.":"Слово останется в Архиве и вернётся завтра.","Enter days, e.g. 1, 3, 7, 14":"Введите дни, например 1, 3, 7, 14","Schedule saved ✓":"График сохранён ✓","Appearance":"Оформление","Auto":"Авто","☀ Light":"☀ Светлая","🌙 Dark":"🌙 Тёмная","Light by day, dark at night.":"Днём светлая, ночью тёмная.","Using your location for exact sunrise & sunset.":"Рассвет и закат вычисляются по вашему местоположению.","Use my location":"Использовать геопозицию","for exact sunrise & sunset.":"— для точного рассвета и заката.","Requesting location…":"Запрашиваю геопозицию…","Location denied":"Доступ к геопозиции запрещён","Location not available":"Геопозиция недоступна","Using your sunrise & sunset":"Считаю по вашему рассвету и закату","Language":"Язык","Pronunciation":"Произношение","British — academic":"Британское — академическое","American":"Американское","The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an":"Голос берётся из вашего устройства. Для самой естественной речи на iPhone: Настройки → Универсальный доступ → Устный контент → Голоса → English → скачайте голос","voice.":"(Enhanced).","Auto-translate":"Автоперевод","Google (fallback: MyMemory)":"Google (запасной — MyMemory)","MyMemory only":"Только MyMemory","The translation fills in automatically as you type":"Перевод подставится сам, пока вы печатаете","Translating…":"Перевожу…","Options — tap to use:":"Варианты — нажмите, чтобы подставить:","Add the next word":"Добавьте следующее слово","Enter a word":"Введите слово","Enter a translation":"Введите перевод","Enter a name":"Введите название","Added ✓":"Добавлено ✓","Progress reset":"Прогресс сброшен","Moved to Archive ✓":"В Архив ✓","Moved back to learning":"Вернул в список","↩ To learning":"↩ В список","🗄 To Archive":"🗄 В Архив","Nothing due right now":"Сейчас нечего повторять","No words":"Нет слов","No words to learn":"Нет слов для изучения","No words in this list":"В этом списке нет слов","Need at least 3 words":"Нужно хотя бы 3 слова","Nothing to import":"Нечего импортировать","Imported ✓":"Импортировано ✓","No storage space left":"На устройстве закончилось место","Couldn’t read the file":"Не удалось прочитать файл","Everything is already filled in":"Всё уже заполнено","Nothing found for these words":"Для этих слов ничего не нашлось","Exit this session?":"Выйти из занятия?","Move all words of this list back from Archive and reset progress?":"Вернуть все слова списка из Архива и обнулить прогресс?","Correct ✓":"Верно ✓","Wrong":"Неверно","Almost — mind the spelling":"Почти — следите за написанием","Correct spelling: ":"Правильное написание: ","Answer: ":"Ответ: ","the match is correct":"пара верна","the match is wrong":"пара неверна","Is this a correct match?":"Пара подобрана верно?","Type the translation":"Напишите перевод","Type in English":"Напишите по-английски","Choose the translation":"Выберите перевод","Choose the word":"Выберите слово","tap to flip":"нажмите, чтобы перевернуть","Don't know":"Не знаю","Know ✓":"Знаю ✓","🔊 Pronounce":"🔊 Произнести","Deck complete":"Колода пройдена","Review tough ones":"Повторить трудные","Great job!":"Отлично!","Review complete":"Повторение завершено","You revised every word in this session.":"Вы повторили все слова этого подхода.","Every word this session is mastered and moved to the Archive.":"Все слова подхода усвоены и ушли в Архив.","Excellent!":"Превосходно!","Good effort":"Неплохо","Keep practising":"Нужно ещё поработать","How many questions":"Сколько вопросов","Question types":"Типы вопросов","Multiple choice":"Выбор из вариантов","Type the answer":"Ввод ответа","True / false":"Верно / неверно","Start test":"Начать тест","Pick at least one type":"Выберите хотя бы один тип","Archive review: results don't change progress.":"Повторение Архива: результат не меняет прогресс.","🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.":"🇷🇺 → 🇬🇧 Слово показывается по-русски — вспомните и напишите (или выберите) английское. Между вопросами можно свободно ходить и править ответы до завершения.","Finish test":"Завершить тест","Finish ✓":"Завершить ✓","Next →":"Дальше →","← Back":"← Назад","Retry mistakes":"Повторить ошибки","Mistakes":"Ошибки","Spelling slips":"Описки","no answer":"нет ответа","Match each word with its translation":"Соедините слово с переводом","Mistakes:":"Ошибок:","Preview will appear here":"Здесь появится предпросмотр","Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.":"Вставьте список из Quizlet, Excel или обычного текста. Переводы можно не писать — подставятся сами.","Between word and translation":"Между словом и переводом","Between cards":"Между карточками","Tab ⇥":"Табуляция ⇥","Dash –":"Тире –","Comma":"Запятая","New line":"Новая строка","; semicolon":"; точка с запятой","Blank line":"Пустая строка","Translate when the translation is missing":"Переводить, если перевода нет","Makes a paper worksheet from this list — print it or save as PDF.":"Сделает бумажный вариант из этого списка — можно распечатать или сохранить в PDF.","🇷🇺 → 🇬🇧 write the English":"🇷🇺 → 🇬🇧 написать английское","🇬🇧 → 🇷🇺 write the Russian":"🇬🇧 → 🇷🇺 написать русское","How many words":"Сколько слов","Answer key on a separate page":"Ключ на отдельной странице","🖨 Print":"🖨 Печать","Answer key":"Ключ к заданию","Name:":"Имя:","Date:":"Дата:","Score:":"Баллы:","Sign in":"Войти","Sign up":"Регистрация","Sign out":"Выйти","Create account":"Создать аккаунт","Please wait…":"Минутку…","An account syncs your words across devices. Using the app without one keeps everything on this device only.":"С аккаунтом слова синхронизируются между устройствами. Без него всё хранится только на этом устройстве.","Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.":"Не получается связаться с сервисом входа. Проверьте интернет — на этом устройстве приложение работает и без него.","Enter email and password":"Введите почту и пароль","This email is already registered — sign in instead.":"Эта почта уже зарегистрирована — войдите.","Wrong email or password.":"Неверная почта или пароль.","Password must be at least 6 characters.":"Пароль должен быть не короче 6 символов.","Confirm your email first — check your inbox.":"Сначала подтвердите почту — проверьте входящие.","That email address doesn’t look right.":"Адрес почты выглядит неправильно.","No connection — try again when you’re online.":"Нет связи — попробуйте, когда появится интернет.","Something went wrong":"Что-то пошло не так","Account created ✓":"Аккаунт создан ✓","Check your email to confirm, then sign in":"Подтвердите почту по письму и войдите","Signed in ✓":"Вы вошли ✓","Signed out":"Вы вышли","Loading your profile…":"Загружаю профиль…","Teacher":"Учитель","Student":"Ученик","words sync automatically":"слова синхронизируются","Your code — give it to students":"Ваш код — дайте его ученикам","A student enters this in their Account to give you access to their lists.":"Ученик вводит его в разделе «Аккаунт», и вы получаете доступ к его спискам.","Link to a teacher":"Привязаться к учителю","Teacher's code":"Код учителя","Your teacher can then see and edit your lists.":"После этого учитель сможет видеть и править ваши списки.","Enter the code":"Введите код","No teacher found with that code":"Учитель с таким кодом не найден","Couldn’t link — try again":"Не удалось привязаться — попробуйте ещё раз","Not signed in":"Вы не вошли","Syncing…":"Синхронизирую…","Synced ✓":"Синхронизировано ✓","No students linked yet":"Пока нет привязанных учеников","Open Account and share your code. Once a student enters it, their lists appear here.":"Откройте «Аккаунт» и передайте свой код. Как только ученик его введёт, его списки появятся здесь.","View & edit their words":"Смотреть и править слова","No lists yet":"Пока нет списков","You can create the first list for this student below.":"Первый список для этого ученика можно создать ниже.","No words yet":"Пока нет слов","Tap ＋ to add the first word.":"Нажмите ＋, чтобы добавить первое слово.","Words this student has mastered will show up here.":"Здесь появятся слова, которые ученик уже усвоил.","New word":"Новое слово","Word":"Слово","Couldn’t save — check your connection":"Не удалось сохранить — проверьте связь","Couldn’t create — check your connection":"Не удалось создать — проверьте связь","Couldn’t delete":"Не удалось удалить","Couldn’t update":"Не удалось обновить","Saved ✓":"Сохранено ✓","Creating…":"Создаю…","Saving…":"Сохраняю…","Delete this word from the student’s list?":"Удалить это слово из списка ученика?","Deleted":"Удалено","active today":"занимался сегодня","active yesterday":"занимался вчера","no activity yet":"ещё не занимался","this week":"за неделю","no words":"нет слов","💾 Backup (all lists)":"💾 Резервная копия (все списки)","📂 Restore from file":"📂 Восстановить из файла","📥 Import words":"📥 Импорт слов","📤 Send to student (file)":"📤 Отправить ученику (файл)","🔄 Sync now":"🔄 Синхронизировать","🧑‍🎓 My students":"🧑‍🎓 Мои ученики","👤 Account":"👤 Аккаунт","👤 Sign in / Sign up":"👤 Войти / Зарегистрироваться","Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.":"Слова хранятся только на этом устройстве. Войдите, чтобы они синхронизировались, — или пользуйтесь локально и время от времени делайте резервную копию.","Your words sync to your account and are available on any device you sign in on.":"Слова привязаны к аккаунту и доступны на любом устройстве, где вы вошли.","＋ New list":"＋ Новый список","＋ New list for":"＋ Новый список для","All":"Все","All words":"Все слова","mastered":"усвоено","due now":"на сегодня","due from the Archive":"из Архива","due for review":"к повторению","Repeats after":"Повторы через","Due now":"Сейчас готово","off":"выкл","At least 6 characters":"Не короче 6 символов","🔈 Pronunciation & examples":"🔈 Транскрипция и примеры","🖨 Print a quiz":"🖨 Распечатать тест","🔁 Review schedule":"🔁 График повторений","🎯 Daily goal":"🎯 Цель на день","🗑 Delete":"🗑 Удалить","view & edit their words":"смотреть и править слова","share your code to link a student":"передайте код, чтобы привязать ученика","learned words":"выученные слова","This list will appear in the student’s app.":"Список появится в приложении ученика.","correct":"верно","moved to Archive":"ушло в Архив","remembered":"вспомнили","back to learning":"вернулось в список","More waiting":"Ещё ждут","Next review":"Следующее повторение","next review":"следующее повторение","Still blank":"Без ответа осталось","Finish anyway?":"Всё равно завершить?","Delete words?":"Удалить слова?","This can't be undone.":"Это нельзя отменить.","Added":"Добавлено","Filled in":"Заполнено","Looking up…":"Ищу…","Found":"Найдено","without translation":"без перевода","Linked to":"Привязались к","Can’t reach the translator — enter the translation manually":"Переводчик недоступен — введите перевод вручную","Didn’t know":"Не знал","active":"занимался","ago":"назад","last seen":"был","today":"сегодня","tomorrow":"завтра","in":"через","week":"неделю","week2":"недели","weeks":"недель","month":"месяц","month2":"месяца","months":"месяцев","English":"English","In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","with mistakes":"с ошибками","ready now":"готово","Show all questions":"Показать все вопросы","Collapse":"Свернуть"};
+const RU_DICT={"word":"слово","words2":"слова","words":"слов","question":"вопрос","questions2":"вопроса","questions":"вопросов","day2":"дня","Русский":"Русский","Lists":"Списки","Archive":"Архив","Tricky words":"Сложные слова","Review today":"Повторить сегодня","My students":"Мои ученики","Settings":"Настройки","Account":"Аккаунт","Search":"Поиск","Close":"Закрыть","Done":"Готово","Cancel":"Отмена","Create":"Создать","Add":"Добавить","Save":"Сохранить","Delete":"Удалить","Rename":"Переименовать","Again":"Ещё раз","Keep going":"Продолжить","Check":"Проверить","Answer":"Ответ","Name":"Имя","Email":"Почта","Password":"Пароль","Task":"Задание","Pace":"Темп","Streak":"Серия","Mixed":"Вперемешку","Loading…":"Загрузка…","New list":"Новый список","New name":"Новое название","Your name":"Ваше имя","e.g. Unit 1":"например, Unit 1","you@example.com":"you@example.com","reliable":"reliable","a reliable friend":"a reliable friend","надёжный":"надёжный","Word (English)":"Слово (английский)","Translation":"Перевод","Example (optional)":"Пример (необязательно)","Import words":"Импорт слов","Print a quiz":"Распечатать тест","Reset progress":"Сбросить прогресс","Delete list":"Удалить список","Flashcards":"Карточки","Learn":"Учить","Test":"Тест","Match":"Пары","Review":"Повторение","Result":"Результат","Vocabulary":"Vocabulary","flip through":"листать","until mastered":"до усвоения","check yourself":"проверить себя","race the clock":"на время","review":"повторение","revise":"повторить","until fixed":"пока не закрепится","Select":"Выбрать","Select all":"Выбрать все","Clear selection":"Снять выделение","Learning":"Учу","Learned":"Выучено","Needs work":"Нужно подтянуть","learning":"учу","learned":"выучено","Your word lists will live here":"Здесь будут ваши списки слов","Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.":"Создайте список — например «Unit 1» — и добавляйте слова. Выученные собираются в общий Архив.","Add your first word":"Добавьте первое слово","Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.":"Нажмите ＋ внизу, чтобы ввести слово и перевод, или импортируйте список целиком через меню ⋯.","Nothing found":"Ничего не найдено","Archive is empty":"Архив пуст","Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из всех списков — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».","Nothing tricky right now":"Пока всё даётся легко","Words you keep missing in tests and Learn will gather here, so you can drill exactly those.":"Слова, в которых вы часто ошибаетесь, будут собираться здесь — чтобы отрабатывать именно их.","Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.":"Слова, где ошибок больше, чем верных ответов. Они уйдут отсюда, как только вы начнёте отвечать правильно чаще.","words you keep missing":"слов даются тяжело","learned words from all lists":"выученные слова из всех списков","from all lists":"из всех списков","Add to Home Screen.":"Добавьте на экран «Домой».","In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","Today":"Сегодня","day":"день","days":"дней","Daily goal":"Цель на день","A day counts towards your streak once you've studied this many different words.":"День засчитывается в серию, когда вы разобрали столько разных слов.","Current:":"Сейчас:","best:":"рекорд:","Review schedule":"График повторений","Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.":"Выученные слова возвращаются из Архива через растущие промежутки — так они действительно запоминаются. Если выключить, Архив будет просто хранилищем.","Spaced review":"Интервальные повторения","Gentle":"Щадящий","Standard":"Обычный","Intense":"Интенсивный","Custom":"Свой","Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.":"Спокойный режим, стоит по умолчанию. Переключитесь на «Обычный» или «Интенсивный», если слова успевают забыться.","Your intervals (days, comma separated)":"Свои промежутки (дни через запятую)","Most per session":"Не больше за подход","If you forget a word":"Если слово забыто","Ask again tomorrow":"Спросить завтра","Send back to the list":"Вернуть в список","The word leaves the Archive and goes back into your list to learn again.":"Слово уйдёт из Архива обратно в список — учить заново.","The word stays in the Archive and returns tomorrow.":"Слово останется в Архиве и вернётся завтра.","Enter days, e.g. 1, 3, 7, 14":"Введите дни, например 1, 3, 7, 14","Schedule saved ✓":"График сохранён ✓","Appearance":"Оформление","Auto":"Авто","Light by day, dark at night.":"Днём светлая, ночью тёмная.","Using your location for exact sunrise & sunset.":"Рассвет и закат вычисляются по вашему местоположению.","Use my location":"Использовать геопозицию","for exact sunrise & sunset.":"— для точного рассвета и заката.","Requesting location…":"Запрашиваю геопозицию…","Location denied":"Доступ к геопозиции запрещён","Location not available":"Геопозиция недоступна","Using your sunrise & sunset":"Считаю по вашему рассвету и закату","Language":"Язык","Pronunciation":"Произношение","British — academic":"Британское — академическое","American":"Американское","The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an":"Голос берётся из вашего устройства. Для самой естественной речи на iPhone: Настройки → Универсальный доступ → Устный контент → Голоса → English → скачайте голос","voice.":"(Enhanced).","Auto-translate":"Автоперевод","Google (fallback: MyMemory)":"Google (запасной — MyMemory)","MyMemory only":"Только MyMemory","The translation fills in automatically as you type":"Перевод подставится сам, пока вы печатаете","Translating…":"Перевожу…","Options — tap to use:":"Варианты — нажмите, чтобы подставить:","Add the next word":"Добавьте следующее слово","Enter a word":"Введите слово","Enter a translation":"Введите перевод","Enter a name":"Введите название","Added ✓":"Добавлено ✓","Progress reset":"Прогресс сброшен","Moved to Archive ✓":"В Архив ✓","Moved back to learning":"Вернул в список","Nothing due right now":"Сейчас нечего повторять","No words":"Нет слов","No words to learn":"Нет слов для изучения","No words in this list":"В этом списке нет слов","Need at least 3 words":"Нужно хотя бы 3 слова","Nothing to import":"Нечего импортировать","Imported ✓":"Импортировано ✓","No storage space left":"На устройстве закончилось место","Couldn’t read the file":"Не удалось прочитать файл","Everything is already filled in":"Всё уже заполнено","Nothing found for these words":"Для этих слов ничего не нашлось","Exit this session?":"Выйти из занятия?","Move all words of this list back from Archive and reset progress?":"Вернуть все слова списка из Архива и обнулить прогресс?","Correct ✓":"Верно ✓","Wrong":"Неверно","Almost — mind the spelling":"Почти — следите за написанием","Correct spelling: ":"Правильное написание: ","Answer: ":"Ответ: ","the match is correct":"пара верна","the match is wrong":"пара неверна","Is this a correct match?":"Пара подобрана верно?","Type the translation":"Напишите перевод","Type in English":"Напишите по-английски","Choose the translation":"Выберите перевод","Choose the word":"Выберите слово","tap to flip":"нажмите, чтобы перевернуть","Don't know":"Не знаю","Deck complete":"Колода пройдена","Review tough ones":"Повторить трудные","Great job!":"Отлично!","Review complete":"Повторение завершено","You revised every word in this session.":"Вы повторили все слова этого подхода.","Every word this session is mastered and moved to the Archive.":"Все слова подхода усвоены и ушли в Архив.","Excellent!":"Превосходно!","Good effort":"Неплохо","Keep practising":"Нужно ещё поработать","How many questions":"Сколько вопросов","Question types":"Типы вопросов","Multiple choice":"Выбор из вариантов","Type the answer":"Ввод ответа","True / false":"Верно / неверно","Start test":"Начать тест","Pick at least one type":"Выберите хотя бы один тип","Archive review: results don't change progress.":"Повторение Архива: результат не меняет прогресс.","Finish test":"Завершить тест","Retry mistakes":"Повторить ошибки","Mistakes":"Ошибки","Spelling slips":"Описки","no answer":"нет ответа","Match each word with its translation":"Соедините слово с переводом","Mistakes:":"Ошибок:","Preview will appear here":"Здесь появится предпросмотр","Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.":"Вставьте список из Quizlet, Excel или обычного текста. Переводы можно не писать — подставятся сами.","Between word and translation":"Между словом и переводом","Between cards":"Между карточками","Tab ⇥":"Табуляция ⇥","Dash –":"Тире –","Comma":"Запятая","New line":"Новая строка","; semicolon":"; точка с запятой","Blank line":"Пустая строка","Translate when the translation is missing":"Переводить, если перевода нет","Makes a paper worksheet from this list — print it or save as PDF.":"Сделает бумажный вариант из этого списка — можно распечатать или сохранить в PDF.","How many words":"Сколько слов","Answer key on a separate page":"Ключ на отдельной странице","Answer key":"Ключ к заданию","Name:":"Имя:","Date:":"Дата:","Score:":"Баллы:","Sign in":"Войти","Sign up":"Регистрация","Sign out":"Выйти","Create account":"Создать аккаунт","Please wait…":"Минутку…","An account syncs your words across devices. Using the app without one keeps everything on this device only.":"С аккаунтом слова синхронизируются между устройствами. Без него всё хранится только на этом устройстве.","Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.":"Не получается связаться с сервисом входа. Проверьте интернет — на этом устройстве приложение работает и без него.","Enter email and password":"Введите почту и пароль","This email is already registered — sign in instead.":"Эта почта уже зарегистрирована — войдите.","Wrong email or password.":"Неверная почта или пароль.","Password must be at least 6 characters.":"Пароль должен быть не короче 6 символов.","Confirm your email first — check your inbox.":"Сначала подтвердите почту — проверьте входящие.","That email address doesn’t look right.":"Адрес почты выглядит неправильно.","No connection — try again when you’re online.":"Нет связи — попробуйте, когда появится интернет.","Something went wrong":"Что-то пошло не так","Account created ✓":"Аккаунт создан ✓","Check your email to confirm, then sign in":"Подтвердите почту по письму и войдите","Signed in ✓":"Вы вошли ✓","Signed out":"Вы вышли","Loading your profile…":"Загружаю профиль…","Teacher":"Учитель","Student":"Ученик","words sync automatically":"слова синхронизируются","Your code — give it to students":"Ваш код — дайте его ученикам","A student enters this in their Account to give you access to their lists.":"Ученик вводит его в разделе «Аккаунт», и вы получаете доступ к его спискам.","Link to a teacher":"Привязаться к учителю","Teacher's code":"Код учителя","Your teacher can then see and edit your lists.":"После этого учитель сможет видеть и править ваши списки.","Enter the code":"Введите код","No teacher found with that code":"Учитель с таким кодом не найден","Couldn’t link — try again":"Не удалось привязаться — попробуйте ещё раз","Not signed in":"Вы не вошли","Syncing…":"Синхронизирую…","Synced ✓":"Синхронизировано ✓","No students linked yet":"Пока нет привязанных учеников","Open Account and share your code. Once a student enters it, their lists appear here.":"Откройте «Аккаунт» и передайте свой код. Как только ученик его введёт, его списки появятся здесь.","View & edit their words":"Смотреть и править слова","No lists yet":"Пока нет списков","You can create the first list for this student below.":"Первый список для этого ученика можно создать ниже.","No words yet":"Пока нет слов","Tap ＋ to add the first word.":"Нажмите ＋, чтобы добавить первое слово.","Words this student has mastered will show up here.":"Здесь появятся слова, которые ученик уже усвоил.","New word":"Новое слово","Word":"Слово","Couldn’t save — check your connection":"Не удалось сохранить — проверьте связь","Couldn’t create — check your connection":"Не удалось создать — проверьте связь","Couldn’t delete":"Не удалось удалить","Couldn’t update":"Не удалось обновить","Saved ✓":"Сохранено ✓","Creating…":"Создаю…","Saving…":"Сохраняю…","Delete this word from the student’s list?":"Удалить это слово из списка ученика?","Deleted":"Удалено","active today":"занимался сегодня","active yesterday":"занимался вчера","no activity yet":"ещё не занимался","this week":"за неделю","no words":"нет слов","Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.":"Слова хранятся только на этом устройстве. Войдите, чтобы они синхронизировались, — или пользуйтесь локально и время от времени делайте резервную копию.","Your words sync to your account and are available on any device you sign in on.":"Слова привязаны к аккаунту и доступны на любом устройстве, где вы вошли.","All":"Все","All words":"Все слова","mastered":"выучено","due now":"на сегодня","due from the Archive":"из Архива","due for review":"к повторению","Repeats after":"Повторы через","Due now":"Сейчас к повторению","off":"выкл","At least 6 characters":"Не короче 6 символов","view & edit their words":"смотреть и править слова","share your code to link a student":"передайте код, чтобы привязать ученика","learned words":"выученные слова","This list will appear in the student’s app.":"Список появится в приложении ученика.","correct":"верно","moved to Archive":"ушло в Архив","remembered":"вспомнили","back to learning":"вернулось в список","More waiting":"Ещё ждут","Next review":"Следующее повторение","next review":"следующее повторение","Still blank":"Без ответа осталось","Finish anyway?":"Всё равно завершить?","Delete words?":"Удалить слова?","This can't be undone.":"Это нельзя отменить.","Added":"Добавлено","Filled in":"Заполнено","Looking up…":"Ищу…","Found":"Найдено","without translation":"без перевода","Linked to":"Привязались к","Can’t reach the translator — enter the translation manually":"Переводчик недоступен — введите перевод вручную","Didn’t know":"Не знал","active":"занимался","ago":"назад","last seen":"был","today":"сегодня","tomorrow":"завтра","in":"через","week":"неделю","week2":"недели","weeks":"недель","month":"месяц","month2":"месяца","months":"месяцев","English":"English","In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","with mistakes":"с ошибками","Show all questions":"Показать все вопросы","Collapse":"Свернуть","Backup (all lists)":"Резервная копия (все списки)","Restore from file":"Восстановить из файла","Send to student (file)":"Отправить ученику (файл)","Sync now":"Синхронизировать","Sign in / Sign up":"Войти / Зарегистрироваться","Pronunciation & examples":"Транскрипция и примеры","Print":"Печать","To learning":"В список","To Archive":"В Архив","Pronounce":"Произнести","Light":"Светлая","Dark":"Тёмная","write the English":"написать английское","write the Russian":"написать русское","The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.":"Слово показывается по-русски — вспомните и напишите (или выберите) английское. Между вопросами можно свободно ходить и править ответы до завершения.","New list for":"Новый список для","Back":"Назад","Next":"Дальше","Finish":"Завершить","Know":"Знаю","Study":"Заниматься","Practice anyway":"Позаниматься всё равно","Choose a mode":"Выбрать режим","to review":"повторить","new":"новых","tricky":"сложных","Session":"Занятие","reviewed":"повторено","returned to learning":"вернулось в список","Nothing due today":"На сегодня всё","You have cleared every review. Come back tomorrow, or practise anyway.":"Все повторения сделаны. Возвращайтесь завтра — или позанимайтесь просто так.","Start with a few words":"Начните с нескольких слов","Add words to your dictionary and this screen will plan each day for you.":"Добавьте слова в словарь — и этот экран будет планировать занятия за вас.","Go to the dictionary":"Открыть словарь","Tricky":"Сложные","Scope":"Что учим","Me":"Я","Students":"Ученики","Dictionary":"Словарь","Interface":"Интерфейс","Learning plan":"План занятий","Data":"Данные","Signed in as":"Вы вошли как","Words stay on this device":"Слова только на этом устройстве","Nothing here yet":"Здесь пока пусто","words due":"к повторению","for today":"на сегодня","My words":"Мои слова"};
 function t(s){try{if((S.settings.lang||"ru")==="en")return s;}catch(e){}return RU_DICT[s]||s;}
 function plr(n,one,few,many){const a=n%10,b=n%100;return (S.settings.lang||"ru")==="en"?(n===1?one:few):(a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many));}
 const nWords=n=>n+" "+plr(n,t("word"),t("words2"),t("words"));
@@ -379,6 +443,9 @@ const DEF_SR={on:true,plan:'gentle',days:null,limit:20,onFail:'repeat',picked:fa
 const DEF_STATS={day:'',ids:[],streak:0,best:0,goal:10,met:false};
 const DB=()=>({v:2,sets:[],settings:{prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,lang:'ru',sr:Object.assign({},DEF_SR),goal:10},stats:Object.assign({},DEF_STATS)});
 
+/* ---------- icons: one line weight, one colour, drawn on a 24 grid ---------- */
+const ICONS={"user":"<circle cx=\"12\" cy=\"8.6\" r=\"3.4\"/><path d=\"M5.6 19.6c.9-3.3 3.5-5 6.4-5s5.5 1.7 6.4 5\"/>","moon":"<path d=\"M20 14.3A8.4 8.4 0 0 1 9.7 4 8.4 8.4 0 1 0 20 14.3Z\"/>","sun":"<circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 3v2M12 19v2M21 12h-2M5 12H3M18.4 5.6l-1.4 1.4M7 17l-1.4 1.4M18.4 18.4 17 17M7 7 5.6 5.6\"/>","sliders":"<path d=\"M4 7h10M18 7h2M4 17h4M12 17h8\"/><circle cx=\"16\" cy=\"7\" r=\"2\"/><circle cx=\"10\" cy=\"17\" r=\"2\"/>","more":"<circle cx=\"5.5\" cy=\"12\" r=\"1.3\"/><circle cx=\"12\" cy=\"12\" r=\"1.3\"/><circle cx=\"18.5\" cy=\"12\" r=\"1.3\"/>","left":"<path d=\"M14.5 5.5 8 12l6.5 6.5\"/>","right":"<path d=\"M9.5 5.5 16 12l-6.5 6.5\"/>","down":"<path d=\"M5.5 9.5 12 16l6.5-6.5\"/>","up":"<path d=\"M5.5 14.5 12 8l6.5 6.5\"/>","plus":"<path d=\"M12 5.5v13M5.5 12h13\"/>","cards":"<rect x=\"3.2\" y=\"7.4\" width=\"13.4\" height=\"12.4\" rx=\"2.2\"/><path d=\"M7.6 7.4V6.2a2 2 0 0 1 2-2h9.2a2 2 0 0 1 2 2v9.2a2 2 0 0 1-2 2h-1.2\"/>","target":"<circle cx=\"12\" cy=\"12\" r=\"8.2\"/><circle cx=\"12\" cy=\"12\" r=\"4.3\"/><circle cx=\"12\" cy=\"12\" r=\"1\"/>","quiz":"<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.4\"/><path d=\"M8.4 12.4l2.4 2.4 4.8-5.4\"/>","grid":"<rect x=\"3.6\" y=\"3.6\" width=\"7\" height=\"7\" rx=\"1.8\"/><rect x=\"13.4\" y=\"3.6\" width=\"7\" height=\"7\" rx=\"1.8\"/><rect x=\"3.6\" y=\"13.4\" width=\"7\" height=\"7\" rx=\"1.8\"/><rect x=\"13.4\" y=\"13.4\" width=\"7\" height=\"7\" rx=\"1.8\"/>","archive":"<rect x=\"3.4\" y=\"4.4\" width=\"17.2\" height=\"4.2\" rx=\"1.4\"/><path d=\"M5.2 8.6v9.4a2 2 0 0 0 2 2h9.6a2 2 0 0 0 2-2V8.6M10 12.6h4\"/>","zap":"<path d=\"M13.4 3.2 6.2 13.4h5l-.6 7.4 7.2-10.2h-5Z\"/>","users":"<circle cx=\"9.4\" cy=\"8.6\" r=\"3.2\"/><path d=\"M3.6 19.6c.8-3.1 3.1-4.8 5.8-4.8s5 1.7 5.8 4.8\"/><path d=\"M16.4 5.8a3.2 3.2 0 0 1 0 5.9M17.6 15.2c1.8.6 3 2.1 3.4 4.4\"/>","repeat":"<path d=\"M4.2 11.4a7.8 7.8 0 0 1 13.3-4.6l2.3 2.2M19.8 12.6a7.8 7.8 0 0 1-13.3 4.6l-2.3-2.2\"/><path d=\"M20.2 4.6v4.4h-4.4M3.8 19.4V15h4.4\"/>","flame":"<path d=\"M12 3.4c3.4 3 5.2 5.6 5.2 8.3a5.2 5.2 0 0 1-10.4 0c0-1.2.4-2.3 1.2-3.3.3 1.2.9 2 1.8 2.3-.2-2.6.5-4.9 2.2-7.3Z\"/>","sound":"<path d=\"M5 9.6h3l4-3.4v11.6l-4-3.4H5a1 1 0 0 1-1-1v-2.8a1 1 0 0 1 1-1Z\"/><path d=\"M15.6 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8\"/>","check":"<path d=\"M5 12.6 9.6 17 19 7\"/>","close":"<path d=\"M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6\"/>","trash":"<path d=\"M4.6 6.8h14.8M9.4 6.8V5.2a1.4 1.4 0 0 1 1.4-1.4h2.4a1.4 1.4 0 0 1 1.4 1.4v1.6\"/><path d=\"M6.6 6.8l.9 12a1.6 1.6 0 0 0 1.6 1.4h5.8a1.6 1.6 0 0 0 1.6-1.4l.9-12\"/>","download":"<path d=\"M12 3.6v11M7.6 10.2 12 14.6l4.4-4.4\"/><path d=\"M4.4 16.2v2.4a1.8 1.8 0 0 0 1.8 1.8h11.6a1.8 1.8 0 0 0 1.8-1.8v-2.4\"/>","upload":"<path d=\"M12 20.4V9M7.6 13.4 12 9l4.4 4.4\"/><path d=\"M4.4 7.8V5.4a1.8 1.8 0 0 1 1.8-1.8h11.6a1.8 1.8 0 0 1 1.8 1.8v2.4\"/>","printer":"<path d=\"M7 8.4V4.6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3.8\"/><path d=\"M5.4 8.4h13.2a2 2 0 0 1 2 2v4.4a1.4 1.4 0 0 1-1.4 1.4H17M7 16.2H4.8a1.4 1.4 0 0 1-1.4-1.4v-4.4a2 2 0 0 1 2-2Z\"/><rect x=\"7\" y=\"13.6\" width=\"10\" height=\"6.8\" rx=\"1.2\"/>","send":"<path d=\"M20.6 3.6 10.8 13.4M20.6 3.6l-6.4 17-3.4-7.2-7.2-3.4Z\"/>","reset":"<path d=\"M4.2 11.2a7.9 7.9 0 1 1 2 6\"/><path d=\"M3.6 4.8v5h5\"/>","search":"<circle cx=\"10.8\" cy=\"10.8\" r=\"6.6\"/><path d=\"M15.6 15.6 20.4 20.4\"/>","globe":"<circle cx=\"12\" cy=\"12\" r=\"8.4\"/><path d=\"M3.8 12h16.4M12 3.6c2.2 2.4 3.3 5.2 3.3 8.4s-1.1 6-3.3 8.4c-2.2-2.4-3.3-5.2-3.3-8.4s1.1-6 3.3-8.4Z\"/>","exit":"<path d=\"M9.6 20.4H5.8a1.8 1.8 0 0 1-1.8-1.8V5.4a1.8 1.8 0 0 1 1.8-1.8h3.8\"/><path d=\"M15.4 16.4 19.8 12l-4.4-4.4M19.8 12H9.2\"/>","award":"<circle cx=\"12\" cy=\"9.2\" r=\"5.6\"/><path d=\"M8.4 13.8 7.2 21l4.8-2.6 4.8 2.6-1.2-7.2\"/>","trend":"<path d=\"M3.8 15.6 9 10.4l3.4 3.4 7.4-7.4\"/><path d=\"M15.6 6.4h4.6v4.6\"/>","book":"<path d=\"M12 6.4C10.4 4.9 8.4 4.2 6 4.2H3.6v13.4H6c2.4 0 4.4.7 6 2.2 1.6-1.5 3.6-2.2 6-2.2h2.4V4.2H18c-2.4 0-4.4.7-6 2.2Z\"/><path d=\"M12 6.4v13.4\"/>","pen":"<path d=\"M4.2 19.8h4L19.4 8.6a2.3 2.3 0 0 0-3.2-3.2L5 16.6v3.2Z\"/><path d=\"M14.8 6.8l3.2 3.2\"/>","key":"<circle cx=\"8.2\" cy=\"12\" r=\"4.4\"/><path d=\"M12.6 12h8M17.4 12v3.2M20.4 12v2.4\"/>","link":"<path d=\"M10.2 13.8a3.6 3.6 0 0 0 5.2 0l3-3a3.6 3.6 0 0 0-5.1-5.1l-1.4 1.4\"/><path d=\"M13.8 10.2a3.6 3.6 0 0 0-5.2 0l-3 3a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4\"/>","clock":"<circle cx=\"12\" cy=\"12\" r=\"8.4\"/><path d=\"M12 7.2V12l3.2 2\"/>","sync":"<path d=\"M20.4 12a8.4 8.4 0 0 1-14.6 5.6L3.6 15.4\"/><path d=\"M3.6 12a8.4 8.4 0 0 1 14.6-5.6l2.2 2.2\"/><path d=\"M3.6 20.4v-5h5M20.4 3.6v5h-5\"/>","phone":"<rect x=\"6.6\" y=\"2.8\" width=\"10.8\" height=\"18.4\" rx=\"2.6\"/><path d=\"M10.6 5.6h2.8M12 18.2h.01\"/>","cloud":"<path d=\"M7.2 19.2a4.4 4.4 0 0 1-.5-8.8 5.8 5.8 0 0 1 11.1-1.2 3.9 3.9 0 0 1-.6 7.8Z\"/><path d=\"M12 11.6v5.6M9.6 14.4 12 11.8l2.4 2.6\"/>","arrowLeft":"<path d=\"M19.4 12H4.6M10.2 5.4 4.6 12l5.6 6.6\"/>","arrowRight":"<path d=\"M4.6 12h14.8M13.8 5.4 19.4 12l-5.6 6.6\"/>"};
+function ic(n,sz,sw){return '<svg class="i" viewBox="0 0 24 24" width="'+(sz||20)+'" height="'+(sz||20)+'" fill="none" stroke="currentColor" stroke-width="'+(sw||1.75)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[n]||'')+'</svg>';}
 /* ---------- storage + migration ---------- */
 function load(){
   try{
@@ -441,16 +508,95 @@ function checkAns(inp,correct,isRu){
 }
 const newWord=(en,ru,ex='',ipa='')=>({id:uid(),en:en.trim(),ru:ru.trim(),ex:ex.trim(),ipa:ipa.trim(),box:0,arch:false,ok:0,bad:0,added:Date.now(),due:0,rep:0,upd:Date.now(),synced:false});
 const touch=x=>{x.upd=Date.now();x.synced=false;};
-const curSet=()=>S.sets.find(s=>s.id===view.id);
+const curSet=()=>S.sets.find(s=>s.id===(view.id||view.set));
+/* new words land in the list you are filtered to, else the last one you used */
+function addTarget(){
+  const f=curSet();if(f)return f;
+  const last=S.sets.find(s=>s.id===S.settings.lastSet);if(last)return last;
+  if(S.sets.length)return S.sets[0];
+  const s={id:uid(),name:t('My words'),words:[],upd:Date.now(),synced:false};S.sets.push(s);return s;
+}
 const active=s=>s.words.filter(w=>!w.arch);
 const archived=s=>s.words.filter(w=>w.arch);
 const allArchived=()=>S.sets.flatMap(s=>s.words.filter(w=>w.arch).map(w=>({w,sn:s.name,sid:s.id})));
 const archCount=()=>S.sets.reduce((n,s)=>n+s.words.filter(w=>w.arch).length,0);
 function findWord(id){for(const s of S.sets){const w=s.words.find(x=>x.id===id);if(w)return{w,s};}return null;}
+let scope={kind:'all',id:null};
+function setScope(kind,id){scope={kind,id:id||null};}
+function scopeName(){
+  if(scope.kind==='arch')return t('Archive');
+  if(scope.kind==='hard')return t('Tricky words');
+  if(scope.kind==='set'){const s=S.sets.find(x=>x.id===scope.id);return s?s.name:t('All words');}
+  return t('All words');
+}
 function poolNow(){
-  if(view.name==='archive')return allArchived().map(x=>x.w);
-  if(view.name==='hard')return hardWords();
-  const s=curSet();return s?active(s):[];
+  if(scope.kind==='arch')return allArchived().map(x=>x.w);
+  if(scope.kind==='hard')return hardWords();
+  if(scope.kind==='set'){const s=S.sets.find(x=>x.id===scope.id);return s?active(s):[];}
+  return S.sets.flatMap(s=>active(s));
+}
+const allWords=()=>S.sets.flatMap(s=>s.words.map(w=>({w,sn:s.name,sid:s.id})));
+
+/* ---------- what to study right now ---------- */
+function buildSession(force){
+  const goal=S.stats.goal||10, target=Math.max(6,goal);
+  const due=dueWords();                       /* archived words that came back */
+  const seen=new Set(due.map(w=>w.id));
+  const tricky=hardWords().filter(w=>!w.arch&&!seen.has(w.id)).slice(0,5);
+  tricky.forEach(w=>seen.add(w.id));
+  const fresh=S.sets.flatMap(s=>active(s))
+    .filter(w=>!seen.has(w.id))
+    .sort((a,b)=>(a.box||0)-(b.box||0)||(a.upd||0)-(b.upd||0))
+    .slice(0,Math.max(0,target-due.length-tricky.length));
+  let words=[...due,...tricky,...fresh];
+  if(!words.length&&force)words=shuffle(S.sets.flatMap(s=>s.words)).slice(0,target);
+  return {due,tricky,fresh,words:shuffle(words)};
+}
+
+/* ---------- one adaptive session: the question fits the word ---------- */
+function startSession(force){
+  const plan=buildSession(force);
+  if(!plan.words.length)return toast(t('Nothing due right now'));
+  const pool=S.sets.flatMap(s=>s.words);
+  let queue=plan.words.slice();
+  const total=queue.length;
+  let done=0,good=0,learnt=0,back=0;const retried=new Set();
+  const app=$('#app');
+  function next(){
+    if(!queue.length)return finish();
+    const w=queue.shift();done++;
+    app.innerHTML=studyTop(t('Session'),(done-1)/total*100,(done-1)+'/'+total);
+    const lvl=w.arch?3:(w.box||0);
+    const kind=w.arch?'type':(lvl<=1?'mc':'type');
+    const dir=w.arch?'ru2en':(lvl===0?'en2ru':'ru2en');
+    const q=mkQ(pool,w,kind,dir);
+    pulse($('#qb'));
+    renderQ($('#qb'),q,{feedback:true,onDone:ok=>{
+      if(w.arch){
+        const r=srAnswer(w,ok);
+        if(ok){w.ok=(w.ok||0)+1;}else{w.bad=(w.bad||0)+1;if(r==='relearn')back++;}
+      }else{
+        const r=award(w,ok);
+        if(ok&&r==='arch')learnt++;
+        if(!ok&&!retried.has(w.id)){retried.add(w.id);queue.push(w);}
+      }
+      if(ok)good++;
+      touch(w);bumpStudy(w.id);save();
+      next();
+    }});
+  }
+  function finish(){
+    const pct=Math.round(good/Math.max(1,done)*100);
+    const bits=[];
+    if(learnt)bits.push(learnt+' '+t('mastered'));
+    if(plan.due.length)bits.push(plan.due.length+' '+t('reviewed'));
+    if(back)bits.push(back+' '+t('returned to learning'));
+    app.innerHTML=hdr(t('Session'),"go('today')")+
+      scoreHero(pct,bits.length?bits.join(' · '):good+' / '+done+' '+t('correct'))+
+      '<div style="height:14px"></div><button class="btn pri" onclick="go(\'today\')">'+t('Done')+'</button>';
+    if(pct>=60)confetti(pct>=90?170:120);
+  }
+  next();
 }
 
 /* ---------- spaced repetition (archive) ---------- */
@@ -573,11 +719,11 @@ let _themeTimer=null;
 function applyTheme(){
   const dark=resolveDark();
   document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-  const mc=document.querySelector('meta[name="theme-color"]');if(mc)mc.setAttribute('content',dark?'#0b0c11':'#f5f6f9');
+  const mc=document.querySelector('meta[name="theme-color"]');if(mc)mc.setAttribute('content',dark?'#0a120d':'#f2f4f0');
   clearTimeout(_themeTimer);
   if(((S.settings.theme)||'auto')==='auto')_themeTimer=setTimeout(applyTheme,60000);
 }
-function themeIcon(){return document.documentElement.getAttribute('data-theme')==='dark'?'☀':'🌙';}
+function themeIcon(){return ic(document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');}
 function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();render();}
 function setLang(l){S.settings.lang=l;save();settingsSheet();render();}
 function setTheme(m){S.settings.theme=m;save();applyTheme();if($('#scrim'))settingsSheet();render();}
@@ -597,12 +743,12 @@ function bigRing(pct){
     <circle class="rb-track" cx="${sz/2}" cy="${sz/2}" r="${r}"/>
     <circle class="rb-fill" cx="${sz/2}" cy="${sz/2}" r="${r}" transform="rotate(-90 ${sz/2} ${sz/2})"/>
     <text x="50%" y="52%" text-anchor="middle" dy=".02em" class="rb-pct">${pct}%</text>
-    <defs><linearGradient id="gbig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>`;
+    <defs><linearGradient id="gbig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e3b2c"/><stop offset=".55" stop-color="#2f7d4f"/><stop offset="1" stop-color="#d4f25a"/></linearGradient></defs></svg>`;
 }
 function scoreHero(pct,sub){
-  const em=pct>=90?'🏆':pct>=70?'🎉':pct>=50?'👍':'💪';
+  const em=ic(pct>=90?'award':pct>=70?'check':pct>=50?'trend':'repeat',30,1.6);
   const ti=pct>=90?t('Excellent!'):pct>=70?t('Great job!'):pct>=50?t('Good effort'):t('Keep practising');
-  return `<div class="hero"><div class="hero-emoji">${em}</div>${bigRing(pct)}<div class="hero-title">${ti}</div><div class="hero-sub">${sub}</div></div>`;
+  return `<div class="hero"><div class="hero-ic">${em}</div>${bigRing(pct)}<div class="hero-title">${ti}</div><div class="hero-sub">${sub}</div></div>`;
 }
 function confetti(n){
   try{
@@ -610,7 +756,7 @@ function confetti(n){
     const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;
     cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
     document.body.appendChild(cv);
-    const cols=['#6366f1','#8b5cf6','#10b981','#f59e0b','#ef4444','#3b82f6','#a3e635'];
+    const cols=['#0e3b2c','#2f7d4f','#8ef0a8','#d4f25a','#b7e06a','#1e7a52','#f3f8f1'];
     const N=n||120,P=[];
     for(let i=0;i<N;i++)P.push({x:W/2+(Math.random()-.5)*160,y:H*0.3+(Math.random()-.5)*50,
       vx:(Math.random()-.5)*11,vy:Math.random()*-9-4,g:0.3+Math.random()*0.12,
@@ -641,7 +787,7 @@ function ringSvg(done,total,size=46){
    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round"
      stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}" transform="rotate(-90 ${size/2} ${size/2})"/>
    <text x="50%" y="50%" text-anchor="middle" dy=".35em" font-size="13" font-weight="800" fill="var(--tx)">${Math.round(p*100)}</text>
-   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs></svg>`;
+   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e3b2c"/><stop offset=".6" stop-color="#2f7d4f"/><stop offset="1" stop-color="#d4f25a"/></linearGradient></defs></svg>`;
 }
 
 /* ---------- translation ---------- */
@@ -842,7 +988,7 @@ async function submitAuth(){
 function acctSheet(){
   const p=AUTH.profile,u=AUTH.user;
   if(!p)return sheet(`<h2>${t('Account')}</h2><div class="hint">${esc(u?u.email:'')}<br>${t('Loading your profile…')}</div>
-    <button class="btn ghost" onclick="doSignOut()">${t('Sign out')}</button>`);
+    <button class="btn ghost" onclick="doSignOut()">${ic('exit',18)}${t('Sign out')}</button>`);
   const isT=p.role==='teacher';
   sheet(`<h2>${esc(p.display_name||'Account')}</h2>
    <div class="hint">${esc(u.email)} · ${isT?t('Teacher'):t('Student')} · ${t('words sync automatically')}</div>
@@ -851,13 +997,13 @@ function acctSheet(){
       <div class="hint">${t('A student enters this in their Account to give you access to their lists.')}</div></div>`
     :`<div class="field"><label>${t('Link to a teacher')}</label>
       <div class="row"><input class="inp" id="tCode" placeholder="${t("Teacher's code")}" maxlength="8" autocapitalize="characters" autocorrect="off" spellcheck="false" style="flex:1;text-transform:uppercase;letter-spacing:.1em;font-weight:700">
-      <button class="ic" style="width:50px;height:51px" aria-label="Link" onclick="linkTeacher()">✓</button></div>
+      <button class="ic" style="width:50px;height:51px" aria-label="Link" onclick="linkTeacher()">${ic('check',20,2)}</button></div>
       <div class="err" id="linkErr"></div>
       <div class="hint">${t('Your teacher can then see and edit your lists.')}</div></div>`}
    <div class="stack" style="margin-top:6px">
-     ${isT?`<button class="btn" onclick="closeSheet();go('students')">${t('🧑‍🎓 My students')}${AUTH.students.length?` · ${AUTH.students.length}`:''}</button>`:''}
-     <button class="btn" onclick="manualSync()">${t('🔄 Sync now')}</button>
-     <button class="btn ghost" onclick="doSignOut()">${t('Sign out')}</button></div>`);
+     ${isT?`<button class="btn" onclick="closeSheet();go('students')">${ic('users')}${t('My students')}${AUTH.students.length?` · ${AUTH.students.length}`:''}</button>`:''}
+     <button class="btn" onclick="manualSync()">${ic('cloud')}${t('Sync now')}</button>
+     <button class="btn ghost" onclick="doSignOut()">${ic('exit',18)}${t('Sign out')}</button></div>`);
 }
 async function manualSync(){
   if(!cloudEnabled())return toast(t('Not signed in'));
@@ -925,43 +1071,31 @@ async function enrichSet(){
 let view={name:'home'};
 let selMode=false;const selIds=new Set();
 function clearSel(){selMode=false;selIds.clear();}
-function go(name,p={}){clearSel();view=Object.assign({name},p);render();scrollTo(0,0);
+function go(name,p={}){
+  /* older entry points still work: lists and the two smart lists are filters now */
+  if(name==='home')name='today';
+  else if(name==='set'){p={set:p.id||p.set||'all',status:'all'};name='vocab';}
+  else if(name==='archive'){p={set:'all',status:'learned'};name='vocab';}
+  else if(name==='hard'){p={set:'all',status:'tricky'};name='vocab';}
+  clearSel();view=Object.assign({name},p);render();scrollTo(0,0);
   const a=$('#app');if(a){a.classList.remove('viewin');void a.offsetWidth;a.classList.add('viewin');}}
-function render(){(VIEWS[view.name]||VIEWS.home)($('#app'));}
+function render(){(VIEWS[view.name]||VIEWS.today)($('#app'));}
 const pulse=el=>{if(!el)return;el.classList.remove('viewin');void el.offsetWidth;el.classList.add('viewin');};
 const hdr=(title,back,right='')=>{
   try{document.title=(title&&title!=='Vocabulary')?title+' · Vocabulary':'Vocabulary';}catch(e){}
-  return `<header>${back?`<button class="ic back" aria-label="Back" onclick="${back}">‹</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;};
+  return `<header>${back?`<button class="ic back" aria-label="Back" onclick="${back}">${ic('left',22)}</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;};
 
 /* ---------- views ---------- */
 const searchBox=`<div class="search"><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" placeholder="${t('Search')}" oninput="filterList(this.value)"></div>`;
-const modesHtml=modes=>`<div class="modes">${modes.map(m=>`<button class="mcard" onclick="${m[4]}"><div class="em em-${m[3]}">${m[0]}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`;
+const modesHtml=modes=>`<div class="modes">${modes.map(m=>`<button class="mcard" onclick="${m[4]}"><div class="em">${ic(m[0],19)}</div><b>${m[1]}</b><small>${m[2]}</small></button>`).join('')}</div>`;
 function dayStrip(){
   const total=S.sets.reduce((n,s)=>n+s.words.length,0);
   if(!total)return '';
   const goal=S.stats.goal||10,done=todayCount(),pct=Math.min(100,done/goal*100),st=S.stats.streak||0;
   return `<div class="daycard" onclick="goalSheet()">
-    <div class="flame"><div class="n">${st>0?'🔥':'✨'} ${st}</div><div class="c">${plr(st,t('day'),t('day2'),t('days'))}</div></div>
+    <div class="flame"><div class="n">${ic('flame',15)}<span>${st}</span></div><div class="c">${plr(st,t('day'),t('day2'),t('days'))}</div></div>
     <div class="t"><div class="lbl"><span>${t('Today')}${done>=goal?' ✓':''}</span><b>${done} / ${goal}</b></div>
       <div class="pbar"><i style="width:${pct}%"></i></div></div></div>`;
-}
-function reviewCard(){
-  const n=dueCount();
-  if(!n)return '';
-  return `<div class="setcard" onclick="startReview()" style="border-color:var(--pri)">
-    <div class="due-ic">🔁</div>
-    <div class="t"><div class="nm">${t('Review today')}</div>
-      <div class="meta">${nWords(n)} ${t('due from the Archive')}</div></div>
-    <span class="badge">${n}</span></div>`;
-}
-function hardCard(){
-  const n=hardWords().length;
-  if(n<3)return '';
-  return `<div class="setcard" onclick="go('hard')" style="margin-top:14px">
-    <div class="arch-ic" style="background:var(--bad-soft);color:var(--bad)">⚡</div>
-    <div class="t"><div class="nm">${t('Tricky words')}</div>
-      <div class="meta">${nWords(n)} ${t('with mistakes')}</div></div>
-    <span style="color:var(--fade);font-size:22px">›</span></div>`;
 }
 
 /* ---------- review session (archive, spaced) ---------- */
@@ -999,83 +1133,163 @@ function startReview(){
   next();
 }
 
+/* ---------- the three places you can be ---------- */
+function tabBar(){
+  if(selMode)return '';
+  const cur=view.name, isT=AUTH.profile&&AUTH.profile.role==='teacher';
+  const tabs=[['today','target',t('Today')],['vocab','book',t('Dictionary')]];
+  if(isT)tabs.push(['students','users',t('Students')]);
+  tabs.push(['me','user',t('Me')]);
+  const act=n=>n===cur||(n==='students'&&(cur==='tsets'||cur==='twords'));
+  return '<nav class="tabs">'+tabs.map(([n,i,l])=>
+    `<button class="tab ${act(n)?'on':''}" onclick="go('${n}')">${ic(i,21)}<span>${esc(l)}</span></button>`).join('')+'</nav>';
+}
+const themeBtn=()=>`<button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button>`;
+
 const VIEWS={
-home(app){
+today(app){
   const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
-  const arN=archCount();
-  app.innerHTML=hdr(t('Vocabulary'),'',`<button class="ic" aria-label="Account" onclick="acctOrAuth()">👤${AUTH.user?'<span class="acct-dot"></span>':''}</button><button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button><button class="ic" aria-label="Settings" onclick="settingsSheet()">⚙</button>`)+
-   (standalone||S.settings.hideBanner?'':
-     `<div class="banner"><span>📲</span><div><b>${t('Add to Home Screen.')}</b> ${t("In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.")}</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
-   dayStrip()+reviewCard()+
-   (S.sets.length?
-     `<div class="subhead"><span class="t">${t('Lists')}</span></div>`+
-     S.sets.map(s=>{const a=active(s).length,learned=s.words.filter(w=>w.arch).length;return(
-       `<div class="setcard" onclick="go('set',{id:'${s.id}'})">
-         ${ringSvg(learned,s.words.length)}
-         <div class="t"><div class="nm">${esc(s.name)}</div>
-         <div class="meta">${a} ${t('learning')}${learned?` · ${learned} ${t('learned')}`:''}</div></div>
-         <span style="color:var(--fade);font-size:22px">›</span></div>`)}).join('')+
-     `<div class="setcard" onclick="go('archive')" style="margin-top:14px">
-        <div class="arch-ic">🗄</div>
-        <div class="t"><div class="nm">${t('Archive')}</div>
-        <div class="meta">${arN?nWords(arN)+(nextDueAt()&&!dueCount()?' · '+t('next review')+' '+whenTxt(nextDueAt()):' · '+t('from all lists')):t('learned words from all lists')}</div></div>
-        <span style="color:var(--fade);font-size:22px">›</span></div>`
-     :`<div class="empty"><div class="big">📖</div><b>${t('Your word lists will live here')}</b><p>${t('Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.')}</p></div>`)+
-   hardCard()+
-   (AUTH.profile&&AUTH.profile.role==='teacher'
-     ?`<div class="setcard" onclick="go('students')" style="margin-top:14px">
-         <div class="arch-ic" style="background:var(--ok-soft);color:var(--ok)">🧑‍🎓</div>
-         <div class="t"><div class="nm">${t('My students')}</div>
-         <div class="meta">${AUTH.students.length?AUTH.students.length+' · '+t('view & edit their words'):t('share your code to link a student')}</div></div>
-         <span style="color:var(--fade);font-size:22px">›</span></div>`:'')+
-   `<button class="btn pri" style="margin-top:12px" onclick="newSet()">${t('＋ New list')}</button>`;
+  const total=S.sets.reduce((n,s)=>n+s.words.length,0);
+  const plan=buildSession(false);
+  let hero;
+  if(!total){
+    hero=`<div class="empty"><div class="big">${ic('book',26)}</div>
+      <b>${t('Start with a few words')}</b><p>${t('Add words to your dictionary and this screen will plan each day for you.')}</p>
+      <div style="height:14px"></div><button class="btn pri" onclick="go('vocab')">${ic('plus',18)}${t('Go to the dictionary')}</button></div>`;
+  }else if(!plan.words.length){
+    hero=`<div class="sess done">
+      <div class="sess-ic">${ic('check',26,1.8)}</div>
+      <div class="sess-t">${t('Nothing due today')}</div>
+      <div class="sess-m">${nextDueAt()?t('Next review')+' '+whenTxt(nextDueAt()):''}</div>
+      <button class="btn" onclick="startSession(true)">${t('Practice anyway')}</button></div>`;
+  }else{
+    const bits=[];
+    if(plan.due.length)bits.push(plan.due.length+' '+t('to review'));
+    if(plan.fresh.length)bits.push(plan.fresh.length+' '+t('new'));
+    if(plan.tricky.length)bits.push(plan.tricky.length+' '+t('tricky'));
+    hero=`<div class="sess">
+      <div class="sess-n">${plan.words.length}</div>
+      <div class="sess-t">${t('for today')}</div>
+      <button class="btn pri" onclick="startSession()">${t('Study')}${ic('arrowRight',19)}</button>
+      <div class="sess-m">${bits.join(' · ')}</div></div>`;
+  }
+  app.innerHTML=hdr(t('Today'),'',themeBtn())+
+   (standalone||S.settings.hideBanner||!total?'':
+     `<div class="banner"><span class="ib">${ic('phone',19)}</span><div><b>${t('Add to Home Screen.')}</b> ${t("In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.")}</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
+   hero+
+   (total?dayStrip()+`<button class="rowlink" onclick="modesSheet()"><span>${ic('grid',19)}${t('Choose a mode')}</span>${ic('right',18)}</button>`:'')+
+   tabBar();
 },
-set(app){
-  const s=curSet();if(!s)return go('home');
-  const pool=active(s);
-  const modes=[['🗂',t('Flashcards'),t('flip through'),'a',"startCards(false)"],['🎯',t('Learn'),t('until mastered'),'b',"startLearn()"],['📝',t('Test'),t('check yourself'),'d',"testSetup(false)"],['🧩',t('Match'),t('race the clock'),'c',"startMatch(false)"]];
+
+vocab(app){
+  const setId=view.set||'all', status=view.status||'all';
+  const sets=S.sets;
+  const match=x=>(setId==='all'||x.sid===setId)&&
+    (status==='all'||(status==='learning'&&!x.w.arch)||(status==='learned'&&x.w.arch)||
+     (status==='tricky'&&(x.w.bad||0)>=2&&(x.w.bad||0)>(x.w.ok||0)));
+  const items=allWords().filter(match);
+  const curList=setId==='all'?null:sets.find(s=>s.id===setId);
+  const chips=[['all',t('All words')]].concat(sets.map(s=>[s.id,s.name]));
+  const stats=[['all',t('All')],['learning',t('Learning')],['learned',t('Learned')],['tricky',t('Tricky')]];
   const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">${t('Learning')} · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ ${t('Select')}</button></div>`:'');
-  app.innerHTML=hdr(s.name,"go('home')",`<button class="ic" aria-label="Menu" onclick="setMenu()">⋯</button>`)+
-   (selMode?'':(pool.length?modesHtml(modes):''))+
+   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
+   :(items.length?`<div class="tbar"><span class="t">${items.length}</span><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
+  app.innerHTML=hdr(curList?curList.name:t('Dictionary'),'',
+      (curList?`<button class="ic" aria-label="Menu" onclick="setMenu()">${ic('more')}</button>`:
+               `<button class="ic" aria-label="New list" onclick="newSet()">${ic('plus')}</button>`))+
+   (selMode?'':`<div class="chips-row">${chips.map(([id,nm])=>
+      `<button class="fchip ${setId===id?'on':''}" onclick="go('vocab',{set:'${id}',status:'${status}'})">${esc(nm)}</button>`).join('')}</div>`+
+    `<div class="seg4">${stats.map(([id,nm])=>
+      `<button class="${status===id?'on':''}" onclick="go('vocab',{set:'${setId}',status:'${id}'})">${esc(nm)}</button>`).join('')}</div>`)+
    tbar+
-   (!selMode&&pool.length>7?searchBox:'')+
-   `<div id="list">${listHtml(pool,false,'')}</div>`+
-   (selMode?selBar(false):`<button class="fab" aria-label="Add word" onclick="wordForm()">＋</button>`);
+   (!selMode&&items.length>7?searchBox:'')+
+   `<div id="list">${vocabList(items,'')}</div>`+
+   (selMode?selBar(status==='learned'):`<button class="fab" aria-label="Add word" onclick="wordForm()">${ic('plus',24,2)}</button>`)+
+   tabBar();
 },
-archive(app){
-  const items=allArchived(),pool=items.map(x=>x.w);
-  const modes=[['🗂',t('Flashcards'),t('review'),'a',"startCards(true)"],['🎯',t('Learn'),t('revise'),'b',"startLearn(true)"],['📝',t('Test'),t('review'),'d',"testSetup(true)"],['🧩',t('Match'),t('race the clock'),'c',"startMatch(true)"]];
-  const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=pool.length&&pool.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">${t('Learned')} · ${pool.length}</span><button class="lnk" onclick="toggleSelMode()">☑ ${t('Select')}</button></div>`:'');
-  const due=dueCount();
-  app.innerHTML=hdr(t('Archive'),"go('home')")+
-   (due?`<div class="setcard" onclick="startReview()" style="border-color:var(--pri);margin-bottom:14px">
-      <div class="due-ic">🔁</div><div class="t"><div class="nm">${t('Review today')}</div>
-      <div class="meta">${nWords(due)} ${t('due now')}</div></div><span class="badge">${due}</span></div>`:'')+
-   (selMode?'':(pool.length?modesHtml(modes):''))+
-   tbar+
-   (!selMode&&pool.length>7?searchBox:'')+
-   `<div id="list">${archListHtml(items,'')}</div>`+
-   (selMode?selBar(true):'');
-},
-hard(app){
-  const items=hardItems(),pool=items.map(x=>x.w);
-  const modes=[['🎯',t('Learn'),t('until fixed'),'b',"startLearn()"],['📝',t('Test'),t('check yourself'),'d',"testSetup(false)"],['🗂',t('Flashcards'),t('flip through'),'a',"startCards(false)"],['🧩',t('Match'),t('race the clock'),'c',"startMatch(false)"]];
-  app.innerHTML=hdr(t('Tricky words'),"go('home')")+
-   (pool.length?modesHtml(modes)+
-     `<div class="hint" style="margin:-4px 2px 10px">${t('Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.')}</div>`+
-     `<div class="tbar"><span class="t">${t('Needs work')} · ${pool.length}</span></div>`+
-     items.map(({w,sn})=>`<div class="item" onclick="wordForm('${w.id}')">
-        <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
-        <div class="t"><div class="en">${esc(w.en)}</div>
-        <div class="ru">${esc(w.ru)}<span class="src"> · ${esc(sn)}</span></div></div>
-        <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('')
-    :`<div class="empty"><div class="big">✨</div><b>${t('Nothing tricky right now')}</b><p>${t('Words you keep missing in tests and Learn will gather here, so you can drill exactly those.')}</p></div>`);
+
+me(app){
+  const u=AUTH.user,p=AUTH.profile;
+  const acct=u
+   ?`<div class="setcard" onclick="acctSheet()">
+       <div class="arch-ic" style="background:var(--pri-soft);border-color:transparent;color:var(--pri)">${ic('user')}</div>
+       <div class="t"><div class="nm">${esc((p&&p.display_name)||t('Account'))}</div>
+       <div class="meta">${esc(u.email)}${p?' · '+(p.role==='teacher'?t('Teacher'):t('Student')):''}</div></div>
+       ${ic('right',18)}</div>`
+   :`<div class="setcard" onclick="authSheet()">
+       <div class="arch-ic">${ic('user')}</div>
+       <div class="t"><div class="nm">${t('Sign in / Sign up')}</div>
+       <div class="meta">${t('Words stay on this device')}</div></div>
+       ${ic('right',18)}</div>`;
+  app.innerHTML=hdr(t('Me'),'',themeBtn())+acct+
+   `<div class="subhead"><span class="t">${t('Learning plan')}</span></div>
+    <button class="rowlink" onclick="srSheet()"><span>${ic('repeat',19)}${t('Review schedule')}</span><em>${srCfg().on?srDays().join('/'):t('off')}</em></button>
+    <button class="rowlink" onclick="goalSheet()"><span>${ic('target',19)}${t('Daily goal')}</span><em>${nWords(S.stats.goal||10)}</em></button>
+    <div class="subhead" style="margin-top:16px"><span class="t">${t('Interface')}</span></div>`+
+   settingsHtml()+
+   `<div class="subhead" style="margin-top:16px"><span class="t">${t('Data')}</span></div>
+    <div class="stack">
+      <button class="btn" onclick="exportData()">${ic('download',18)}${t('Backup (all lists)')}</button>
+      <button class="btn ghost" onclick="$('#imp-file').click()">${ic('upload',18)}${t('Restore from file')}</button></div>
+    <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importFile(this.files[0])">
+    <div class="hint" style="margin-top:14px">${u?t('Your words sync to your account and are available on any device you sign in on.'):t('Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.')}</div>`+
+   tabBar();
 },
 };
+
+/* a word row that knows where it came from */
+function vocabList(items,qs){
+  qs=(qs||'').toLowerCase();
+  const its=qs?items.filter(x=>(x.w.en+' '+x.w.ru).toLowerCase().includes(qs)):items;
+  if(!items.length)return `<div class="empty"><div class="big">${ic('pen',26)}</div><b>${t('Nothing here yet')}</b><p>${t('Tap ＋ to add the first word.')}</p></div>`;
+  if(!its.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
+  const showSrc=(view.set||'all')==='all';
+  return its.map(({w,sn})=>{
+    const picked=selIds.has(w.id);
+    const tricky=(w.bad||0)>=2&&(w.bad||0)>(w.ok||0);
+    const left=selMode
+      ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
+      :(w.arch?'<span class="chk">'+ic('check',14,2.2)+'</span>'
+        :tricky?`<span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>`
+        :`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`);
+    const meta=[showSrc?esc(sn):'',w.arch&&w.due?esc(whenTxt(w.due)):''].filter(Boolean).join(' · ');
+    return `<div class="item ${picked&&selMode?'pick':''}" onclick="${selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`}">
+      ${left}
+      <div class="t"><div class="en">${esc(w.en)}${w.ipa?` <span class="ipa">${esc(w.ipa)}</span>`:''}</div>
+      <div class="ru">${esc(w.ru)}${meta?`<span class="src"> · ${meta}</span>`:''}</div></div>
+      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button>`}</div>`;
+  }).join('');
+}
+
+/* the four practice modes, now one deliberate choice instead of twelve entry points */
+function modesSheet(){
+  const opts=[['all',t('All words')]].concat(S.sets.map(s=>[s.id,s.name]));
+  if(archCount())opts.push(['arch',t('Archive')]);
+  if(hardWords().length)opts.push(['hard',t('Tricky words')]);
+  const cur=scope.kind==='set'?scope.id:scope.kind;
+  sheet(`<h2>${t('Choose a mode')}</h2>
+   <div class="field"><label>${t('Scope')}</label>
+     <select class="inp" id="mscope" onchange="pickScope(this.value)">
+       ${opts.map(([v,n])=>`<option value="${v}" ${v===cur?'selected':''}>${esc(n)}</option>`).join('')}</select></div>
+   <div class="modes-grid">
+     <button class="mcard" onclick="runMode('cards')"><div class="em">${ic('cards',19)}</div><b>${t('Flashcards')}</b><small>${t('flip through')}</small></button>
+     <button class="mcard" onclick="runMode('learn')"><div class="em">${ic('target',19)}</div><b>${t('Learn')}</b><small>${t('until mastered')}</small></button>
+     <button class="mcard" onclick="runMode('test')"><div class="em">${ic('quiz',19)}</div><b>${t('Test')}</b><small>${t('check yourself')}</small></button>
+     <button class="mcard" onclick="runMode('match')"><div class="em">${ic('grid',19)}</div><b>${t('Match')}</b><small>${t('race the clock')}</small></button>
+   </div>`);
+}
+function pickScope(v){
+  if(v==='all'||v==='arch'||v==='hard')setScope(v);else setScope('set',v);
+}
+function runMode(m){
+  const v=($('#mscope')||{}).value;if(v)pickScope(v);
+  const review=scope.kind==='arch';
+  closeSheet();
+  if(m==='cards')startCards(review);
+  else if(m==='learn')startLearn(review);
+  else if(m==='test')testSetup(review);
+  else startMatch(review);
+}
 
 /* ---------- teacher: student dictionaries (live from cloud) ---------- */
 let TV={sid:null,sname:'',setId:null,setName:'',words:[],sets:[]};
@@ -1098,11 +1312,11 @@ function agoTxt(ts){
   const mo=Math.round(d/30);return t('last seen')+' '+mo+' '+plr(mo,t('month'),t('month2'),t('months'))+' '+t('ago');
 }
 VIEWS.students=async function(app){
-  app.innerHTML=hdr(t('My students'),"go('home')")+`<div id="rl"><div class="empty"><p>${t('Loading…')}</p></div></div>`;
+  app.innerHTML=hdr(t('My students'),'')+`<div id="rl"><div class="empty"><p>${t('Loading…')}</p></div></div>`+tabBar();
   await loadStudents();
   const el=$('#rl');if(!el)return;
   if(!AUTH.students.length){
-    el.innerHTML=`<div class="empty"><div class="big">🧑‍🎓</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`;
+    el.innerHTML=`<div class="empty"><div class="big">${ic('users',26)}</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`+tabBar();
     return;
   }
   const ids=AUTH.students.map(s=>s.id);
@@ -1121,7 +1335,7 @@ VIEWS.students=async function(app){
       <div class="t"><div class="nm">${esc(nm)}</div>
         <div class="meta">${nWords(mine.length)} · ${learned} ${t('learned')}</div>
         <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${agoTxt(last)}${weekN?` · ${weekN} ${t('this week')}`:''}</div></div>
-      <span style="color:var(--fade);font-size:22px">›</span></div>`;
+      ${ic('right',18)}</div>`;
   }).join('');
 };
 VIEWS.tsets=async function(app){
@@ -1144,7 +1358,7 @@ VIEWS.tsets=async function(app){
      tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
        <div class="t"><div class="en">${esc(w.en)}${w.ipa?` <span class="ipa">${esc(w.ipa)}</span>`:''}</div><div class="ru">${esc(w.ru||'')}</div></div>
-       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('')+
+       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button></div>`).join('')+
      `<div style="height:14px"></div>`:'')+
    (sets.length
     ?`<div class="subhead"><span class="t">${t('Lists')}</span></div>`+sets.map(s=>{
@@ -1153,12 +1367,12 @@ VIEWS.tsets=async function(app){
           ${ringSvg(lr,a+lr)}
           <div class="t"><div class="nm">${esc(s.name)}</div><div class="meta">${a} ${t('learning')}${lr?` · ${lr} ${t('learned')}`:''}</div></div>
           <span style="color:var(--fade);font-size:22px">›</span></div>`;}).join('')
-    :`<div class="empty"><div class="big">📖</div><b>${t('No lists yet')}</b><p>${t('You can create the first list for this student below.')}</p></div>`)+
+    :`<div class="empty"><div class="big">${ic('book',26)}</div><b>${t('No lists yet')}</b><p>${t('You can create the first list for this student below.')}</p></div>`)+
    `<div class="setcard" onclick="go('twords',{sid:'${sid}',sname:'${q1(sname)}',setId:'archive',setName:'Archive'})" style="margin-top:14px">
-      <div class="arch-ic">🗄</div>
+      <div class="arch-ic">${ic('archive')}</div>
       <div class="t"><div class="nm">${t('Archive')}</div><div class="meta">${archN?nWords(archN):t('learned words')}</div></div>
       <span style="color:var(--fade);font-size:22px">›</span></div>
-    <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">${t('＋ New list for')} ${esc(sname)}</button>`;
+    <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">${ic('plus',18)}${t('New list for')} ${esc(sname)}</button>`;
 };
 VIEWS.twords=async function(app){
   const {sid,sname,setId,setName}=view;
@@ -1172,11 +1386,11 @@ VIEWS.twords=async function(app){
   el.innerHTML=(list.length
     ?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span></div>`+
      list.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
-       ${inArch?'<span class="chk">✓</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`}
+       ${inArch?'<span class="chk">'+ic('check',14,2.2)+'</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`}
        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}${inArch?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
-       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button></div>`).join('')
-    :`<div class="empty"><div class="big">${inArch?'🗄️':'✍️'}</div><b>${inArch?t('Archive is empty'):t('No words yet')}</b><p>${inArch?t('Words this student has mastered will show up here.'):t('Tap ＋ to add the first word.')}</p></div>`)+
-   (inArch?'':`<button class="fab" aria-label="Add word" onclick="tWordForm()">＋</button>`);
+       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button></div>`).join('')
+    :`<div class="empty"><div class="big">${inArch?ic('archive',26):ic('pen',26)}</div><b>${inArch?t('Archive is empty'):t('No words yet')}</b><p>${inArch?t('Words this student has mastered will show up here.'):t('Tap ＋ to add the first word.')}</p></div>`)+
+   (inArch?'':`<button class="fab" aria-label="Add word" onclick="tWordForm()">${ic('plus',24,2)}</button>`);
 };
 function tBack(){
   if(TV.setId)go('twords',{sid:TV.sid,sname:TV.sname,setId:TV.setId,setName:TV.setName});
@@ -1191,7 +1405,7 @@ function tWordForm(id){
    <div class="err" id="tErr"></div>
    <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
-     <button class="btn ghost" onclick="tToggleArch('${w.id}',${w.arch?'false':'true'})">${w.arch?t('↩ To learning'):t('🗄 To Archive')}</button>
+     <button class="btn ghost" onclick="tToggleArch('${w.id}',${w.arch?'false':'true'})">${w.arch?ic('reset',18)+t('To learning'):ic('archive',18)+t('To Archive')}</button>
      <button class="btn danger ghost" onclick="tDelWord('${w.id}')">${t('Delete')}</button></div>`:''}`);
   setTimeout(()=>$('#tEn')&&$('#tEn').focus(),60);
 }
@@ -1251,10 +1465,10 @@ async function tCreateSet(){
 
 function selBar(inArch){
   const n=selIds.size;
-  const moveLabel=inArch?`${t('↩ To learning')}${n?` (${n})`:''}`:`${t('🗄 To Archive')}${n?` (${n})`:''}`;
+  const moveLabel=inArch?`${ic('reset')}${t('To learning')}${n?` (${n})`:''}`:`${ic('archive')}${t('To Archive')}${n?` (${n})`:''}`;
   return `<div class="selbar"><div class="in row2">
     <button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${moveLabel}</button>
-    <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">${t('🗑 Delete')}${n?` (${n})`:''}</button>
+    <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">${ic('trash')}${t('Delete')}${n?` (${n})`:''}</button>
   </div></div>`;
 }
 function toggleSelMode(){selMode=!selMode;selIds.clear();render();}
@@ -1279,38 +1493,42 @@ function bulkDelete(){
 function listHtml(words,arch,qs){
   qs=(qs||'').toLowerCase();
   const ws=qs?words.filter(w=>(w.en+' '+w.ru).toLowerCase().includes(qs)):words;
-  if(!words.length)return `<div class="empty"><div class="big">✍️</div><b>${t('Add your first word')}</b><p>${t('Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.')}</p></div>`;
+  if(!words.length)return `<div class="empty"><div class="big">${ic('pen',26)}</div><b>${t('Add your first word')}</b><p>${t('Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.')}</p></div>`;
   if(!ws.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
   return ws.map(w=>{
     const picked=selIds.has(w.id);
     const left=selMode
-      ?`<span class="cbox ${picked?'on':''}">${picked?'✓':''}</span>`
+      ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
       :`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`;
     const onclick=selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`;
     return `<div class="item ${picked&&selMode?'pick':''}" onclick="${onclick}">
       ${left}
       <div class="t"><div class="en">${esc(w.en)}${w.ipa?` <span class="ipa">${esc(w.ipa)}</span>`:''}</div><div class="ru">${esc(w.ru)}</div></div>
-      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
+      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button>`}</div>`;
   }).join('');
 }
 function archListHtml(items,qs){
   qs=(qs||'').toLowerCase();
   const its=qs?items.filter(x=>(x.w.en+' '+x.w.ru).toLowerCase().includes(qs)):items;
-  if(!items.length)return `<div class="empty"><div class="big">🗄️</div><b>${t('Archive is empty')}</b><p>${t('Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.')}</p></div>`;
+  if(!items.length)return `<div class="empty"><div class="big">${ic('archive',26)}</div><b>${t('Archive is empty')}</b><p>${t('Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.')}</p></div>`;
   if(!its.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
   return its.map(({w,sn})=>{
     const picked=selIds.has(w.id);
-    const left=selMode?`<span class="cbox ${picked?'on':''}">${picked?'✓':''}</span>`:'<span class="chk">✓</span>';
+    const left=selMode?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`:'<span class="chk">'+ic('check',14,2.2)+'</span>';
     const onclick=selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`;
     return `<div class="item ${picked&&selMode?'pick':''}" onclick="${onclick}">
       ${left}
       <div class="t"><div class="en">${esc(w.en)}${w.ipa?` <span class="ipa">${esc(w.ipa)}</span>`:''}</div><div class="ru">${esc(w.ru)}<span class="src"> · ${esc(sn)}</span>${w.due?`<span class="src"> · ↻ ${esc(whenTxt(w.due))}</span>`:''}</div></div>
-      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">🔊</button>`}</div>`;
+      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button>`}</div>`;
   }).join('');
 }
 function filterList(v){
-  if(view.name==='archive'){$('#list').innerHTML=archListHtml(allArchived(),v);return;}
-  const s=curSet();if(s)$('#list').innerHTML=listHtml(active(s),false,v);
+  const el=$('#list');if(!el)return;
+  const setId=view.set||'all',status=view.status||'all';
+  const items=allWords().filter(x=>(setId==='all'||x.sid===setId)&&
+    (status==='all'||(status==='learning'&&!x.w.arch)||(status==='learned'&&x.w.arch)||
+     (status==='tricky'&&(x.w.bad||0)>=2&&(x.w.bad||0)>(x.w.ok||0))));
+  el.innerHTML=vocabList(items,v);
 }
 
 /* ---------- sheets ---------- */
@@ -1354,13 +1572,13 @@ function setMenu(){
   const s=curSet();
   const miss=s.words.filter(w=>!w.ipa||!w.ex).length;
   sheet(`<h2>${esc(s.name)}</h2><div class="stack">
-   <button class="btn" onclick="importSheet()">${t('📥 Import words')}</button>
-   <button class="btn" id="enBtn" onclick="enrichSet()">${t('🔈 Pronunciation & examples')}${miss?` · ${miss}`:' ✓'}</button>
-   <button class="btn" onclick="printSheet()">${t('🖨 Print a quiz')}</button>
-   <button class="btn" onclick="exportData('${s.id}')">${t('📤 Send to student (file)')}</button>
-   <button class="btn ghost" onclick="renameSet()">${t('Rename')}</button>
-   <button class="btn ghost" onclick="resetProg()">${t('Reset progress')}</button>
-   <button class="btn danger ghost" onclick="delSet()">${t('Delete list')}</button></div>`);
+   <button class="btn" onclick="importSheet()">${ic('download')}${t('Import words')}</button>
+   <button class="btn" id="enBtn" onclick="enrichSet()">${ic('sound')}${t('Pronunciation & examples')}${miss?` · ${miss}`:' ✓'}</button>
+   <button class="btn" onclick="printSheet()">${ic('printer')}${t('Print a quiz')}</button>
+   <button class="btn" onclick="exportData('${s.id}')">${ic('send')}${t('Send to student (file)')}</button>
+   <button class="btn ghost" onclick="renameSet()">${ic('pen',18)}${t('Rename')}</button>
+   <button class="btn ghost" onclick="resetProg()">${ic('reset',18)}${t('Reset progress')}</button>
+   <button class="btn danger ghost" onclick="delSet()">${ic('trash',18)}${t('Delete list')}</button></div>`);
 }
 function renameSet(){const s=curSet();const n=prompt('New name',s.name);if(n&&n.trim()){s.name=n.trim();touch(s);save();closeSheet();render();}}
 function resetProg(){const s=curSet();if(confirm(t('Move all words of this list back from Archive and reset progress?'))){s.words.forEach(w=>{w.box=0;w.arch=false;touch(w);});save();closeSheet();render();toast(t('Progress reset'));}}
@@ -1376,14 +1594,14 @@ function wordForm(id){
      <div class="ipa" id="ipaBox" style="margin:5px 3px 0">${formIpa?esc(formIpa):''}</div></div>
    <div class="field"><label>${t('Translation')}</label>
      <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="${t('надёжный')}" oninput="ruTouched=true" style="flex:1">
-     <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">🌐</button></div></div>
+     <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="trSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="chips"></div>
    <div class="field"><label>${t('Example (optional)')}</label>
      <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${t('a reliable friend')}" autocapitalize="none"></div>
    <button class="btn pri" onclick="saveWord()">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
-     ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${t('↩ To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${t('🗄 To Archive')}</button>`}
+     ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('reset')}${t('To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('archive')}${t('To Archive')}</button>`}
      <button class="btn danger ghost" onclick="delWord()">${t('Delete')}</button></div>`:''}`);
   if(!w)setTimeout(()=>$('#fEn')&&$('#fEn').focus(),60);
 }
@@ -1409,7 +1627,7 @@ function saveWord(){
   const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim(),ex=$('#fEx').value.trim();
   if(!en)return toast(t('Enter a word'));if(!ru)return toast(t('Enter a translation'));
   if(editId){const f=findWord(editId);if(f){Object.assign(f.w,{en,ru,ex,ipa:formIpa||f.w.ipa||''});touch(f.w);}save();closeSheet();render();}
-  else{const s=curSet();s.words.unshift(newWord(en,ru,ex,formIpa));save();render();toast(t('Added ✓'));
+  else{const s=addTarget();S.settings.lastSet=s.id;s.words.unshift(newWord(en,ru,ex,formIpa));save();render();toast(t('Added ✓'));
     formIpa='';$('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';ruTouched=false;
     const ib=$('#ipaBox');if(ib)ib.textContent='';
     $('#trSt').textContent=t('Add the next word');$('#fEn').focus();}
@@ -1468,7 +1686,7 @@ function impPrev(){
 }
 async function runImport(){
   const pairs=parseImport();if(!pairs.length)return toast(t('Nothing to import'));
-  const s=curSet(),btn=$('#impBtn');btn.disabled=true;
+  const s=addTarget(),btn=$('#impBtn');btn.disabled=true;
   let done=0;
   for(const p of pairs){
     let ru=p.ru;
@@ -1506,7 +1724,7 @@ function srSheet(){
      <div class="hint">${t('Repeats after')}: <b>${d.join(', ')}</b> ${t('days')}.${c.plan==='gentle'?' '+t('Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.'):''}</div></div>
    ${c.plan==='custom'?`<div class="field"><label>${t('Your intervals (days, comma separated)')}</label>
      <div class="row"><input class="inp" id="srDays" value="${esc(d.join(', '))}" inputmode="numeric" style="flex:1">
-     <button class="ic" style="width:50px;height:51px" aria-label="Save" onclick="srCustom()">✓</button></div></div>`:''}
+     <button class="ic" style="width:50px;height:51px" aria-label="Save" onclick="srCustom()">${ic('check',20,2)}</button></div></div>`:''}
    <div class="field"><label>${t('Most per session')}</label>
      <div class="sel-opt">
        ${[10,20,30,50].map(v=>`<button class="${c.limit===v?'on':''}" onclick="srSet('limit',${v})">${v}</button>`).join('')}</div></div>
@@ -1515,7 +1733,7 @@ function srSheet(){
        <button class="${c.onFail==='repeat'?'on':''}" onclick="srSet('onFail','repeat')">${t('Ask again tomorrow')}</button>
        <button class="${c.onFail==='relearn'?'on':''}" onclick="srSet('onFail','relearn')">${t('Send back to the list')}</button></div>
      <div class="hint">${c.onFail==='relearn'?t('The word leaves the Archive and goes back into your list to learn again.'):t('The word stays in the Archive and returns tomorrow.')}</div></div>
-   <div class="hint">${t('Due now')}: <b>${dueCount()}</b> ${t('ready now')}${nextDueAt()?` · ${whenTxt(nextDueAt())}`:''}</div>`:''}
+   <div class="hint">${t('Due now')}: <b>${dueCount()}</b>${nextDueAt()?` · ${whenTxt(nextDueAt())}`:''}</div>`:''}
    <button class="btn ghost" style="margin-top:6px" onclick="closeSheet()">${t('Close')}</button>`);
 }
 function srSet(k,v){
@@ -1534,19 +1752,17 @@ function srCustom(){
 }
 
 /* ---------- settings / backup ---------- */
-function settingsSheet(){
-  const th=S.settings.theme||'auto',ac=S.settings.accent||'uk';
-  const lg=S.settings.lang||'ru';
-  sheet(`<h2>${t('Settings')}</h2>
-   <div class="field"><label>${t('Language')}</label>
+function settingsHtml(){
+  const th=S.settings.theme||'auto',ac=S.settings.accent||'uk',lg=S.settings.lang||'ru';
+  return `<div class="field"><label>${t('Language')}</label>
      <div class="seg3">
        <button class="${lg==='ru'?'on':''}" onclick="setLang('ru')">Русский</button>
        <button class="${lg==='en'?'on':''}" onclick="setLang('en')">English</button></div></div>
    <div class="field"><label>${t('Appearance')}</label>
      <div class="seg3">
        <button class="${th==='auto'?'on':''}" onclick="setTheme('auto')">${t('Auto')}</button>
-       <button class="${th==='light'?'on':''}" onclick="setTheme('light')">${t('☀ Light')}</button>
-       <button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">${t('🌙 Dark')}</button></div>
+       <button class="${th==='light'?'on':''}" onclick="setTheme('light')">${ic('sun',17)}${t('Light')}</button>
+       <button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">${ic('moon',17)}${t('Dark')}</button></div>
      ${th==='auto'?`<div class="hint">${t('Light by day, dark at night.')}${S.settings.geo?' '+t('Using your location for exact sunrise & sunset.'):` <span onclick="useLocation()" style="color:var(--pri);font-weight:700">${t('Use my location')}</span> ${t('for exact sunrise & sunset.')}`}</div>`:''}</div>
    <div class="field"><label>${t('Pronunciation')}</label>
      <select class="inp" onchange="S.settings.accent=this.value;save()">
@@ -1556,17 +1772,9 @@ function settingsSheet(){
    <div class="field"><label>${t('Auto-translate')}</label>
      <select class="inp" onchange="S.settings.prov=this.value;save()">
        <option value="google" ${S.settings.prov==='google'?'selected':''}>${t('Google (fallback: MyMemory)')}</option>
-       <option value="mm" ${S.settings.prov==='mm'?'selected':''}>${t('MyMemory only')}</option></select></div>
-   <div class="stack" style="margin-top:4px">
-     <button class="btn" onclick="closeSheet();srSheet()">${t('🔁 Review schedule')}${srCfg().on?` · ${srDays().join('/')}`:' · '+t('off')}</button>
-     <button class="btn" onclick="closeSheet();goalSheet()">${t('🎯 Daily goal')} · ${nWords(S.stats.goal||10)}</button></div>
-   <div class="stack" style="margin-top:6px">
-     <button class="btn" onclick="exportData()">${t('💾 Backup (all lists)')}</button>
-     <button class="btn ghost" onclick="$('#imp-file').click()">${t('📂 Restore from file')}</button></div>
-   <input type="file" id="imp-file" accept=".json,application/json" hidden onchange="importFile(this.files[0])">
-   <div class="stack" style="margin-top:10px"><button class="btn ghost" onclick="closeSheet();acctOrAuth()">${AUTH.user?t('👤 Account'):t('👤 Sign in / Sign up')}</button></div>
-   <div class="hint" style="margin-top:14px">${AUTH.user?t('Your words sync to your account and are available on any device you sign in on.'):t('Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.')}</div>`);
+       <option value="mm" ${S.settings.prov==='mm'?'selected':''}>${t('MyMemory only')}</option></select></div>`;
 }
+function settingsSheet(){sheet(`<h2>${t('Settings')}</h2>`+settingsHtml());}
 async function exportData(setId){
   closeSheet();
   const data=setId?{v:2,sets:[S.sets.find(s=>s.id===setId)],settings:S.settings}:S;
@@ -1596,15 +1804,15 @@ function printSheet(){
   sheet(`<h2>${t('Print a quiz')}</h2>
    <div class="hint">${t('Makes a paper worksheet from this list — print it or save as PDF.')}</div>
    <div class="field"><label>${t('Task')}</label><div class="sel-opt">
-     <button class="${prDir==='ru2en'?'on':''}" onclick="prDir='ru2en';printSheet()">${t('🇷🇺 → 🇬🇧 write the English')}</button>
-     <button class="${prDir==='en2ru'?'on':''}" onclick="prDir='en2ru';printSheet()">${t('🇬🇧 → 🇷🇺 write the Russian')}</button>
+     <button class="${prDir==='ru2en'?'on':''}" onclick="prDir='ru2en';printSheet()">RU → EN · ${t('write the English')}</button>
+     <button class="${prDir==='en2ru'?'on':''}" onclick="prDir='en2ru';printSheet()">EN → RU · ${t('write the Russian')}</button>
      <button class="${prDir==='mix'?'on':''}" onclick="prDir='mix';printSheet()">${t('Mixed')}</button></div></div>
    <div class="field"><label>${t('How many words')}</label>
      <select class="inp" id="prN" onchange="prN=+this.value">
        ${[...new Set([10,20,30,max].filter(v=>v<=max))].sort((a,b)=>a-b).map(v=>`<option value="${v}" ${v===prN?'selected':''}>${v===max?t("All")+" ("+max+")":v}</option>`).join('')}</select></div>
    <div class="toggle" onclick="prKey=!prKey;this.querySelector('.sw').classList.toggle('on',prKey)">
      <label>${t('Answer key on a separate page')}</label><div class="sw ${prKey?'on':''}"><i></i></div></div>
-   <button class="btn pri" onclick="doPrint()">${t('🖨 Print')}</button>`);
+   <button class="btn pri" onclick="doPrint()">${ic('printer')}${t('Print')}</button>`);
 }
 function doPrint(){
   const s=curSet();if(!s)return;
@@ -1659,7 +1867,7 @@ function renderQ(box,q,o){
     const title=near?t('Almost — mind the spelling'):(ok?t('Correct ✓'):t('Wrong'));
     const ans=esc(q.type==='tf'?(q.isTrue?t('the match is correct'):t('the match is wrong')):answer);
     f.innerHTML=`<div class="fb ${cls}">${title}${(ok&&!near)?'':`<small>${near?t('Correct spelling: '):t('Answer: ')}${ans}</small>`}</div>`+
-      (ok?'':`<button class="btn pri" id="nx">${t("Next →")}</button>`);
+      (ok?'':`<button class="btn pri" id="nx">${t("Next")}</button>`);
     if(!en2ru||q.type==='tf')speak(w.en);
     if(ok)setTimeout(()=>o.onDone(ok,given,near),near?1500:620);else $('#nx').onclick=()=>o.onDone(ok,given,near);
   };
@@ -1683,7 +1891,7 @@ function startCards(review){
   let deck=shuffle(pool),i=0,flip=false,dir='en',unknown=[],total=deck.length;const app=$('#app');
   function draw(){
     if(i>=deck.length){
-      app.innerHTML=hdr(t('Flashcards'),"render()")+`<div class="celebrate"><div class="big">${unknown.length?'👍':'🎉'}</div></div>
+      app.innerHTML=hdr(t('Flashcards'),"render()")+`<div class="hero"><div class="hero-ic">${ic(unknown.length?'trend':'award',30,1.6)}</div></div>
         <div class="empty" style="padding-top:0"><b>${t('Deck complete')}</b><p>${t('Didn’t know')}: ${unknown.length} / ${total}</p></div>
         ${unknown.length?`<button class="btn pri" id="rep">${t('Review tough ones')} (${unknown.length})</button><div style="height:9px"></div>`:''}
         <button class="btn ghost" onclick="render()">${t('Done')}</button>`;
@@ -1697,8 +1905,8 @@ function startCards(review){
           ?`<div class="word">${esc(back)}</div>${(dir==='ru'&&w.ipa)?`<div class="ipa">${esc(w.ipa)}</div>`:''}${w.ex?`<div class="ex">${esc(w.ex)}</div>`:''}`
           :`<div class="word">${esc(front)}</div>${(dir==='en'&&w.ipa)?`<div class="ipa">${esc(w.ipa)}</div>`:''}<div class="tip">${t('tap to flip')}</div>`}
       </div></div>
-      <div class="row2"><button class="btn" id="no" style="color:var(--bad)">${t("Don't know")}</button><button class="btn" id="yes" style="color:var(--ok)">${t('Know ✓')}</button></div>
-      <div style="height:9px"></div><button class="btn ghost" id="sp">${t('🔊 Pronounce')}</button>`;
+      <div class="row2"><button class="btn" id="no" style="color:var(--bad)">${ic('close',17)}${t("Don't know")}</button><button class="btn" id="yes" style="color:var(--ok)">${ic('check',17,2)}${t('Know')}</button></div>
+      <div style="height:9px"></div><button class="btn ghost" id="sp">${ic('sound')}${t('Pronounce')}</button>`;
     $('#cd').onclick=()=>{
       const c=$('#cd');
       if(!c||c.classList.contains('fout')){flip=!flip;draw();return;}
@@ -1725,7 +1933,7 @@ function startLearn(review){
   function next(){
     if(!queue.length){
       app.innerHTML=hdr(t('Learn'),"render()")+
-        `<div class="hero"><div class="hero-emoji">🏆</div><div class="hero-title" style="margin-top:14px">${review?t('Review complete'):t('Great job!')}</div>
+        `<div class="hero"><div class="hero-ic">${ic('award',30,1.6)}</div><div class="hero-title" style="margin-top:14px">${review?t('Review complete'):t('Great job!')}</div>
          <div class="hero-sub">${review?t('You revised every word in this session.'):t('Every word this session is mastered and moved to the Archive.')}</div></div>
         <div style="height:14px"></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;
       confetti();return;
@@ -1758,7 +1966,7 @@ function testSetup(review){
    <div class="field"><label>${t('Question types')}</label><div class="stack">
      ${[['k1',t('Multiple choice')],['k2',t('Type the answer')],['k3',t('True / false')]].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
-   <div class="hint">${t('🇷🇺 → 🇬🇧 The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.')}</div>
+   <div class="hint">RU → EN. ${t('The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.')}</div>
    ${review?'<div class="hint">'+t('Archive review: results don\'t change progress.')+'</div>':''}
    <button class="btn pri" onclick="beginTest(${!!review})">${t('Start test')}</button>`);
 }
@@ -1784,15 +1992,15 @@ function runTest(words,kinds,review){
     const dots=qs.map((_,ix)=>`<button class="qdot ${answered(ix)?'on':''} ${ix===i?'cur':''}" data-ix="${ix}">${ix+1}</button>`).join('');
     let h=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()")+
       `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div><span class="stat">${ca}/${total}</span></div>`+
-      `<div class="qpalbox"><div class="qpal${palOpen?' open':''}" id="qpal">${dots}</div><button class="qmore" id="qmore" aria-label="${palOpen?t('Collapse'):t('Show all questions')}">${palOpen?'⌃':'⌄'}</button></div>`+
+      `<div class="qpalbox"><div class="qpal${palOpen?' open':''}" id="qpal">${dots}</div><button class="qmore" id="qmore" aria-label="${palOpen?t('Collapse'):t('Show all questions')}">${palOpen?ic('up',18):ic('down',18)}</button></div>`+
       `<div class="card" style="min-height:min(30vh,180px)"><div class="lbl">${lbl}</div>
         <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
     if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[i]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
     if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
     if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" value="${esc(ans[i]||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>`;
     h+=`<div style="height:14px"></div><div class="row2">
-      <button class="btn ghost" id="tback" ${i===0?'disabled':''}>${t('← Back')}</button>
-      ${i<total-1?`<button class="btn pri" id="tnext">${t('Next →')}</button>`:`<button class="btn pri tfinbtn">${t('Finish ✓')}</button>`}</div>
+      <button class="btn ghost" id="tback" ${i===0?'disabled':''}>${ic('arrowLeft',18)}${t('Back')}</button>
+      ${i<total-1?`<button class="btn pri" id="tnext">${t('Next')}${ic('arrowRight',18)}</button>`:`<button class="btn pri tfinbtn">${ic('check',18,2)}${t('Finish')}</button>`}</div>
       ${i<total-1?`<div style="height:9px"></div><button class="btn ghost tfinbtn" style="color:var(--mut)">${t('Finish test')}</button>`:''}`;
     app.innerHTML=h;
     if(shown!==i){pulse(app.querySelector('.card'));shown=i;}
@@ -1806,9 +2014,9 @@ function runTest(words,kinds,review){
         more.style.display='';
         /* never leave the question you are on hidden */
         const cur=pal.querySelector('.qdot.cur');
-        if(!palOpen&&cur&&top(cur)>pal.clientHeight-10){palOpen=true;pal.classList.add('open');more.textContent='⌃';}
+        if(!palOpen&&cur&&top(cur)>pal.clientHeight-10){palOpen=true;pal.classList.add('open');more.innerHTML=ic('up',18);}
         more.onclick=()=>{palOpen=!palOpen;pal.classList.toggle('open',palOpen);
-          more.textContent=palOpen?'⌃':'⌄';
+          more.innerHTML=palOpen?ic('up',18):ic('down',18);
           more.setAttribute('aria-label',palOpen?t('Collapse'):t('Show all questions'));};
       }
     }
@@ -1841,19 +2049,19 @@ function runTest(words,kinds,review){
         slips.map(r=>`<div class="item" style="display:block;padding:13px 15px">
           <div style="display:flex;align-items:center;gap:13px">
             <div class="t" style="flex:1"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div>
-            <button class="spk" onclick="speak('${q1(r.w.en)}')">🔊</button></div>
+            <button class="spk" onclick="speak('${q1(r.w.en)}')">${ic('sound',17)}</button></div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
-            <span class="ans-bad near">✎ ${esc(r.given)}</span>
-            <span class="ans-ok">✓ ${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
+            <span class="ans-bad near">${esc(r.given)}</span>
+            <span class="ans-ok">${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
         `<div style="height:10px"></div>`:'')+
       (bad.length?`<div class="subhead"><span class="t">${t('Mistakes')} — ${bad.length}</span></div>`+
         bad.map(r=>`<div class="item" style="display:block;padding:13px 15px">
           <div style="display:flex;align-items:center;gap:13px">
             <div class="t" style="flex:1"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div>
-            <button class="spk" onclick="speak('${q1(r.w.en)}')">🔊</button></div>
+            <button class="spk" onclick="speak('${q1(r.w.en)}')">${ic('sound',17)}</button></div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
-            <span class="ans-bad">✗ ${r.given?esc(r.given):t('no answer')}</span>
-            <span class="ans-ok">✓ ${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
+            <span class="ans-bad">${r.given?esc(r.given):t('no answer')}</span>
+            <span class="ans-ok">${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
         `<div style="height:10px"></div><button class="btn pri" id="rt">${t('Retry mistakes')}</button><div style="height:9px"></div>`:'')+
       `<button class="btn ghost" onclick="render()">${t('Close')}</button>`;
     if(bad.length)$('#rt').onclick=()=>runTest(shuffle(bad.map(r=>r.w)),kinds,review);
@@ -1880,7 +2088,7 @@ function startMatch(){
     if(x.id===y.id){el.classList.add('done');sel.classList.add('done');sel=null;left--;
       if(!left){clearInterval(iv);const t=((Date.now()-t0)/1000).toFixed(1);
         app.innerHTML=hdr(t('Match'),"render()")+
-          `<div class="hero"><div class="hero-emoji">🎉</div><div class="big-pct" style="margin:6px 0 0">${t}s</div>
+          `<div class="hero"><div class="hero-ic">${ic('award',30,1.6)}</div><div class="big-pct" style="margin:6px 0 0">${t}s</div>
            <div class="hero-sub">${t('Mistakes')}: ${miss}</div></div>
           <div style="height:14px"></div><button class="btn pri" onclick="startMatch()">${t('Again')}</button><div style="height:9px"></div>
           <button class="btn ghost" onclick="render()">${t('Close')}</button>`;
