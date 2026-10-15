@@ -25,12 +25,12 @@
   --bg:#f3f6fb; --surf:#ffffff; --surf2:#f2f6fd;
   --tx:#0f1a2e; --mut:#5a6885; --fade:#808ea9;
   --line:#e4eaf4; --line2:#d2dcec;
-  --pri:#1c45b0; --pri-d:#13318a; --pri-soft:#e8eefb; --on-pri:#ffffff;
-  --acc:#9cc5ff; --acc-ink:#13318a; --mint:#8ec6ff;
-  --grad:linear-gradient(135deg,#13318a,#2f6fe0 62%,#8ec6ff);
+  --pri:#1f66ee; --pri-d:#1a56db; --pri-soft:#e9f0ff; --on-pri:#ffffff;
+  --acc:#a8ccff; --acc-ink:#1a46a8; --mint:#9ed0ff;
+  --grad:linear-gradient(135deg,#1a56db,#2f86f5 62%,#9ed0ff);
   --ok:#1b7a4d; --ok-soft:#e3f1e9; --bad:#c03a28; --bad-soft:#fae7e3;
   --warn:#a9700f; --info:#1f6f8b;
-  --word:#0f1a2e; --card-bg:#14306e; --card-tx:#f2f6ff; --card-mut:#a3bbe8;
+  --word:#0f1a2e; --card-bg:#1a46a8; --card-tx:#f4f8ff; --card-mut:#aec6ef;
   --sh-sm:0 1px 2px rgba(15,26,46,.05); --sh:0 10px 30px rgba(15,26,46,.10),0 2px 6px rgba(15,26,46,.05);
   --r:16px; --r-sm:12px;
   --ff:Madefor,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
@@ -40,11 +40,11 @@
   --bg:#070c17; --surf:#0f1726; --surf2:#141e32;
   --tx:#e8eefb; --mut:#94a3c0; --fade:#6d7d9c;
   --line:#1b2538; --line2:#27344b;
-  --pri:#74a9ff; --pri-d:#a8ccff; --pri-soft:#14213a; --on-pri:#061129;
-  --acc:#a8ccff; --acc-ink:#0b1d3f; --mint:#8ec6ff;
-  --grad:linear-gradient(135deg,#2f6fe0,#74a9ff 62%,#bcdcff);
+  --pri:#7db4ff; --pri-d:#aed2ff; --pri-soft:#15243f; --on-pri:#06142e;
+  --acc:#b6d6ff; --acc-ink:#0b1d3f; --mint:#9ed0ff;
+  --grad:linear-gradient(135deg,#2f86f5,#7db4ff 62%,#c6e2ff);
   --ok:#4ed39a; --ok-soft:#0d2a20; --bad:#ef8a76; --bad-soft:#2d1512;
-  --word:#f2f6ff; --card-bg:#14274b; --card-tx:#eef4ff; --card-mut:#9ab4e0;
+  --word:#f2f6ff; --card-bg:#19356d; --card-tx:#f0f6ff; --card-mut:#a8c3ec;
   --sh-sm:0 1px 2px rgba(0,0,0,.35); --sh:0 14px 34px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -725,7 +725,7 @@ function bigRing(pct){
     <circle class="rb-track" cx="${sz/2}" cy="${sz/2}" r="${r}"/>
     <circle class="rb-fill" cx="${sz/2}" cy="${sz/2}" r="${r}" transform="rotate(-90 ${sz/2} ${sz/2})"/>
     <text x="50%" y="52%" text-anchor="middle" dy=".02em" class="rb-pct">${pct}%</text>
-    <defs><linearGradient id="gbig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13318a"/><stop offset=".55" stop-color="#2f6fe0"/><stop offset="1" stop-color="#8ec6ff"/></linearGradient></defs></svg>`;
+    <defs><linearGradient id="gbig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a56db"/><stop offset=".55" stop-color="#2f86f5"/><stop offset="1" stop-color="#9ed0ff"/></linearGradient></defs></svg>`;
 }
 function scoreHero(pct,sub){
   const em=ic(pct>=90?'award':pct>=70?'check':pct>=50?'trend':'repeat',30,1.6);
@@ -738,7 +738,7 @@ function confetti(n){
     const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;
     cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
     document.body.appendChild(cv);
-    const cols=['#13318a','#1c45b0','#2f6fe0','#74a9ff','#8ec6ff','#bcdcff','#ffffff'];
+    const cols=['#1a56db','#1f66ee','#2f86f5','#7db4ff','#9ed0ff','#c6e2ff','#ffffff'];
     const N=n||120,P=[];
     for(let i=0;i<N;i++)P.push({x:W/2+(Math.random()-.5)*160,y:H*0.3+(Math.random()-.5)*50,
       vx:(Math.random()-.5)*11,vy:Math.random()*-9-4,g:0.3+Math.random()*0.12,
@@ -769,7 +769,7 @@ function ringSvg(done,total,size=46){
    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round"
      stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}" transform="rotate(-90 ${size/2} ${size/2})"/>
    <text x="50%" y="50%" text-anchor="middle" dy=".35em" font-size="13.5" fill="var(--tx)">${Math.round(p*100)}</text>
-   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13318a"/><stop offset=".6" stop-color="#2f6fe0"/><stop offset="1" stop-color="#8ec6ff"/></linearGradient></defs></svg>`;
+   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a56db"/><stop offset=".6" stop-color="#2f86f5"/><stop offset="1" stop-color="#9ed0ff"/></linearGradient></defs></svg>`;
 }
 
 /* ---------- translation ---------- */

@@ -5,7 +5,7 @@
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1c45b0",
+  "theme_color": "#1f66ee",
   "lang": "ru",
   "description": "Личный словарь для изучения английских слов: карточки, тесты и интервальные повторения.",
   "icons": [
