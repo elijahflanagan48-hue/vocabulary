@@ -1,5 +1,6 @@
-const CACHE = 'vocab-v29';
-const FILES = ['./', './index.html', './manifest.json', './icon-180.png', './icon-512.png', './favicon-32.png', './favicon-192.png'];
+const CACHE = 'vocab-v31';
+const FILES = ['./', './index.html', './manifest.json', './icon-180.png', './icon-512.png', './favicon-32.png', './favicon-192.png',
+  './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const EXTERNAL = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
 
 self.addEventListener('install', e => {
