@@ -10,9 +10,9 @@
 <meta name="theme-color" content="#f3f6fb">
 <title>Vocabulary</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
-<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32-v2.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192-v2.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180-v2.png">
 <meta name="description" content="Vocabulary — личный словарь для изучения английских слов: карточки, тесты и интервальные повторения.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>(function(){try{var s=(JSON.parse(localStorage.getItem('vocab.v2')||'{}').settings)||{};var m=s.theme||'auto',dark;if(m==='dark')dark=true;else if(m==='light')dark=false;else{var h=new Date().getHours();dark=h<7||h>=19;}document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
@@ -416,6 +416,91 @@ const RU_DICT={"word":"слово","words2":"слова","words":"слов","que
 function t(s){try{if((S.settings.lang||"ru")==="en")return s;}catch(e){}return RU_DICT[s]||s;}
 function plr(n,one,few,many){const a=n%10,b=n%100;return (S.settings.lang||"ru")==="en"?(n===1?one:few):(a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many));}
 const nWords=n=>n+" "+plr(n,t("word"),t("words2"),t("words"));
+/* strings added with the multi-language support */
+Object.assign(RU_DICT,{
+  "List language":"Язык списка",
+  "Change language":"Сменить язык",
+  "Which language this list is in. The Archive, the auto-translation and the pronunciation follow it.":"На каком языке этот список. От него зависят Архив, автоперевод и озвучка.",
+  "Moving this list to another language also moves its learned words to that language's Archive.":"Вместе со списком в архив другого языка переедут и его выученные слова.",
+  "The word is shown in Russian — recall and type (or choose) it in the language you are studying. You can move between questions and fix your answers before finishing.":"Слово показывается по-русски — вспомните и напишите (или выберите) его на изучаемом языке. Между вопросами можно свободно ходить и править ответы до завершения.",
+  "learned words from this language":"выученные слова этого языка",
+  "Learned words from your lists in this language collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из ваших списков на этом языке — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».",
+  "Type":"Напишите",
+  "Only for English lists.":"Только для списков на английском."
+});
+
+/* ---------- the languages a list can be in ---------- */
+/* c: code used by the translators · ru/e: name in the interface · n: native name
+   tts: voice tag asked of the device · adv: Russian adverb for “write in …” */
+const LANGS=[
+  {c:'en',ru:'Английский',e:'English',n:'English',tts:'en-GB',adv:'по-английски',prep:'на английском'},
+  {c:'hu',ru:'Венгерский',e:'Hungarian',n:'Magyar',tts:'hu-HU',adv:'по-венгерски',prep:'на венгерском'},
+  {c:'de',ru:'Немецкий',e:'German',n:'Deutsch',tts:'de-DE',adv:'по-немецки',prep:'на немецком'},
+  {c:'fr',ru:'Французский',e:'French',n:'Français',tts:'fr-FR',adv:'по-французски',prep:'на французском'},
+  {c:'es',ru:'Испанский',e:'Spanish',n:'Español',tts:'es-ES',adv:'по-испански',prep:'на испанском'},
+  {c:'it',ru:'Итальянский',e:'Italian',n:'Italiano',tts:'it-IT',adv:'по-итальянски',prep:'на итальянском'},
+  {c:'pt',ru:'Португальский',e:'Portuguese',n:'Português',tts:'pt-PT',adv:'по-португальски',prep:'на португальском'},
+  {c:'nl',ru:'Нидерландский',e:'Dutch',n:'Nederlands',tts:'nl-NL',adv:'по-нидерландски',prep:'на нидерландском'},
+  {c:'pl',ru:'Польский',e:'Polish',n:'Polski',tts:'pl-PL',adv:'по-польски',prep:'на польском'},
+  {c:'cs',ru:'Чешский',e:'Czech',n:'Čeština',tts:'cs-CZ',adv:'по-чешски',prep:'на чешском'},
+  {c:'sk',ru:'Словацкий',e:'Slovak',n:'Slovenčina',tts:'sk-SK',adv:'по-словацки',prep:'на словацком'},
+  {c:'uk',ru:'Украинский',e:'Ukrainian',n:'Українська',tts:'uk-UA',adv:'по-украински',prep:'на украинском'},
+  {c:'sr',ru:'Сербский',e:'Serbian',n:'Српски',tts:'sr-RS',adv:'по-сербски',prep:'на сербском'},
+  {c:'hr',ru:'Хорватский',e:'Croatian',n:'Hrvatski',tts:'hr-HR',adv:'по-хорватски',prep:'на хорватском'},
+  {c:'bg',ru:'Болгарский',e:'Bulgarian',n:'Български',tts:'bg-BG',adv:'по-болгарски',prep:'на болгарском'},
+  {c:'ro',ru:'Румынский',e:'Romanian',n:'Română',tts:'ro-RO',adv:'по-румынски',prep:'на румынском'},
+  {c:'el',ru:'Греческий',e:'Greek',n:'Ελληνικά',tts:'el-GR',adv:'по-гречески',prep:'на греческом'},
+  {c:'tr',ru:'Турецкий',e:'Turkish',n:'Türkçe',tts:'tr-TR',adv:'по-турецки',prep:'на турецком'},
+  {c:'sv',ru:'Шведский',e:'Swedish',n:'Svenska',tts:'sv-SE',adv:'по-шведски',prep:'на шведском'},
+  {c:'no',ru:'Норвежский',e:'Norwegian',n:'Norsk',tts:'nb-NO',adv:'по-норвежски',prep:'на норвежском'},
+  {c:'da',ru:'Датский',e:'Danish',n:'Dansk',tts:'da-DK',adv:'по-датски',prep:'на датском'},
+  {c:'fi',ru:'Финский',e:'Finnish',n:'Suomi',tts:'fi-FI',adv:'по-фински',prep:'на финском'},
+  {c:'et',ru:'Эстонский',e:'Estonian',n:'Eesti',tts:'et-EE',adv:'по-эстонски',prep:'на эстонском'},
+  {c:'lv',ru:'Латышский',e:'Latvian',n:'Latviešu',tts:'lv-LV',adv:'по-латышски',prep:'на латышском'},
+  {c:'lt',ru:'Литовский',e:'Lithuanian',n:'Lietuvių',tts:'lt-LT',adv:'по-литовски',prep:'на литовском'},
+  {c:'he',ru:'Иврит',e:'Hebrew',n:'עברית',tts:'he-IL',adv:'на иврите',prep:'на иврите'},
+  {c:'ar',ru:'Арабский',e:'Arabic',n:'العربية',tts:'ar-SA',adv:'по-арабски',prep:'на арабском'},
+  {c:'fa',ru:'Персидский',e:'Persian',n:'فارسی',tts:'fa-IR',adv:'по-персидски',prep:'на персидском'},
+  {c:'hy',ru:'Армянский',e:'Armenian',n:'Հայերեն',tts:'hy-AM',adv:'по-армянски',prep:'на армянском'},
+  {c:'ka',ru:'Грузинский',e:'Georgian',n:'ქართული',tts:'ka-GE',adv:'по-грузински',prep:'на грузинском'},
+  {c:'kk',ru:'Казахский',e:'Kazakh',n:'Қазақша',tts:'kk-KZ',adv:'по-казахски',prep:'на казахском'},
+  {c:'zh',ru:'Китайский',e:'Chinese',n:'中文',tts:'zh-CN',adv:'по-китайски',prep:'на китайском'},
+  {c:'ja',ru:'Японский',e:'Japanese',n:'日本語',tts:'ja-JP',adv:'по-японски',prep:'на японском'},
+  {c:'ko',ru:'Корейский',e:'Korean',n:'한국어',tts:'ko-KR',adv:'по-корейски',prep:'на корейском'},
+  {c:'hi',ru:'Хинди',e:'Hindi',n:'हिन्दी',tts:'hi-IN',adv:'на хинди',prep:'на хинди'},
+  {c:'vi',ru:'Вьетнамский',e:'Vietnamese',n:'Tiếng Việt',tts:'vi-VN',adv:'по-вьетнамски',prep:'на вьетнамском'},
+  {c:'id',ru:'Индонезийский',e:'Indonesian',n:'Bahasa Indonesia',tts:'id-ID',adv:'по-индонезийски',prep:'на индонезийском'},
+  {c:'la',ru:'Латынь',e:'Latin',n:'Latina',tts:'',adv:'по-латински',prep:'на латыни'}
+];
+const DEF_LANG='en';
+const LANG_MAP=(()=>{const m={};LANGS.forEach(l=>m[l.c]=l);return m;})();
+const uiEn=()=>{try{return (S.settings.lang||'ru')==='en';}catch(e){return false;}};
+function langInfo(c){return LANG_MAP[c]||LANG_MAP[DEF_LANG];}
+function langName(c){const l=langInfo(c);return uiEn()?l.e:l.ru;}
+/* inside brackets Russian reads better lowercase: “Слово (венгерский)” */
+function langNameLc(c){const n=langName(c);return uiEn()?n:n.charAt(0).toLowerCase()+n.slice(1);}
+/* “Напишите по-венгерски” / “Type in Hungarian” */
+function langAdv(c){const l=langInfo(c);return uiEn()?('in '+l.e):l.adv;}
+/* “…слово на венгерском” / “…the word in Hungarian” */
+function langPrep(c){const l=langInfo(c);return uiEn()?('in '+l.e):(l.prep||l.ru);}
+const setLangOf=s=>(s&&s.lang)||DEF_LANG;
+/* a new list starts in the language of the last one you made */
+function newSetLang(){
+  try{const l=S.settings.lastLang;if(LANG_MAP[l])return l;}catch(e){}
+  return DEF_LANG;
+}
+/* the languages that actually have a list, in the order the lists appear */
+function langsUsed(){const seen=[];S.sets.forEach(s=>{const c=setLangOf(s);if(seen.indexOf(c)<0)seen.push(c);});return seen;}
+const multiLang=()=>langsUsed().length>1;
+/* word id → language of the list it sits in, rebuilt whenever the data changes */
+let _lgIdx=null;
+function lgIdx(){
+  if(_lgIdx)return _lgIdx;
+  const m=new Map();
+  S.sets.forEach(s=>{const L=setLangOf(s);s.words.forEach(w=>m.set(w.id,L));});
+  _lgIdx=m;return m;
+}
+const langOf=w=>(w&&lgIdx().get(w.id))||DEF_LANG;
 
 const SR_PLANS={gentle:[1,3,8,21,45],standard:[1,3,7,16,35],intense:[1,2,4,8,16]};
 const DEF_SR={on:true,plan:'gentle',days:null,limit:20,onFail:'repeat',picked:false};
@@ -446,20 +531,22 @@ function migrate(d){ // v1 -> v2
 }
 function fix(d){
   d=d||DB();
+  _lgIdx=null;
   d.settings=Object.assign({prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,lang:'ru'},d.settings||{});
   d.settings.sr=Object.assign({},DEF_SR,d.settings.sr||{});
   /* nobody has chosen a pace yet → follow the current default */
   if(!d.settings.sr.picked)d.settings.sr.plan=DEF_SR.plan;
   d.stats=Object.assign({},DEF_STATS,d.stats||{});
   if(!Array.isArray(d.stats.ids))d.stats.ids=[];
-  d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map(w=>({
+  /* a list with no language is English — that is all there was before */
+  d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,lang:LANG_MAP[s.lang]?s.lang:DEF_LANG,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map(w=>({
     id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),
     due:w.due||0,rep:w.rep||0,upd:w.upd||Date.now(),synced:!!w.synced
   }))}));
   return d;
 }
 let S=load();
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast(t('No storage space left'))};cloudKick();};
+const save=()=>{_lgIdx=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast(t('No storage space left'))};cloudKick();};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q1=s=>String(s??'').replace(/[\\']/g,'\\$&');
@@ -497,24 +584,35 @@ function addTarget(){
   const f=curSet();if(f)return f;
   const last=S.sets.find(s=>s.id===S.settings.lastSet);if(last)return last;
   if(S.sets.length)return S.sets[0];
-  const s={id:uid(),name:t('My words'),words:[],upd:Date.now(),synced:false};S.sets.push(s);return s;
+  const s={id:uid(),name:t('My words'),lang:newSetLang(),words:[],upd:Date.now(),synced:false};S.sets.push(s);return s;
+}
+/* the language a word added right now would get — without creating the list yet */
+function targetLang(){
+  const f=curSet();if(f)return setLangOf(f);
+  const last=S.sets.find(s=>s.id===S.settings.lastSet);if(last)return setLangOf(last);
+  if(S.sets.length)return setLangOf(S.sets[0]);
+  return newSetLang();
 }
 const active=s=>s.words.filter(w=>!w.arch);
 const archived=s=>s.words.filter(w=>w.arch);
-const allArchived=()=>S.sets.flatMap(s=>s.words.filter(w=>w.arch).map(w=>({w,sn:s.name,sid:s.id})));
-const archCount=()=>S.sets.reduce((n,s)=>n+s.words.filter(w=>w.arch).length,0);
+/* with no language given these cover every list, exactly as they used to */
+const inLang=(s,lang)=>!lang||setLangOf(s)===lang;
+const allArchived=lang=>S.sets.filter(s=>inLang(s,lang)).flatMap(s=>s.words.filter(w=>w.arch).map(w=>({w,sn:s.name,sid:s.id,lg:setLangOf(s)})));
+const archCount=lang=>S.sets.reduce((n,s)=>n+(inLang(s,lang)?s.words.filter(w=>w.arch).length:0),0);
 function findWord(id){for(const s of S.sets){const w=s.words.find(x=>x.id===id);if(w)return{w,s};}return null;}
 let scope={kind:'all',id:null};
 function setScope(kind,id){scope={kind,id:id||null};}
 /* the words actually on screen right now — what Select all must act on */
 function viewPool(){
-  if(view.name==='archive')return allArchived().map(x=>x.w);
+  if(view.name==='archive')return allArchived(view.lang).map(x=>x.w);
   if(view.name==='hard')return hardWords();
   if(view.name==='set'){const s=curSet();return s?active(s):[];}
   return poolNow();
 }
 function poolNow(){
-  if(scope.kind==='arch')return allArchived().map(x=>x.w);
+  /* for 'arch' and 'lang', scope.id carries a language code (null = every language) */
+  if(scope.kind==='arch')return allArchived(scope.id).map(x=>x.w);
+  if(scope.kind==='lang')return S.sets.filter(s=>setLangOf(s)===scope.id).flatMap(s=>active(s));
   if(scope.kind==='hard')return hardWords();
   if(scope.kind==='set'){const s=S.sets.find(x=>x.id===scope.id);return s?active(s):[];}
   return S.sets.flatMap(s=>active(s));
@@ -604,16 +702,16 @@ function srAnswer(w,ok){
   if(c.onFail==='relearn'){w.arch=false;w.box=1;w.rep=0;w.due=0;return 'relearn';}
   w.rep=Math.max(0,(w.rep||0)-1);w.due=Date.now()+DAY;return 'again';
 }
-function dueAll(){
+function dueAll(lang){
   if(!srCfg().on)return [];
   const now=Date.now();
-  return S.sets.flatMap(s=>s.words.filter(w=>w.arch&&w.due&&w.due<=now))
+  return S.sets.filter(s=>inLang(s,lang)).flatMap(s=>s.words.filter(w=>w.arch&&w.due&&w.due<=now))
     .sort((a,b)=>(a.due||0)-(b.due||0));
 }
 function dueWords(){const lim=srCfg().limit||20;return dueAll().slice(0,lim);}
-function dueCount(){return dueAll().length;}
-function nextDueAt(){
-  const f=S.sets.flatMap(s=>s.words.filter(w=>w.arch&&w.due)).map(w=>w.due).sort((a,b)=>a-b)[0];
+function dueCount(lang){return dueAll(lang).length;}
+function nextDueAt(lang){
+  const f=S.sets.filter(s=>inLang(s,lang)).flatMap(s=>s.words.filter(w=>w.arch&&w.due)).map(w=>w.due).sort((a,b)=>a-b)[0];
   return f||0;
 }
 function whenTxt(ts){
@@ -655,23 +753,34 @@ function todayCount(){rollDay();return S.stats.ids.length;}
 
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2300);}
 let _voices=[];function loadVoices(){try{_voices=speechSynthesis.getVoices()||[]}catch(e){_voices=[]}}
-function bestVoice(){
-  const target=(S.settings.accent==='us')?'en-us':'en-gb';
-  const en=_voices.filter(v=>/^en/i.test(v.lang||''));
-  if(!en.length)return null;
-  const score=v=>{let s=0;const n=(v.name||'').toLowerCase();
-    if(/\b(enhanced|premium|neural|natural)\b/.test(n))s+=70;
-    if(/\b(siri|ava|allison|samantha|serena|daniel|kate|arthur|oliver|stephanie|aria|jenny|guy|libby|sonia|ryan|nicky|aaron)\b/.test(n))s+=42;
-    if(/\bgoogle\b/.test(n))s+=34;
-    if(/\b(compact|eloquence|fred|albert|zarvox|trinoids|whisper|novelty|bad|bells|boing|bubbles|cellos|wobble|superstar)\b/.test(n))s-=90;
-    return s;};
-  const inTarget=en.filter(v=>(v.lang||'').replace('_','-').toLowerCase()===target);
-  const pool=inTarget.length?inTarget:en;
-  return pool.slice().sort((a,b)=>score(b)-score(a))[0];
+/* which voice tag to ask the device for — English still follows the accent setting */
+function ttsTag(lang){
+  const c=LANG_MAP[lang]?lang:DEF_LANG;
+  if(c==='en')return S.settings.accent==='us'?'en-US':'en-GB';
+  return langInfo(c).tts||'';
 }
-function speak(t){try{const u=new SpeechSynthesisUtterance(t);const v=bestVoice();
-  u.lang=(v&&v.lang)||(S.settings.accent==='us'?'en-US':'en-GB');u.rate=.9;u.pitch=1;
+const vScore=v=>{let s=0;const n=(v.name||'').toLowerCase();
+  if(/\b(enhanced|premium|neural|natural)\b/.test(n))s+=70;
+  if(/\b(siri|ava|allison|samantha|serena|daniel|kate|arthur|oliver|stephanie|aria|jenny|guy|libby|sonia|ryan|nicky|aaron)\b/.test(n))s+=42;
+  if(/\bgoogle\b/.test(n))s+=34;
+  if(/\b(compact|eloquence|fred|albert|zarvox|trinoids|whisper|novelty|bad|bells|boing|bubbles|cellos|wobble|superstar)\b/.test(n))s-=90;
+  return s;};
+/* the exact region if the device has it, otherwise any voice for the language */
+function bestVoice(tag){
+  if(!tag)return null;
+  const want=tag.toLowerCase(),base=want.split('-')[0];
+  const fam=_voices.filter(v=>((v.lang||'').replace('_','-').toLowerCase().split('-')[0])===base);
+  if(!fam.length)return null;
+  const exact=fam.filter(v=>(v.lang||'').replace('_','-').toLowerCase()===want);
+  return (exact.length?exact:fam).slice().sort((a,b)=>vScore(b)-vScore(a))[0];
+}
+function speak(txt,lang){try{
+  const tag=ttsTag(lang);if(!tag)return;            /* Latin and the like: no voice to ask for */
+  const u=new SpeechSynthesisUtterance(txt);const v=bestVoice(tag);
+  u.lang=(v&&v.lang)||tag;u.rate=.9;u.pitch=1;
   if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+/* speak a word in the language of the list it belongs to */
+function speakWord(id){const f=findWord(id);if(f)speak(f.w.en,setLangOf(f.s));}
 
 /* ---------- theme (day/night) ---------- */
 function sunTimes(date,lat,lon){
@@ -773,17 +882,19 @@ function ringSvg(done,total,size=46){
 }
 
 /* ---------- translation ---------- */
-async function translate(t){
+/* txt is translated from the list's language into Russian */
+async function translate(txt,lang){
+  const src=LANG_MAP[lang]?lang:DEF_LANG;
   const order=S.settings.prov==='mm'?['mm']:['google','mm'];
   for(const p of order){
     try{
       if(p==='google'){
-        const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&dt=bd&q='+encodeURIComponent(t));
+        const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+src+'&tl=ru&dt=t&dt=bd&q='+encodeURIComponent(txt));
         if(!r.ok)continue;const j=await r.json();const main=(j[0]||[]).map(x=>x[0]).join('').trim();
         const alts=(j[1]||[]).flatMap(e=>e[1]||[]).filter(x=>x&&x.toLowerCase()!==main.toLowerCase()).slice(0,6);
         if(main)return{main,alts};
       }else{
-        const r=await fetch('https://api.mymemory.translated.net/get?langpair=en|ru&q='+encodeURIComponent(t));
+        const r=await fetch('https://api.mymemory.translated.net/get?langpair='+src+'|ru&q='+encodeURIComponent(txt));
         if(!r.ok)continue;const j=await r.json();const main=(j.responseData.translatedText||'').trim();
         const alts=[...new Set((j.matches||[]).map(m=>m.translation).filter(x=>x&&x.toLowerCase()!==main.toLowerCase()))].slice(0,5);
         if(main&&!/^[A-Z\s]+$/.test(main))return{main,alts};
@@ -801,6 +912,14 @@ try{sb=(window.supabase&&window.supabase.createClient)?window.supabase.createCli
 let AUTH={user:null,profile:null,ready:false,students:[]};
 let syncing=false;
 function cloudEnabled(){return !!(sb&&AUTH.user);}
+
+/* the lang column may not exist in an older copy of the database; we find out once and adapt */
+let noLangCol=false;
+function missingLangCol(e){
+  const m=((e&&(e.message||e.details||e.hint||''))+'').toLowerCase();
+  return m.indexOf('lang')>=0&&(m.indexOf('column')>=0||m.indexOf('schema')>=0||m.indexOf('does not exist')>=0||m.indexOf('not found')>=0);
+}
+const withLang=(rows,sets)=>noLangCol?rows:rows.map((r,i)=>Object.assign({},r,{lang:setLangOf(sets[i])}));
 
 let _pushTimer=null;
 function cloudKick(){
@@ -821,8 +940,14 @@ async function cloudPush(){
     if(dirtySets.length){
       const rows=dirtySets.map(s=>({id:s.id,owner_id:me,name:s.name,position:S.sets.indexOf(s),deleted:false,
         updated_at:new Date(s.upd||Date.now()).toISOString()}));
-      const {error}=await sb.from('sets').upsert(rows);
-      if(!error)dirtySets.forEach(s=>s.synced=true);
+      const {error}=await sb.from('sets').upsert(withLang(rows,dirtySets));
+      /* an older database has no lang column yet — send the rest rather than stall the sync */
+      if(error&&!noLangCol&&missingLangCol(error)){
+        noLangCol=true;
+        const r2=await sb.from('sets').upsert(rows);
+        if(!r2.error)dirtySets.forEach(s=>s.synced=true);
+      }
+      else if(!error)dirtySets.forEach(s=>s.synced=true);
     }
     for(let i=0;i<dirtyWords.length;i+=200){
       const slice=dirtyWords.slice(i,i+200);
@@ -867,8 +992,10 @@ function mergeCloud(cs,cw,authoritative){
     const setIds=new Set(cs.map(x=>x.id)),wordIds=new Set(cw.map(x=>x.id));
     cs.forEach(c=>{
       const u=+new Date(c.updated_at),l=S.sets.find(x=>x.id===c.id);
-      if(!l)S.sets.push({id:c.id,name:c.name,words:[],upd:u,synced:true});
-      else if(u>(l.upd||0)){l.name=c.name;l.upd=u;l.synced=true;}
+      /* a row from a database without the column keeps whatever language we already had */
+      const cl=LANG_MAP[c.lang]?c.lang:null;
+      if(!l)S.sets.push({id:c.id,name:c.name,lang:cl||DEF_LANG,words:[],upd:u,synced:true});
+      else if(u>(l.upd||0)){l.name=c.name;if(cl)l.lang=cl;l.upd=u;l.synced=true;}
     });
     if(authoritative)S.sets=S.sets.filter(s=>setIds.has(s.id)||!s.synced);
     cw.forEach(c=>{
@@ -878,6 +1005,7 @@ function mergeCloud(cs,cw,authoritative){
       else if(u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
     });
     if(authoritative)S.sets.forEach(s=>{s.words=s.words.filter(w=>wordIds.has(w.id)||!w.synced);});
+    _lgIdx=null;
     try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   }catch(e){}
 }
@@ -1066,6 +1194,18 @@ function tabBar(){
 }
 const themeBtn=()=>`<button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button>`;
 
+/* the Archive card on the Dictionary screen — lang null means “every language” */
+function archCard(lang,first){
+  const n=archCount(lang),nd=nextDueAt(lang),named=!!lang;
+  const tail=nd&&!dueCount(lang)?' · '+t('next review')+' '+whenTxt(nd):(named?'':' · '+t('from all lists'));
+  const meta=n?nWords(n)+tail:(named?t('learned words from this language'):t('learned words from all lists'));
+  return `<div class="setcard" onclick="go('archive'${named?",{lang:'"+lang+"'}":''})"${first?' style="margin-top:14px"':''}>
+     <div class="arch-ic">${ic('archive')}</div>
+     <div class="t"><div class="nm">${t('Archive')}${named?' · '+esc(langName(lang)):''}</div>
+     <div class="meta">${meta}</div></div>
+     ${ic('right',18)}</div>`;
+}
+
 const VIEWS={
 today(app){
   const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
@@ -1102,20 +1242,18 @@ today(app){
 },
 
 vocab(app){
-  const arN=archCount(),hardN=hardWords().length;
+  const hardN=hardWords().length,ls=langsUsed(),multi=ls.length>1;
+  /* one Archive while a single language is in use, one per language once a second appears */
+  const archive=(multi?ls:[null]).map((c,i)=>archCard(c,i===0)).join('');
   app.innerHTML=hdr(t('Dictionary'),'',`<button class="ic" aria-label="New list" onclick="newSet()">${ic('plus')}</button>`)+
    (S.sets.length?
      S.sets.map(s=>{const a=active(s).length,learned=s.words.filter(w=>w.arch).length;return(
        `<div class="setcard" onclick="go('set',{id:'${s.id}'})">
          ${ringSvg(learned,s.words.length)}
          <div class="t"><div class="nm">${esc(s.name)}</div>
-         <div class="meta">${a} ${t('learning')}${learned?` · ${learned} ${t('learned')}`:''}</div></div>
+         <div class="meta">${multi?esc(langName(setLangOf(s)))+' · ':''}${a} ${t('learning')}${learned?` · ${learned} ${t('learned')}`:''}</div></div>
          ${ic('right',18)}</div>`)}).join('')+
-     `<div class="setcard" onclick="go('archive')" style="margin-top:14px">
-        <div class="arch-ic">${ic('archive')}</div>
-        <div class="t"><div class="nm">${t('Archive')}</div>
-        <div class="meta">${arN?nWords(arN)+(nextDueAt()&&!dueCount()?' · '+t('next review')+' '+whenTxt(nextDueAt()):' · '+t('from all lists')):t('learned words from all lists')}</div></div>
-        ${ic('right',18)}</div>`+
+     archive+
      (hardN>=3?`<div class="setcard" onclick="go('hard')">
         <div class="arch-ic" style="background:var(--bad-soft);border-color:transparent;color:var(--bad)">${ic('zap')}</div>
         <div class="t"><div class="nm">${t('Tricky words')}</div>
@@ -1141,15 +1279,15 @@ set(app){
 },
 
 archive(app){
-  const items=allArchived();
+  const lang=view.lang||null,items=allArchived(lang);
   const tbar=selMode
    ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
    :(items.length?`<div class="tbar"><span class="t">${t('Learned')} · ${items.length}</span><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
-  app.innerHTML=hdr(t('Archive'),"go('vocab')")+
-   (items.length&&!selMode?modesTop('arch',''):'')+
+  app.innerHTML=hdr(t('Archive')+(lang?' · '+esc(langName(lang)):''),"go('vocab')")+
+   (items.length&&!selMode?modesTop('arch',lang||''):'')+
    tbar+
    (!selMode&&items.length>7?searchBox:'')+
-   `<div id="list">${items.length?wordRows(items,'',true):`<div class="empty"><div class="big">${ic('archive',26)}</div><b>${t('Archive is empty')}</b><p>${t('Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.')}</p></div>`}</div>`+
+   `<div id="list">${items.length?wordRows(items,'',true):`<div class="empty"><div class="big">${ic('archive',26)}</div><b>${t('Archive is empty')}</b><p>${lang?t('Learned words from your lists in this language collect here — automatically in Learn and Test, or when you move them here with Select.'):t('Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.')}</p></div>`}</div>`+
    (selMode?selBar(true):'');
 },
 
@@ -1216,16 +1354,21 @@ function wordRows(items,qs,showSrc){
       ${left}
       <div class="t"><div class="en">${esc(w.en)}</div>
       <div class="ru">${esc(w.ru)}${meta?`<span class="src"> · ${meta}</span>`:''}</div></div>
-      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button>`}</div>`;
+      ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speakWord('${w.id}')">${ic('sound',17)}</button>`}</div>`;
   }).join('')+'</div>'+(hidden?`<button class="btn ghost" style="margin-top:4px" onclick="showAllRows()">${t('Show all')} · ${hidden}</button>`:'');
 }
 
 /* the four practice modes, now one deliberate choice instead of twelve entry points */
 function modesSheet(){
-  const opts=[['all',t('All words')]].concat(S.sets.map(s=>[s.id,s.name]));
-  if(archCount())opts.push(['arch',t('Archive')]);
+  const ls=langsUsed(),multi=ls.length>1;
+  const opts=[['all',t('All words')]];
+  /* with two languages in play you can practise just one of them */
+  if(multi)ls.forEach(c=>opts.push(['lang:'+c,t('All words')+' · '+langName(c)]));
+  S.sets.forEach(s=>opts.push([s.id,multi?s.name+' · '+langName(setLangOf(s)):s.name]));
+  if(multi)ls.forEach(c=>{if(archCount(c))opts.push(['arch:'+c,t('Archive')+' · '+langName(c)]);});
+  else if(archCount())opts.push(['arch',t('Archive')]);
   if(hardWords().length)opts.push(['hard',t('Tricky words')]);
-  const cur=scope.kind==='set'?scope.id:scope.kind;
+  const cur=scope.kind==='set'?scope.id:((scope.kind==='arch'||scope.kind==='lang')&&scope.id?scope.kind+':'+scope.id:scope.kind);
   sheet(`<h2>${t('Choose a mode')}</h2>
    <div class="field"><label>${t('Scope')}</label>
      <select class="inp" id="mscope" onchange="pickScope(this.value)">
@@ -1253,7 +1396,10 @@ function launchMode(kind,id,m){
   runMode(m);
 }
 function pickScope(v){
-  if(v==='all'||v==='arch'||v==='hard')setScope(v);else setScope('set',v);
+  if(v==='all'||v==='arch'||v==='hard')return setScope(v);
+  const i=v.indexOf(':');
+  if(i>0){const k=v.slice(0,i);if(k==='arch'||k==='lang')return setScope(k,v.slice(i+1));}
+  setScope('set',v);
 }
 function runMode(m){
   const v=($('#mscope')||{}).value;if(v)pickScope(v);
@@ -1329,7 +1475,7 @@ VIEWS.tsets=async function(app){
      '<div class="wlist">'+tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}</div></div>
-       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'+
+       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'+
      `<div style="height:14px"></div>`:'')+
    (sets.length
     ?`<div class="subhead"><span class="t">${t('Lists')}</span></div>`+sets.map(s=>{
@@ -1361,10 +1507,14 @@ VIEWS.twords=async function(app){
      '<div class="wlist">'+list.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        ${inArch?'<span class="chk">'+ic('check',14,2.2)+'</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`}
        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}${inArch?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
-       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'
+       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'
     :`<div class="empty"><div class="big">${inArch?ic('archive',26):ic('pen',26)}</div><b>${inArch?t('Archive is empty'):t('No words yet')}</b><p>${inArch?t('Words this student has mastered will show up here.'):t('Tap ＋ to add the first word, or import a whole list from the ⋯ menu.')}</p></div>`)+
    (inArch?'':`<button class="fab" aria-label="Add word" onclick="tWordForm()">${ic('plus',24,2)}</button>`);
 };
+/* the language of one of the student's lists, as it came from the cloud */
+function tSetLang(setId){
+  try{const s=(TV.sets||[]).find(x=>x.id===setId);const c=s&&s.lang;return LANG_MAP[c]?c:DEF_LANG;}catch(e){return DEF_LANG;}
+}
 function tSetMenu(){
   sheet(`<h2>${esc(TV.setName||'')}</h2>
    <button class="btn" onclick="importSheet(true)">${ic('download')}${t('Import words')}</button>
@@ -1377,8 +1527,9 @@ function tBack(){
 }
 function tWordForm(id){
   const w=id?TV.words.find(x=>x.id===id):null;
+  const lg=tSetLang(w?w.set_id:TV.setId);
   sheet(`<h2>${w?t('Word'):t('New word')}</h2>
-   <div class="field"><label>${t('Word (English)')}</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="${t('reliable')}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+   <div class="field"><label>${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="${t('reliable')}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
    <div class="field"><label>${t('Translation')}</label><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="${t('надёжный')}"></div>
    <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${t('a reliable friend')}" autocapitalize="none"></div>
    <div class="err" id="tErr"></div>
@@ -1434,6 +1585,8 @@ function tNewSet(){
   sheet(`<h2>${t('New list')}</h2>
    <div class="hint">${t('This list will appear in the student’s app.')}</div>
    <div class="field"><label>${t('Name')}</label><input class="inp" id="tNm" placeholder="${t('e.g. Unit 1')}"></div>
+   <div class="field"><label>${t('List language')}</label>
+     <select class="inp" id="tLg">${langOptions(newSetLang())}</select></div>
    <div class="err" id="tsErr"></div>
    <button class="btn pri" id="tsBtn" onclick="tCreateSet()">${t('Create')}</button>`);
   setTimeout(()=>$('#tNm')&&$('#tNm').focus(),60);
@@ -1442,9 +1595,13 @@ async function tCreateSet(){
   const n=($('#tNm').value||'').trim();
   if(!n){$('#tsErr').textContent=t('Enter a name');return;}
   const btn=$('#tsBtn');btn.disabled=true;btn.textContent=t('Creating…');
+  const lg=(($('#tLg')||{}).value)||newSetLang();
+  const base={id:uid(),owner_id:TV.sid,name:n,position:TV.sets.length,deleted:false,updated_at:new Date().toISOString()};
   try{
-    const {error}=await sb.from('sets').insert({id:uid(),owner_id:TV.sid,name:n,position:TV.sets.length,deleted:false,updated_at:new Date().toISOString()});
+    let {error}=await sb.from('sets').insert(noLangCol?base:Object.assign({},base,{lang:lg}));
+    if(error&&!noLangCol&&missingLangCol(error)){noLangCol=true;({error}=await sb.from('sets').insert(base));}
     if(error)throw error;
+    S.settings.lastLang=lg;save();
     closeSheet();go('tsets',{sid:TV.sid,sname:TV.sname});
   }catch(e){
     $('#tsErr').textContent=srvMsg(e,t('Couldn’t create — check your connection'));btn.disabled=false;btn.textContent=t('Create');
@@ -1480,7 +1637,7 @@ function bulkDelete(){
 }
 function filterList(v){
   const el=$('#list');if(!el)return;
-  if(view.name==='archive'){el.innerHTML=wordRows(allArchived(),v,true);return;}
+  if(view.name==='archive'){el.innerHTML=wordRows(allArchived(view.lang||null),v,true);return;}
   if(view.name==='hard'){el.innerHTML=wordRows(hardItems(),v,true);return;}
   const s=curSet();if(s)el.innerHTML=wordRows(active(s).map(w=>({w,sn:s.name})),v,false);
 }
@@ -1513,14 +1670,39 @@ function closeSheet(){
   setTimeout(()=>s.remove(),190);
 }
 
+/* one <select> of every language, used by both the new-list and the change-language sheets */
+function langOptions(cur){
+  return LANGS.map(l=>`<option value="${l.c}" ${l.c===cur?'selected':''}>${esc(uiEn()?l.e:l.ru)}${l.n&&l.n!==(uiEn()?l.e:l.ru)?' · '+esc(l.n):''}</option>`).join('');
+}
 function newSet(){
+  const lg=newSetLang();
   sheet(`<h2>${t('New list')}</h2>
    <div class="field"><label>${t('Name')}</label><input class="inp" id="nm" placeholder="${t('e.g. Unit 1')}" autofocus></div>
+   <div class="field"><label>${t('List language')}</label>
+     <select class="inp" id="nlg">${langOptions(lg)}</select>
+     <div class="hint">${t('Which language this list is in. The Archive, the auto-translation and the pronunciation follow it.')}</div></div>
    <button class="btn pri" onclick="createSet()">${t('Create')}</button>`);
   setTimeout(()=>$('#nm')&&$('#nm').focus(),60);
 }
 function createSet(){const n=$('#nm').value.trim();if(!n)return toast(t('Enter a name'));
-  const s={id:uid(),name:n,words:[],upd:Date.now(),synced:false};S.sets.push(s);save();closeSheet();go('set',{id:s.id});}
+  const lg=(($('#nlg')||{}).value)||newSetLang();
+  S.settings.lastLang=lg;
+  const s={id:uid(),name:n,lang:lg,words:[],upd:Date.now(),synced:false};S.sets.push(s);save();closeSheet();go('set',{id:s.id});}
+function langSheet(){
+  const s=curSet();if(!s)return;
+  sheet(`<h2>${t('Change language')}</h2>
+   <div class="field"><label>${t('List language')}</label>
+     <select class="inp" id="slg">${langOptions(setLangOf(s))}</select></div>
+   <div class="hint">${t("Moving this list to another language also moves its learned words to that language's Archive.")}</div>
+   <div style="height:12px"></div>
+   <button class="btn pri" onclick="applySetLang()">${t('Save')}</button>`);
+}
+function applySetLang(){
+  const s=curSet();if(!s)return closeSheet();
+  const lg=(($('#slg')||{}).value)||setLangOf(s);
+  if(lg!==setLangOf(s)){s.lang=lg;S.settings.lastLang=lg;touch(s);save();}
+  closeSheet();render();toast(t('Saved ✓'));
+}
 
 function setMenu(){
   const s=curSet();
@@ -1529,6 +1711,7 @@ function setMenu(){
    <button class="btn" onclick="studyThisSet()">${ic('target',18)}${t('Study this list')}</button>
    <button class="btn" onclick="exportData('${s.id}')">${ic('send')}${t('Send to student (file)')}</button>
    <button class="btn ghost" onclick="renameSet()">${ic('pen',18)}${t('Rename')}</button>
+   <button class="btn ghost" onclick="langSheet()">${ic('globe',18)}${t('Change language')} · ${esc(langName(setLangOf(s)))}</button>
    <button class="btn ghost" onclick="resetProg()">${ic('reset',18)}${t('Reset progress')}</button>
    <button class="btn danger ghost" onclick="delSet()">${ic('trash',18)}${t('Delete list')}</button></div>`);
 }
@@ -1538,19 +1721,22 @@ function resetProg(){const s=curSet();if(confirm(t('Move all words of this list 
 function delSet(){const s=curSet();if(confirm(t('Delete list')+' “'+s.name+'”? '+t("This can't be undone."))){cloudDeleteSet(s);S.sets=S.sets.filter(x=>x!==s);save();closeSheet();go('home');}}
 
 /* ---------- word form ---------- */
-let editId=null,ruTouched=false,trTimer=null,trSeq=0;
+let editId=null,ruTouched=false,trTimer=null,trSeq=0,formLang=DEF_LANG;
 function wordForm(id){
-  const w=id?(findWord(id)||{}).w:null;editId=id||null;ruTouched=!!w;
+  const f=id?findWord(id):null;const w=f?f.w:null;editId=id||null;ruTouched=!!w;
+  /* an existing word keeps its list's language; a new one lands in addTarget() */
+  formLang=f?setLangOf(f.s):targetLang();
+  const ph=formLang==='en';   /* the English examples only help on an English list */
   sheet(`<h2>${w?t('Word'):t('New word')}</h2>
-   <div class="field"><label>${t('Word (English)')}</label>
-     <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="${t('reliable')}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
+   <div class="field"><label>${t('Word')} (${esc(langNameLc(formLang))})</label>
+     <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
    <div class="field"><label>${t('Translation')}</label>
-     <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="${t('надёжный')}" oninput="ruTouched=true" style="flex:1">
+     <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="${ph?t('надёжный'):''}" oninput="ruTouched=true" style="flex:1">
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="trSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="chips"></div>
    <div class="field"><label>${t('Example (optional)')}</label>
-     <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${t('a reliable friend')}" autocapitalize="none"></div>
+     <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none"></div>
    <button class="btn pri" onclick="saveWord()">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
      ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('reset')}${t('To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('archive')}${t('To Archive')}</button>`}
@@ -1561,7 +1747,7 @@ function autoTr(){clearTimeout(trTimer);trTimer=setTimeout(()=>doTr(false),650);
 async function doTr(force){
   const enEl=$('#fEn');if(!enEl)return;const en=enEl.value.trim();if(!en)return;
   const seq=++trSeq;const st=$('#trSt');if(st)st.textContent=t('Translating…');
-  const r=await translate(en);
+  const r=await translate(en,formLang);
   if(seq!==trSeq||!$('#fEn')||$('#fEn').value.trim()!==en)return;
   if(!r){if($('#trSt'))$('#trSt').textContent='⚠ '+t('Can’t reach the translator — enter the translation manually');return;}
   if(force||(!ruTouched&&!$('#fRu').value)){$('#fRu').value=r.main;ruTouched=false;}
@@ -1589,7 +1775,8 @@ function importSheet(toStudent){
   impTerm='auto';impCard='line';impAuto=true;
   impTo=toStudent?{sid:TV.sid,setId:TV.setId}:null;
   sheet(`<h2>${t('Import words')}</h2>
-   <div class="hint">${impTo?t('The words go straight into the student’s list.'):t("Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.")}</div>
+   <div class="hint">${impTo?t('The words go straight into the student’s list.'):t("Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.")}
+     <br><b>${esc(langName(impTo?tSetLang(impTo.setId):targetLang()))} → ${uiEn()?'Russian':'Русский'}</b></div>
    <div class="field"><textarea class="inp" id="imp" placeholder="apple&#9;яблоко&#10;reliable&#9;надёжный&#10;to give up&#10;book	книга" oninput="impPrev()"></textarea></div>
    <div class="field"><label>${t('Between word and translation')}</label><div class="sel-opt" id="selT">
      ${[['auto',t('Auto')],['tab',t('Tab ⇥')],['dash',t('Dash –')],['comma',t('Comma')],['eq','= ']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='auto'?'on':''}" onclick="impTerm='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
@@ -1635,6 +1822,7 @@ async function runImport(){
   const pairs=parseImport();if(!pairs.length)return toast(t('Nothing to import'));
   const btn=$('#impBtn');btn.disabled=true;
   const s=impTo?null:addTarget();
+  const lg=impTo?tSetLang(impTo.setId):setLangOf(s);
   const er=$('#impErr');if(er)er.textContent='';
   const need=pairs.filter(p=>!p.ru&&impAuto);
   if(need.length){
@@ -1642,7 +1830,7 @@ async function runImport(){
     const worker=async()=>{
       while(queue.length){
         const p=queue.shift();
-        const r=await translate(p.en);
+        const r=await translate(p.en,lg);
         p.ru=r?r.main:'';
         done++;if(btn)btn.textContent=t('Translating…')+' '+done+'/'+need.length;
       }
@@ -1739,11 +1927,12 @@ function settingsHtml(){
        <button class="${th==='light'?'on':''}" onclick="setTheme('light')">${ic('sun',17)}${t('Light')}</button>
        <button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">${ic('moon',17)}${t('Dark')}</button></div>
      ${th==='auto'?`<div class="hint">${t('Light by day, dark at night.')}${S.settings.geo?' '+t('Using your location for exact sunrise & sunset.'):` <span onclick="useLocation()" style="color:var(--pri);font-weight:700">${t('Use my location')}</span> ${t('for exact sunrise & sunset.')}`}</div>`:''}</div>
-   <div class="field"><label>${t('Pronunciation')}</label>
-     <select class="inp" onchange="S.settings.accent=this.value;save()">
-       <option value="uk" ${ac==='uk'?'selected':''}>${t('British — academic')}</option>
-       <option value="us" ${ac==='us'?'selected':''}>${t('American')}</option></select>
-     <div class="hint">${t('The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an')} <b>Enhanced</b> ${t('voice.')}</div></div>
+   ${(()=>{const ls=langsUsed();return (!ls.length||ls.indexOf('en')>=0)?
+     `<div class="field"><label>${t('Pronunciation')}</label>
+       <select class="inp" onchange="S.settings.accent=this.value;save()">
+         <option value="uk" ${ac==='uk'?'selected':''}>${t('British — academic')}</option>
+         <option value="us" ${ac==='us'?'selected':''}>${t('American')}</option></select>
+       <div class="hint">${ls.length>1?t('Only for English lists.')+' ':''}${t('The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an')} <b>Enhanced</b> ${t('voice.')}</div></div>`:'';})()}
    <div class="field"><label>${t('Auto-translate')}</label>
      <select class="inp" onchange="S.settings.prov=this.value;save()">
        <option value="google" ${S.settings.prov==='google'?'selected':''}>${t('Google (fallback: MyMemory)')}</option>
@@ -1773,20 +1962,32 @@ function importFile(f){
 
 /* ---------- questions engine ---------- */
 function mkQ(pool,w,kind,forceDir){
-  const others=pool.filter(x=>x!==w);
+  const lg=langOf(w);
+  /* decoys must be in the same language as the word, or the question makes no sense */
+  const others=pool.filter(x=>x!==w&&langOf(x)===lg);
   if(kind==='mc'&&others.length<1)kind='type';
   if(kind==='tf'&&others.length<1)kind='type';
   const dir=forceDir||(Math.random()<.5?'en2ru':'ru2en');
   if(kind==='mc'){const ds=shuffle(others).slice(0,Math.min(3,others.length));
-    return{w,type:'mc',dir,opts:shuffle([w,...ds]).map(x=>({t:dir==='en2ru'?x.ru:x.en,c:x===w}))};}
+    return{w,lg,type:'mc',dir,opts:shuffle([w,...ds]).map(x=>({t:dir==='en2ru'?x.ru:x.en,c:x===w}))};}
   if(kind==='tf'){const isTrue=Math.random()<.5;const d=isTrue?w:shuffle(others)[0];
     const td=forceDir==='ru2en'?'ru2en':'en2ru';
-    return{w,type:'tf',dir:td,shown:td==='ru2en'?d.en:d.ru,isTrue};}
-  return{w,type:'type',dir};
+    return{w,lg,type:'tf',dir:td,shown:td==='ru2en'?d.en:d.ru,isTrue};}
+  return{w,lg,type:'type',dir};
+}
+/* “Напишите по-венгерски” / “Выберите слово — венгерский” once more than one language is in play */
+function qLabel(q){
+  const en2ru=q.dir==='en2ru',lg=q.lg||langOf(q.w);
+  if(q.type==='tf')return t('Is this a correct match?');
+  /* answering into the studied language: always say which one, so a mixed session stays clear */
+  if(q.type==='type')return en2ru?t('Type the translation')
+    :(lg==='en'?t('Type in English'):t('Type')+' '+langAdv(lg));
+  return en2ru?t('Choose the translation')
+    :(multiLang()?t('Choose the word')+' '+langPrep(lg):t('Choose the word'));
 }
 function renderQ(box,q,o){
   const w=q.w,en2ru=q.dir==='en2ru',prompt=en2ru?w.en:w.ru,answer=en2ru?w.ru:w.en;
-  let lbl=q.type==='tf'?t('Is this a correct match?'):q.type==='type'?(en2ru?t('Type the translation'):t('Type in English')):(en2ru?t('Choose the translation'):t('Choose the word'));
+  let lbl=qLabel(q);
   let h=`<div class="card" style="min-height:min(34vh,200px)"><div class="lbl">${lbl}</div>
     <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
   if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,i)=>`<button class="opt" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
@@ -1805,7 +2006,7 @@ function renderQ(box,q,o){
     const ans=esc(q.type==='tf'?(q.isTrue?t('the match is correct'):t('the match is wrong')):answer);
     f.innerHTML=`<div class="fb ${cls}">${title}${(ok&&!near)?'':`<small>${near?t('Correct spelling: '):t('Answer: ')}${ans}</small>`}</div>`+
       (ok?'':`<button class="btn pri" id="nx">${t("Next")}</button>`);
-    if(!en2ru||q.type==='tf')speak(w.en);
+    if(!en2ru||q.type==='tf')speak(w.en,q.lg||langOf(w));
     if(ok)setTimeout(()=>o.onDone(ok,given,near),near?1500:620);else $('#nx').onclick=()=>o.onDone(ok,given,near);
   };
   if(q.type==='mc')box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
@@ -1849,10 +2050,10 @@ function startCards(review){
       c.classList.add('fout');
       setTimeout(()=>{flip=!flip;draw();const n=$('#cd');if(n){n.classList.add('fin');setTimeout(()=>n.classList.remove('fin'),270);}},185);
     };
-    $('#sp').onclick=()=>speak(w.en);
+    $('#sp').onclick=()=>speak(w.en,langOf(w));
     $('#yes').onclick=()=>{if(!review){const r=award(w,true);save();if(r==='arch')toast('“'+w.en+'” → '+t('Archive')+' ✓');}i++;flip=false;draw();};
     $('#no').onclick=()=>{if(!review){award(w,false);save();}unknown.push(w);i++;flip=false;draw();};
-    if(!flip&&dir==='en')speak(w.en);
+    if(!flip&&dir==='en')speak(w.en,langOf(w));
   }
   window._flip=()=>{dir=dir==='en'?'ru':'en';flip=false;draw();};
   draw();
@@ -1902,7 +2103,14 @@ function testSetup(review){
    <div class="field"><label>${t('Question types')}</label><div class="stack">
      ${[['k1',t('Multiple choice')],['k2',t('Type the answer')],['k3',t('True / false')]].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
-   <div class="hint">RU → EN. ${t('The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.')}</div>
+   <div class="hint">${(()=>{
+       const ls=[...new Set(pool.map(langOf))];
+       const arrow=ls.length===1?'RU → '+ls[0].toUpperCase()+'. ':'';
+       const body=(ls.length===1&&ls[0]==='en')
+         ?t('The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.')
+         :t('The word is shown in Russian — recall and type (or choose) it in the language you are studying. You can move between questions and fix your answers before finishing.');
+       return arrow+body;
+     })()}</div>
    ${review?'<div class="hint">'+t('Archive review: results don\'t change progress.')+'</div>':''}
    <button class="btn pri" onclick="beginTest(${!!review})">${t('Start test')}</button>`);
 }
@@ -1923,7 +2131,7 @@ function runTest(words,kinds,review){
   function finishTest(){const blanks=total-countAns();if(blanks&&!confirm(t('Still blank')+': '+blanks+'. '+t('Finish anyway?')))return;result();}
   function draw(){
     const q=qs[i],en2ru=q.dir==='en2ru',prompt=en2ru?q.w.en:q.w.ru;
-    const lbl=q.type==='tf'?t('Is this a correct match?'):q.type==='type'?(en2ru?t('Type the translation'):t('Type in English')):(en2ru?t('Choose the translation'):t('Choose the word'));
+    const lbl=qLabel(q);
     const ca=countAns();
     const dots=qs.map((_,ix)=>`<button class="qdot ${answered(ix)?'on':''} ${ix===i?'cur':''}" data-ix="${ix}">${ix+1}</button>`).join('');
     let h=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()")+
@@ -1985,7 +2193,7 @@ function runTest(words,kinds,review){
         slips.map(r=>`<div class="item" style="display:block;padding:13px 15px">
           <div style="display:flex;align-items:center;gap:13px">
             <div class="t" style="flex:1"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div>
-            <button class="spk" onclick="speak('${q1(r.w.en)}')">${ic('sound',17)}</button></div>
+            <button class="spk" onclick="speakWord('${r.w.id}')">${ic('sound',17)}</button></div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
             <span class="ans-bad near">${esc(r.given)}</span>
             <span class="ans-ok">${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
@@ -1994,7 +2202,7 @@ function runTest(words,kinds,review){
         bad.map(r=>`<div class="item" style="display:block;padding:13px 15px">
           <div style="display:flex;align-items:center;gap:13px">
             <div class="t" style="flex:1"><div class="en">${esc(r.w.en)}</div><div class="ru">${esc(r.w.ru)}</div></div>
-            <button class="spk" onclick="speak('${q1(r.w.en)}')">${ic('sound',17)}</button></div>
+            <button class="spk" onclick="speakWord('${r.w.id}')">${ic('sound',17)}</button></div>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
             <span class="ans-bad">${r.given?esc(r.given):t('no answer')}</span>
             <span class="ans-ok">${esc(r.correct||r.w.en)}</span></div></div>`).join('')+
