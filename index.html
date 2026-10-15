@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Vocab">
-<meta name="theme-color" content="#0e3b2c">
+<meta name="theme-color" content="#f3f6fb">
 <title>Vocabulary</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -18,29 +18,29 @@
 <script>(function(){try{var s=(JSON.parse(localStorage.getItem('vocab.v2')||'{}').settings)||{};var m=s.theme||'auto',dark;if(m==='dark')dark=true;else if(m==='light')dark=false;else{var h=new Date().getHours();dark=h<7||h>=19;}document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
 :root{
-  --bg:#f2f4f0; --surf:#ffffff; --surf2:#f7f9f5;
-  --tx:#0e1a14; --mut:#5b6b61; --fade:#8e9d93;
-  --line:#e4e9e2; --line2:#d5ded3;
-  --pri:#0e3b2c; --pri-d:#0a2c21; --pri-soft:#e7efe9; --on-pri:#ffffff;
-  --acc:#d4f25a; --acc-ink:#0e3b2c; --mint:#8ef0a8;
-  --grad:linear-gradient(135deg,#0e3b2c,#2f7d4f 60%,#d4f25a);
-  --ok:#1e7a52; --ok-soft:#e4f2ea; --bad:#b33f2b; --bad-soft:#f9e8e4;
+  --bg:#f3f6fb; --surf:#ffffff; --surf2:#f2f6fd;
+  --tx:#0f1a2e; --mut:#5a6885; --fade:#808ea9;
+  --line:#e4eaf4; --line2:#d2dcec;
+  --pri:#1c45b0; --pri-d:#13318a; --pri-soft:#e8eefb; --on-pri:#ffffff;
+  --acc:#9cc5ff; --acc-ink:#13318a; --mint:#8ec6ff;
+  --grad:linear-gradient(135deg,#13318a,#2f6fe0 62%,#8ec6ff);
+  --ok:#1b7a4d; --ok-soft:#e3f1e9; --bad:#c03a28; --bad-soft:#fae7e3;
   --warn:#a9700f; --info:#1f6f8b;
-  --word:#0e1a14; --card-bg:#0e3b2c; --card-tx:#f3f8f1; --card-mut:#9cc6ad;
-  --sh-sm:0 1px 2px rgba(14,26,20,.04); --sh:0 10px 30px rgba(14,26,20,.10),0 2px 6px rgba(14,26,20,.05);
+  --word:#0f1a2e; --card-bg:#14306e; --card-tx:#f2f6ff; --card-mut:#a3bbe8;
+  --sh-sm:0 1px 2px rgba(15,26,46,.05); --sh:0 10px 30px rgba(15,26,46,.10),0 2px 6px rgba(15,26,46,.05);
   --r:16px; --r-sm:12px;
   --ff:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro","Segoe UI",Roboto,system-ui,sans-serif;
   --ff-serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Noto Serif",serif;
 }
 :root[data-theme="dark"]{
-  --bg:#0a120d; --surf:#111b15; --surf2:#16231b;
-  --tx:#e9f0ea; --mut:#93a69a; --fade:#6d8075;
-  --line:#1d2b23; --line2:#26362c;
-  --pri:#58b887; --pri-d:#8ef0a8; --pri-soft:#15291f; --on-pri:#04190f;
-  --acc:#d4f25a; --acc-ink:#0e3b2c; --mint:#8ef0a8;
-  --grad:linear-gradient(135deg,#2f7d4f,#6fc995 62%,#c3e46a);
-  --ok:#4ed38f; --ok-soft:#0f2a1e; --bad:#e8806a; --bad-soft:#2c1511;
-  --word:#f1f7f1; --card-bg:#132c22; --card-tx:#eef6ee; --card-mut:#8fb79e;
+  --bg:#070c17; --surf:#0f1726; --surf2:#141e32;
+  --tx:#e8eefb; --mut:#94a3c0; --fade:#6d7d9c;
+  --line:#1b2538; --line2:#27344b;
+  --pri:#74a9ff; --pri-d:#a8ccff; --pri-soft:#14213a; --on-pri:#061129;
+  --acc:#a8ccff; --acc-ink:#0b1d3f; --mint:#8ec6ff;
+  --grad:linear-gradient(135deg,#2f6fe0,#74a9ff 62%,#bcdcff);
+  --ok:#4ed39a; --ok-soft:#0d2a20; --bad:#ef8a76; --bad-soft:#2d1512;
+  --word:#f2f6ff; --card-bg:#14274b; --card-tx:#eef4ff; --card-mut:#9ab4e0;
   --sh-sm:0 1px 2px rgba(0,0,0,.35); --sh:0 14px 34px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -86,10 +86,11 @@ header h1{flex:1;min-width:0;margin:0;font-size:25px;font-weight:700;letter-spac
 
 
 /* mode pills */
-.modes{display:flex;gap:10px;overflow-x:auto;padding:2px 0 14px;margin:0 -16px;
-  padding-left:16px;padding-right:16px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
-.modes::-webkit-scrollbar{display:none}
-.mcard{flex:none;scroll-snap-align:start;width:113px;padding:13px 12px;border-radius:var(--r-sm);background:var(--surf);
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px}
+.modes .mcard{width:auto;padding:14px 5px 12px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center}
+.modes .mcard .em{width:48px;height:48px;border-radius:15px;margin:0}
+.modes .mcard b{font-size:13px;letter-spacing:-.015em}
+.mcard{flex:none;width:113px;padding:13px 12px;border-radius:var(--r-sm);background:var(--surf);
   border:1px solid var(--line);text-align:left}
 .mcard{transition:transform .3s cubic-bezier(.33,1,.68,1),box-shadow .2s ease}
 .mcard:active{transform:scale(.978);transition-duration:.12s}
@@ -341,8 +342,8 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .sess{background:var(--card-bg);color:var(--card-tx);border-radius:20px;padding:28px 20px 20px;text-align:center;margin-bottom:14px}
 .sess-n{font-family:var(--ff-serif);font-size:60px;line-height:1;font-weight:600;color:var(--acc);letter-spacing:-.02em}
 .sess-t{color:var(--card-mut);font-size:15px;margin-top:8px}
-.sess .btn{margin-top:20px;background:var(--acc);color:var(--acc-ink);border-color:transparent;font-weight:700}
-.sess .btn:active{background:var(--acc)}
+.sess .btn{margin-top:20px;background:#ffffff;color:var(--card-bg);border-color:transparent;font-weight:700}
+.sess .btn:active{background:#eef4ff}
 .sess-m{color:var(--card-mut);font-size:13.5px;margin-top:13px;min-height:18px}
 .sess.done{padding:26px 20px 20px}
 .sess.done .btn{background:transparent;color:var(--card-tx);border:1px solid rgba(255,255,255,.22)}
@@ -376,6 +377,7 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   .setcard{padding:20px}.setcard .nm{font-size:21px}.setcard .meta{font-size:15px}
   .item{padding:15px 18px}.item .en{font-size:18.5px}.item .ru{font-size:16px}
   .mcard{width:120px;padding:17px 14px}.mcard b{font-size:16px}.mcard small{font-size:12.5px}
+  .modes{gap:11px}.modes .mcard{padding:17px 6px 15px}.modes .mcard .em{width:58px;height:58px;border-radius:18px}.modes .mcard b{font-size:15px}
   .card .word{font-size:clamp(36px,4.6vw,50px)}
   .opt{font-size:18px;padding:18px 19px}
   .hero-title{font-size:32px}.hero-sub{font-size:17px}
@@ -678,7 +680,7 @@ let _themeTimer=null;
 function applyTheme(){
   const dark=resolveDark();
   document.documentElement.setAttribute('data-theme',dark?'dark':'light');
-  const mc=document.querySelector('meta[name="theme-color"]');if(mc)mc.setAttribute('content',dark?'#0a120d':'#f2f4f0');
+  const mc=document.querySelector('meta[name="theme-color"]');if(mc)mc.setAttribute('content',dark?'#070c17':'#f3f6fb');
   clearTimeout(_themeTimer);
   if(((S.settings.theme)||'auto')==='auto')_themeTimer=setTimeout(applyTheme,60000);
 }
@@ -702,7 +704,7 @@ function bigRing(pct){
     <circle class="rb-track" cx="${sz/2}" cy="${sz/2}" r="${r}"/>
     <circle class="rb-fill" cx="${sz/2}" cy="${sz/2}" r="${r}" transform="rotate(-90 ${sz/2} ${sz/2})"/>
     <text x="50%" y="52%" text-anchor="middle" dy=".02em" class="rb-pct">${pct}%</text>
-    <defs><linearGradient id="gbig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e3b2c"/><stop offset=".55" stop-color="#2f7d4f"/><stop offset="1" stop-color="#d4f25a"/></linearGradient></defs></svg>`;
+    <defs><linearGradient id="gbig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13318a"/><stop offset=".55" stop-color="#2f6fe0"/><stop offset="1" stop-color="#8ec6ff"/></linearGradient></defs></svg>`;
 }
 function scoreHero(pct,sub){
   const em=ic(pct>=90?'award':pct>=70?'check':pct>=50?'trend':'repeat',30,1.6);
@@ -715,7 +717,7 @@ function confetti(n){
     const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;
     cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
     document.body.appendChild(cv);
-    const cols=['#0e3b2c','#2f7d4f','#8ef0a8','#d4f25a','#b7e06a','#1e7a52','#f3f8f1'];
+    const cols=['#13318a','#1c45b0','#2f6fe0','#74a9ff','#8ec6ff','#bcdcff','#ffffff'];
     const N=n||120,P=[];
     for(let i=0;i<N;i++)P.push({x:W/2+(Math.random()-.5)*160,y:H*0.3+(Math.random()-.5)*50,
       vx:(Math.random()-.5)*11,vy:Math.random()*-9-4,g:0.3+Math.random()*0.12,
@@ -746,7 +748,7 @@ function ringSvg(done,total,size=46){
    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round"
      stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}" transform="rotate(-90 ${size/2} ${size/2})"/>
    <text x="50%" y="50%" text-anchor="middle" dy=".35em" font-size="13" font-weight="800" fill="var(--tx)">${Math.round(p*100)}</text>
-   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e3b2c"/><stop offset=".6" stop-color="#2f7d4f"/><stop offset="1" stop-color="#d4f25a"/></linearGradient></defs></svg>`;
+   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#13318a"/><stop offset=".6" stop-color="#2f6fe0"/><stop offset="1" stop-color="#8ec6ff"/></linearGradient></defs></svg>`;
 }
 
 /* ---------- translation ---------- */
@@ -1218,10 +1220,10 @@ function modesSheet(){
 function modesTop(kind,id){
   const go=m=>`onclick="launchMode('${kind}','${id||''}','${m}')"`;
   return `<div class="modes">
-   <button class="mcard" ${go('cards')}><div class="em">${ic('cards',19)}</div><b>${t('Flashcards')}</b><small>${t('flip through')}</small></button>
-   <button class="mcard" ${go('learn')}><div class="em">${ic('target',19)}</div><b>${t('Learn')}</b><small>${t('until mastered')}</small></button>
-   <button class="mcard" ${go('test')}><div class="em">${ic('quiz',19)}</div><b>${t('Test')}</b><small>${t('check yourself')}</small></button>
-   <button class="mcard" ${go('match')}><div class="em">${ic('grid',19)}</div><b>${t('Match')}</b><small>${t('race the clock')}</small></button>
+   <button class="mcard" ${go('cards')}><div class="em">${ic('cards',25,1.7)}</div><b>${t('Flashcards')}</b></button>
+   <button class="mcard" ${go('learn')}><div class="em">${ic('target',25,1.7)}</div><b>${t('Learn')}</b></button>
+   <button class="mcard" ${go('test')}><div class="em">${ic('quiz',25,1.7)}</div><b>${t('Test')}</b></button>
+   <button class="mcard" ${go('match')}><div class="em">${ic('grid',25,1.7)}</div><b>${t('Match')}</b></button>
   </div>`;
 }
 function launchMode(kind,id,m){

@@ -4,13 +4,26 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0e3b2c",
-  "theme_color": "#0e3b2c",
+  "background_color": "#ffffff",
+  "theme_color": "#1c45b0",
   "lang": "ru",
   "description": "Личный словарь для изучения английских слов: карточки, тесты и интервальные повторения.",
   "icons": [
-    {"src": "favicon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "icon-180.png", "sizes": "180x180", "type": "image/png"},
-    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {
+      "src": "favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
