@@ -129,6 +129,21 @@ header h1{flex:1;min-width:0;margin:0;font-family:var(--ff-serif);font-size:25px
 .pip:nth-child(1){height:7px}.pip:nth-child(2){height:11px}.pip:nth-child(3){height:15px}
 .pip.on1,.pip.on2,.pip.on3{background:var(--pri)}
 .pip.on1{opacity:.4}.pip.on2{opacity:.7}.pip.on3{opacity:1}
+.numx{min-width:30px;height:24px;padding:0 5px;border-radius:7px;background:var(--line);color:var(--mut);
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none;
+  font-variant-numeric:tabular-nums}
+.rangebar{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 12px;padding:12px 14px;
+  background:var(--surf);border:1px solid var(--line);border-radius:14px;color:var(--ink);text-align:left}
+.rangebar>span{display:flex;align-items:center;gap:8px;font-weight:650;font-size:14.5px;flex:none}
+.rangebar em{flex:1;font-style:normal;color:var(--mut);font-size:14px;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rangebar.on{border-color:var(--pri);color:var(--pri)}
+.rangebar.on em{color:var(--pri);font-weight:650}
+.rangerow{display:flex;gap:10px}
+.akword{text-align:center;padding:18px 10px 14px}
+.akword .en{font-family:var(--ff-serif);font-weight:700;font-size:26px;color:var(--word)}
+.akword .ru{color:var(--mut);font-size:16px;margin-top:5px}
+.aklist{max-height:44vh;overflow:auto;margin:10px 0 14px}
 .chk{width:24px;height:24px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none}
 .spk{width:34px;height:34px;flex:none;border-radius:9px;background:transparent;border:1px solid var(--line);color:var(--mut);display:flex;align-items:center;justify-content:center}
 .spk{transition:transform .3s cubic-bezier(.33,1,.68,1),background-color .18s ease}
@@ -426,7 +441,31 @@ Object.assign(RU_DICT,{
   "learned words from this language":"выученные слова этого языка",
   "Learned words from your lists in this language collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из ваших списков на этом языке — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».",
   "Type":"Напишите",
-  "Only for English lists.":"Только для списков на английском."
+  "Only for English lists.":"Только для списков на английском.",
+  "Mastered!":"Выучено!",
+  "Move this word to the Archive, or keep it in the list to practise a bit more?":"Перенести слово в архив или оставить в списке, чтобы ещё потренировать?",
+  "To the Archive":"В архив",
+  "Keep in the list":"Оставить в списке",
+  "Mastered":"Выучено",
+  "Tick the words to move to the Archive. The rest stay in their lists.":"Отметьте слова, которые перенести в архив. Остальные останутся в списках.",
+  "Keep all in the lists":"Оставить все в списках",
+  "Kept in the list":"Оставлено в списке",
+  "kept in the lists":"оставлено в списках",
+  "Select words":"Выбрать слова",
+  "Delete this list and all its words from the student\u2019s app?":"Удалить этот список и все его слова из приложения ученика?",
+  "List deleted":"Список удалён",
+  "Couldn\u2019t delete the list":"Не удалось удалить список",
+  "Delete these words from the student\u2019s lists?":"Удалить эти слова из списков ученика?",
+  "Range":"Диапазон",
+  "All words in the Archive":"Весь архив",
+  "Choose a range":"Диапазон слов",
+  "Pick which words of the Archive to practise \u2014 for example from 650 to 750.":"Выберите, какие слова архива повторять — например, с 650 по 750.",
+  "from":"с",
+  "to":"по",
+  "Apply":"Применить",
+  "Whole Archive":"Весь архив",
+  "of":"из",
+  "Enter a correct range":"Введите корректный диапазон"
 });
 
 /* ---------- the languages a list can be in ---------- */
@@ -599,19 +638,35 @@ const archived=s=>s.words.filter(w=>w.arch);
 const inLang=(s,lang)=>!lang||setLangOf(s)===lang;
 const allArchived=lang=>S.sets.filter(s=>inLang(s,lang)).flatMap(s=>s.words.filter(w=>w.arch).map(w=>({w,sn:s.name,sid:s.id,lg:setLangOf(s)})));
 const archCount=lang=>S.sets.reduce((n,s)=>n+(inLang(s,lang)?s.words.filter(w=>w.arch).length:0),0);
+/* a slice of the Archive the student picked to work on, e.g. words 650–750 */
+let archRange=null;
+function archNumbered(lang){return allArchived(lang).map((x,i)=>Object.assign({},x,{n:i+1}));}
+/* everything in the chosen range — the whole Archive when no range is set */
+function archSlice(lang){
+  const all=archNumbered(lang);
+  if(!archRange)return all;
+  const a=Math.max(1,archRange.from),b=Math.min(all.length,archRange.to);
+  return all.filter(x=>x.n>=a&&x.n<=b);
+}
+function archRangeLabel(lang){
+  const total=archCount(lang);
+  if(!archRange)return t('Whole Archive')+' · '+nWords(total);
+  const a=Math.max(1,archRange.from),b=Math.min(total,archRange.to);
+  return a+'–'+b+' '+t('of')+' '+total;
+}
 function findWord(id){for(const s of S.sets){const w=s.words.find(x=>x.id===id);if(w)return{w,s};}return null;}
 let scope={kind:'all',id:null};
 function setScope(kind,id){scope={kind,id:id||null};}
 /* the words actually on screen right now — what Select all must act on */
 function viewPool(){
-  if(view.name==='archive')return allArchived(view.lang).map(x=>x.w);
+  if(view.name==='archive')return archSlice(view.lang).map(x=>x.w);
   if(view.name==='hard')return hardWords();
   if(view.name==='set'){const s=curSet();return s?active(s):[];}
   return poolNow();
 }
 function poolNow(){
   /* for 'arch' and 'lang', scope.id carries a language code (null = every language) */
-  if(scope.kind==='arch')return allArchived(scope.id).map(x=>x.w);
+  if(scope.kind==='arch')return archSlice(scope.id).map(x=>x.w);
   if(scope.kind==='lang')return S.sets.filter(s=>setLangOf(s)===scope.id).flatMap(s=>active(s));
   if(scope.kind==='hard')return hardWords();
   if(scope.kind==='set'){const s=S.sets.find(x=>x.id===scope.id);return s?active(s):[];}
@@ -655,14 +710,18 @@ function startSession(force){
       if(w.arch){
         const r=srAnswer(w,ok);
         if(ok){w.ok=(w.ok||0)+1;}else{w.bad=(w.bad||0)+1;if(r==='relearn')back++;}
+        if(ok)good++;
+        touch(w);bumpStudy(w.id);save();
+        return next();
       }else{
         const r=award(w,ok);
-        if(ok&&r==='arch')learnt++;
         if(!ok&&!retried.has(w.id)){retried.add(w.id);queue.push(w);total++;}
+        if(ok)good++;
+        touch(w);bumpStudy(w.id);save();
+        /* mastered → let the student decide before it leaves the list */
+        if(r==='ready')return archAsk([w],n=>{learnt+=n;next();});
+        return next();
       }
-      if(ok)good++;
-      touch(w);bumpStudy(w.id);save();
-      next();
     }});
   }
   function finish(){
@@ -865,11 +924,53 @@ function confetti(n){
 }
 
 /* award: update mastery; returns 'arch' if word just archived */
+/* box 4 = mastered, but the student chose to keep the word in the list */
+const KEPT=4;
 function award(w,correct){
   touch(w);bumpStudy(w.id);
-  if(correct){w.ok++;w.box=Math.min(3,w.box+1);if(w.box>=3&&!w.arch){w.arch=true;srStart(w);return 'arch';}}
-  else{w.bad++;w.box=Math.max(0,w.box-1);}
+  if(correct){
+    w.ok++;
+    if((w.box||0)>=KEPT)return '';                 /* already kept on purpose — don't ask again */
+    w.box=Math.min(3,(w.box||0)+1);
+    /* the word is mastered, but nothing moves until the student says so */
+    if(w.box>=3&&!w.arch)return 'ready';
+  }
+  else{w.bad++;w.box=Math.max(0,((w.box||0)>=KEPT?3:(w.box||0))-1);}
   return '';
+}
+/* the two answers to “mastered — what now?” */
+function archYes(w){w.arch=true;w.box=3;srStart(w);touch(w);}
+function archNo(w){w.box=KEPT;w.arch=false;w.due=0;w.rep=0;touch(w);}
+
+/* ask before anything leaves a list. Dismissing the sheet keeps the words. */
+function archAsk(ws,onDone){
+  ws=(ws||[]).filter(w=>w&&!w.arch);
+  if(!ws.length)return onDone(0);
+  const done=n=>{closeSheet();save();onDone(n);};
+  window._archYes=()=>{
+    let n=0;
+    ws.forEach((w,i)=>{const c=$('#ak'+i);if(!c||c.classList.contains('on')){archYes(w);n++;}else archNo(w);});
+    done(n);
+  };
+  window._archNo=()=>{ws.forEach(archNo);done(0);};
+  window._archTick=i=>{const c=$('#ak'+i);if(c)c.classList.toggle('on');
+    const n=ws.filter((_,k)=>{const e=$('#ak'+k);return !e||e.classList.contains('on');}).length;
+    const b=$('#akBtn');if(b){b.textContent=n?t('To the Archive')+' ('+n+')':t('To the Archive');b.disabled=!n;}};
+  const one=ws.length===1;
+  const body=one
+    ?`<div class="akword"><div class="en">${esc(ws[0].en)}</div><div class="ru">${esc(ws[0].ru||'')}</div></div>
+      <div class="hint">${t('Move this word to the Archive, or keep it in the list to practise a bit more?')}</div>`
+    :`<div class="hint">${t('Tick the words to move to the Archive. The rest stay in their lists.')}</div>
+      <div class="wlist aklist">${ws.map((w,i)=>`<div class="item" onclick="_archTick(${i})">
+        <span class="cbox on" id="ak${i}">${ic('check',14,2.4)}</span>
+        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}</div></div></div>`).join('')}</div>`;
+  sheet(`<h2>${one?t('Mastered!'):t('Mastered')+' · '+ws.length}</h2>
+   ${body}
+   <button class="btn pri" id="akBtn" onclick="_archYes()">${t('To the Archive')}${one?'':' ('+ws.length+')'}</button>
+   <div style="height:9px"></div>
+   <button class="btn ghost" onclick="_archNo()">${one?t('Keep in the list'):t('Keep all in the lists')}</button>`);
+  /* tapping the backdrop must not strand the session — treat it as “keep” */
+  const d=$('#scrim');if(d)d.onclick=e=>{if(e.target===d)window._archNo();};
 }
 function ringSvg(done,total,size=46){
   const r=(size-7)/2,c=2*Math.PI*r,p=total?done/total:0;
@@ -1160,7 +1261,10 @@ function go(name,p={}){
   rowCap=400;
   /* older entry points still work: lists and the two smart lists are filters now */
   if(name==='home')name='today';
-  clearSel();view=Object.assign({name},p);render();scrollTo(0,0);
+  clearSel();
+  /* the slice belongs to the screen that set it */
+  if(name!=='archive'||(p.lang||null)!==(view.lang||null))archRange=null;
+  view=Object.assign({name},p);render();scrollTo(0,0);
   const a=$('#app');if(a){a.classList.remove('viewin');void a.offsetWidth;a.classList.add('viewin');}}
 function render(){(VIEWS[view.name]||VIEWS.today)($('#app'));}
 const pulse=el=>{if(!el)return;el.classList.remove('viewin');void el.offsetWidth;el.classList.add('viewin');};
@@ -1279,11 +1383,17 @@ set(app){
 },
 
 archive(app){
-  const lang=view.lang||null,items=allArchived(lang);
+  const lang=view.lang||null,total=archCount(lang),items=archSlice(lang);
   const tbar=selMode
    ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
    :(items.length?`<div class="tbar"><span class="t">${t('Learned')} · ${items.length}</span><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
+  /* pick the slice first, then the mode — practice runs on exactly what is shown */
+  const rangeBar=(total>1&&!selMode)
+   ?`<button class="rangebar ${archRange?'on':''}" onclick="rangeSheet()">
+       <span>${ic('sliders',18)}${t('Range')}</span><em>${esc(archRangeLabel(lang))}</em>${ic('right',17)}</button>`
+   :'';
   app.innerHTML=hdr(t('Archive')+(lang?' · '+esc(langName(lang)):''),"go('vocab')")+
+   rangeBar+
    (items.length&&!selMode?modesTop('arch',lang||''):'')+
    tbar+
    (!selMode&&items.length>7?searchBox:'')+
@@ -1341,12 +1451,13 @@ function wordRows(items,qs,showSrc){
   if(hidden)its=its.slice(0,rowCap);
   if(!items.length)return `<div class="empty"><div class="big">${ic('pen',26)}</div><b>${t('Add your first word')}</b><p>${t('Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.')}</p></div>`;
   if(!its.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
-  return '<div class="wlist">'+its.map(({w,sn})=>{
+  return '<div class="wlist">'+its.map(({w,sn,n})=>{
     const picked=selIds.has(w.id);
     const tricky=(w.bad||0)>=2&&(w.bad||0)>(w.ok||0);
     const left=selMode
       ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
-      :(w.arch?'<span class="chk">'+ic('check',14,2.2)+'</span>'
+      :(n?`<span class="numx">${n}</span>`
+        :w.arch?'<span class="chk">'+ic('check',14,2.2)+'</span>'
         :tricky?`<span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>`
         :`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`);
     const meta=[showSrc?esc(sn):'',w.arch&&w.due?esc(whenTxt(w.due)):''].filter(Boolean).join(' · ');
@@ -1494,44 +1605,117 @@ VIEWS.tsets=async function(app){
 VIEWS.twords=async function(app){
   const {sid,sname,setId,setName}=view;
   app.innerHTML=hdr(setName,`go('tsets',{sid:'${sid}',sname:'${q1(sname)}'})`,
-    setId==='archive'?'':`<button class="ic" aria-label="Menu" onclick="tSetMenu()">${ic('more')}</button>`)+
+    setId==='archive'
+      ?`<button class="ic" aria-label="Select" onclick="tToggleSel()">${ic('check',20,2)}</button>`
+      :`<button class="ic" aria-label="Menu" onclick="tSetMenu()">${ic('more')}</button>`)+
    `<div id="tl"><div class="empty"><p>${t('Loading…')}</p></div></div>`;
   const {sets,words}=await fetchOwner(sid);
   TV={sid,sname,setId,setName,words,sets};
+  tDrawWords();
+};
+/* redraw the word list from what we already hold, without going back to the cloud */
+function tDrawWords(){
   const el=$('#tl');if(!el)return;
+  const {setId,words,sets}=TV;
   const inArch=setId==='archive';
   const list=inArch?words.filter(w=>w.arch):words.filter(w=>w.set_id===setId&&!w.arch);
-  const setName2=id=>{const s=sets.find(x=>x.id===id);return s?s.name:'';};
+  const setName2=id=>{const s=(sets||[]).find(x=>x.id===id);return s?s.name:'';};
+  TV.list=list;
+  const tbar=tSelMode
+   ?`<div class="tbar"><button class="lnk" onclick="tSelAll()">${tSelIds.size>=list.length&&list.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="tToggleSel()">${t('Cancel')}</button></div>`
+   :(list.length?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span><button class="lnk" onclick="tToggleSel()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   el.innerHTML=(list.length
-    ?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span></div>`+
-     '<div class="wlist">'+list.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
-       ${inArch?'<span class="chk">'+ic('check',14,2.2)+'</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`}
+    ?tbar+
+     '<div class="wlist">'+list.map(w=>{
+       const picked=tSelIds.has(w.id);
+       return `<div class="item ${picked&&tSelMode?'pick':''}" onclick="${tSelMode?`tPick('${w.id}')`:`tWordForm('${w.id}')`}">
+       ${tSelMode
+         ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
+         :(inArch?'<span class="chk">'+ic('check',14,2.2)+'</span>':`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`)}
        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}${inArch?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
-       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'
+       ${tSelMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button>`}</div>`;}).join('')+'</div>'
     :`<div class="empty"><div class="big">${inArch?ic('archive',26):ic('pen',26)}</div><b>${inArch?t('Archive is empty'):t('No words yet')}</b><p>${inArch?t('Words this student has mastered will show up here.'):t('Tap ＋ to add the first word, or import a whole list from the ⋯ menu.')}</p></div>`)+
-   (inArch?'':`<button class="fab" aria-label="Add word" onclick="tWordForm()">${ic('plus',24,2)}</button>`);
-};
+   (tSelMode?tSelBar(inArch):(inArch?'':`<button class="fab" aria-label="Add word" onclick="tWordForm()">${ic('plus',24,2)}</button>`));
+}
+/* ---------- teacher: working on several of a student's words at once ---------- */
+let tSelMode=false,tSelIds=new Set();
+function tClearSel(){tSelMode=false;tSelIds.clear();}
+function tToggleSel(){tSelMode=!tSelMode;tSelIds.clear();tRedraw();}
+function tPick(id){if(tSelIds.has(id))tSelIds.delete(id);else tSelIds.add(id);tRedraw();}
+function tSelAll(){const l=TV.list||[];if(tSelIds.size>=l.length)tSelIds.clear();else l.forEach(w=>tSelIds.add(w.id));tRedraw();}
+/* redraw without refetching the whole dictionary from the cloud */
+function tRedraw(){tDrawWords();}
+function tSelBar(inArch){
+  const n=tSelIds.size;
+  return `<div class="selbar"><div class="in row2">
+    <button class="btn pri" ${n?'':'disabled'} onclick="tBulkArch(${inArch?'false':'true'})">${inArch?ic('reset')+t('To learning'):ic('archive')+t('To Archive')}${n?` (${n})`:''}</button>
+    <button class="btn danger" ${n?'':'disabled'} onclick="tBulkDelete()">${ic('trash')}${t('Delete')}${n?` (${n})`:''}</button>
+  </div></div>`;
+}
+async function tBulkArch(toArch){
+  const ids=[...tSelIds];if(!ids.length)return;
+  try{
+    for(let i=0;i<ids.length;i+=100){
+      const {error}=await sb.from('words').update({arch:toArch,box:toArch?3:2,updated_at:new Date().toISOString()}).in('id',ids.slice(i,i+100));
+      if(error)throw error;
+    }
+    tClearSel();toast((toArch?t('Moved to Archive ✓'):t('Moved back to learning'))+': '+ids.length);tBack();
+  }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
+}
+async function tBulkDelete(){
+  const ids=[...tSelIds];if(!ids.length)return;
+  if(!confirm(t('Delete these words from the student’s lists?')+' '+nWords(ids.length)+'. '+t("This can't be undone.")))return;
+  try{
+    for(let i=0;i<ids.length;i+=100){
+      const {error}=await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).in('id',ids.slice(i,i+100));
+      if(error)throw error;
+    }
+    tClearSel();toast(t('Deleted')+': '+nWords(ids.length));tBack();
+  }catch(e){toast(srvMsg(e,t('Couldn’t delete')));}
+}
+/* remove one of the student's lists, with everything in it */
+async function tDelSet(){
+  const name=TV.setName||'';
+  if(!confirm(t('Delete this list and all its words from the student’s app?')+' “'+name+'”'))return;
+  try{
+    const now=new Date().toISOString();
+    let r=await sb.from('words').update({deleted:true,updated_at:now}).eq('set_id',TV.setId);
+    if(r.error)throw r.error;
+    r=await sb.from('sets').update({deleted:true,updated_at:now}).eq('id',TV.setId);
+    if(r.error)throw r.error;
+    closeSheet();tClearSel();toast(t('List deleted'));go('tsets',{sid:TV.sid,sname:TV.sname});
+  }catch(e){toast(srvMsg(e,t('Couldn’t delete the list')));}
+}
 /* the language of one of the student's lists, as it came from the cloud */
 function tSetLang(setId){
   try{const s=(TV.sets||[]).find(x=>x.id===setId);const c=s&&s.lang;return LANG_MAP[c]?c:DEF_LANG;}catch(e){return DEF_LANG;}
 }
 function tSetMenu(){
-  sheet(`<h2>${esc(TV.setName||'')}</h2>
+  sheet(`<h2>${esc(TV.setName||'')}</h2><div class="stack">
    <button class="btn" onclick="importSheet(true)">${ic('download')}${t('Import words')}</button>
-   <div style="height:9px"></div>
-   <button class="btn ghost" onclick="closeSheet()">${t('Close')}</button>`);
+   <button class="btn" onclick="closeSheet();tToggleSel()">${ic('check',18,2)}${t('Select words')}</button>
+   <button class="btn danger ghost" onclick="tDelSet()">${ic('trash',18)}${t('Delete list')}</button>
+   <button class="btn ghost" onclick="closeSheet()">${t('Close')}</button></div>`);
 }
 function tBack(){
+  tClearSel();
   if(TV.setId)go('twords',{sid:TV.sid,sname:TV.sname,setId:TV.setId,setName:TV.setName});
   else go('tsets',{sid:TV.sid,sname:TV.sname});
 }
 function tWordForm(id){
   const w=id?TV.words.find(x=>x.id===id):null;
   const lg=tSetLang(w?w.set_id:TV.setId);
+  const ph=lg==='en';
+  trSetup({en:'tEn',ru:'tRu',st:'tTrSt',chips:'tChips',lang:lg});
+  ruTouched=!!w;
   sheet(`<h2>${w?t('Word'):t('New word')}</h2>
-   <div class="field"><label>${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="${t('reliable')}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
-   <div class="field"><label>${t('Translation')}</label><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="${t('надёжный')}"></div>
-   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${t('a reliable friend')}" autocapitalize="none"></div>
+   <div class="field"><label>${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
+   <div class="field"><label>${t('Translation')}</label>
+     <div class="row"><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="${ph?t('надёжный'):''}" oninput="ruTouched=true" style="flex:1">
+     <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
+   <div class="hint" id="tTrSt">${t('The translation fills in automatically as you type')}</div>
+   <div class="chips" id="tChips"></div>
+   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none"></div>
    <div class="err" id="tErr"></div>
    <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
@@ -1550,11 +1734,21 @@ async function tSaveWord(id){
       const {error}=await sb.from('words').update({en,ru,ex,updated_at:now}).eq('id',id);
       if(error)throw error;
     }else{
-      const {error}=await sb.from('words').insert({id:uid(),set_id:TV.setId,owner_id:TV.sid,en,ru,ex,
-        box:0,arch:false,ok:0,bad:0,position:TV.words.length,deleted:false,updated_at:now});
+      const row={id:uid(),set_id:TV.setId,owner_id:TV.sid,en,ru,ex,
+        box:0,arch:false,ok:0,bad:0,position:TV.words.length,deleted:false,updated_at:now};
+      const {error}=await sb.from('words').insert(row);
       if(error)throw error;
+      /* keep the form open so a whole batch can be typed in one go */
+      TV.words.push(row);
+      toast(t('Added ✓'));
+      btn.disabled=false;btn.textContent=t('Add');
+      ['tEn','tRu','tEx'].forEach(k=>{const e=$('#'+k);if(e)e.value='';});
+      const ch=$('#tChips');if(ch)ch.innerHTML='';
+      const st=$('#tTrSt');if(st)st.textContent=t('Add the next word');
+      ruTouched=false;const f=$('#tEn');if(f)f.focus();
+      return;
     }
-    closeSheet();toast(id?t('Saved ✓'):t('Added ✓'));tBack();
+    closeSheet();toast(t('Saved ✓'));tBack();
   }catch(e){
     err.textContent=srvMsg(e,t('Couldn’t save — check your connection'));btn.disabled=false;btn.textContent=id?t('Save'):t('Add');
   }
@@ -1637,7 +1831,7 @@ function bulkDelete(){
 }
 function filterList(v){
   const el=$('#list');if(!el)return;
-  if(view.name==='archive'){el.innerHTML=wordRows(allArchived(view.lang||null),v,true);return;}
+  if(view.name==='archive'){el.innerHTML=wordRows(archSlice(view.lang||null),v,true);return;}
   if(view.name==='hard'){el.innerHTML=wordRows(hardItems(),v,true);return;}
   const s=curSet();if(s)el.innerHTML=wordRows(active(s).map(w=>({w,sn:s.name})),v,false);
 }
@@ -1674,6 +1868,39 @@ function closeSheet(){
 function langOptions(cur){
   return LANGS.map(l=>`<option value="${l.c}" ${l.c===cur?'selected':''}>${esc(uiEn()?l.e:l.ru)}${l.n&&l.n!==(uiEn()?l.e:l.ru)?' · '+esc(l.n):''}</option>`).join('');
 }
+/* choose which slice of the Archive to work on */
+function rangeSheet(){
+  const lang=view.lang||null,total=archCount(lang);
+  const a=archRange?Math.max(1,archRange.from):1;
+  const b=archRange?Math.min(total,archRange.to):total;
+  const presets=[];
+  for(let st=0;st<total&&presets.length<8;st+=100)presets.push([st+1,Math.min(total,st+100)]);
+  sheet(`<h2>${t('Choose a range')}</h2>
+   <div class="hint">${t('Pick which words of the Archive to practise — for example from 650 to 750.')}</div>
+   <div class="rangerow">
+     <div class="field" style="flex:1"><label>${t('from')}</label>
+       <input class="inp" id="rFrom" type="number" inputmode="numeric" min="1" max="${total}" value="${a}"></div>
+     <div class="field" style="flex:1"><label>${t('to')}</label>
+       <input class="inp" id="rTo" type="number" inputmode="numeric" min="1" max="${total}" value="${b}"></div>
+   </div>
+   ${presets.length>1?`<div class="chips" style="margin-bottom:12px">${presets.map(([x,y])=>
+     `<button class="chip" onclick="$('#rFrom').value=${x};$('#rTo').value=${y}">${x}–${y}</button>`).join('')}</div>`:''}
+   <div class="err" id="rErr"></div>
+   <button class="btn pri" onclick="applyRange()">${t('Apply')}</button>
+   <div style="height:9px"></div>
+   <button class="btn ghost" onclick="clearRange()">${t('Whole Archive')} · ${nWords(total)}</button>`);
+  setTimeout(()=>{const e=$('#rFrom');if(e){e.focus();e.select();}},60);
+}
+function applyRange(){
+  const lang=view.lang||null,total=archCount(lang);
+  let a=parseInt(($('#rFrom')||{}).value,10),b=parseInt(($('#rTo')||{}).value,10);
+  if(!a||!b||a<1||b<1||a>b||a>total){const e=$('#rErr');if(e)e.textContent=t('Enter a correct range');return;}
+  b=Math.min(b,total);
+  archRange=(a<=1&&b>=total)?null:{from:a,to:b};
+  closeSheet();render();
+}
+function clearRange(){archRange=null;closeSheet();render();}
+
 function newSet(){
   const lg=newSetLang();
   sheet(`<h2>${t('New list')}</h2>
@@ -1726,6 +1953,7 @@ function wordForm(id){
   const f=id?findWord(id):null;const w=f?f.w:null;editId=id||null;ruTouched=!!w;
   /* an existing word keeps its list's language; a new one lands in addTarget() */
   formLang=f?setLangOf(f.s):targetLang();
+  trSetup({lang:formLang});
   const ph=formLang==='en';   /* the English examples only help on an English list */
   sheet(`<h2>${w?t('Word'):t('New word')}</h2>
    <div class="field"><label>${t('Word')} (${esc(langNameLc(formLang))})</label>
@@ -1743,16 +1971,23 @@ function wordForm(id){
      <button class="btn danger ghost" onclick="delWord()">${t('Delete')}</button></div>`:''}`);
   if(!w)setTimeout(()=>$('#fEn')&&$('#fEn').focus(),60);
 }
+/* which fields the translator writes into — the student form and the teacher form share it */
+let TR={en:'fEn',ru:'fRu',st:'trSt',chips:'chips',lang:DEF_LANG};
+function trSetup(cfg){TR=Object.assign({en:'fEn',ru:'fRu',st:'trSt',chips:'chips',lang:DEF_LANG},cfg||{});}
 function autoTr(){clearTimeout(trTimer);trTimer=setTimeout(()=>doTr(false),650);}
 async function doTr(force){
-  const enEl=$('#fEn');if(!enEl)return;const en=enEl.value.trim();if(!en)return;
-  const seq=++trSeq;const st=$('#trSt');if(st)st.textContent=t('Translating…');
-  const r=await translate(en,formLang);
-  if(seq!==trSeq||!$('#fEn')||$('#fEn').value.trim()!==en)return;
-  if(!r){if($('#trSt'))$('#trSt').textContent='⚠ '+t('Can’t reach the translator — enter the translation manually');return;}
-  if(force||(!ruTouched&&!$('#fRu').value)){$('#fRu').value=r.main;ruTouched=false;}
-  if($('#trSt'))$('#trSt').textContent=t('Options — tap to use:');
-  $('#chips').innerHTML=[r.main,...r.alts].map(a=>`<button class="chip" onclick="$('#fRu').value='${q1(a)}';ruTouched=true">${esc(a)}</button>`).join('');
+  const enEl=$('#'+TR.en);if(!enEl)return;const en=enEl.value.trim();if(!en)return;
+  const seq=++trSeq;const st=$('#'+TR.st);if(st)st.textContent=t('Translating…');
+  const r=await translate(en,TR.lang);
+  const now=$('#'+TR.en);
+  if(seq!==trSeq||!now||now.value.trim()!==en)return;     /* the field moved on while we waited */
+  const ruEl=$('#'+TR.ru);if(!ruEl)return;
+  const stEl=$('#'+TR.st);
+  if(!r){if(stEl)stEl.textContent='⚠ '+t('Can’t reach the translator — enter the translation manually');return;}
+  if(force||(!ruTouched&&!ruEl.value)){ruEl.value=r.main;ruTouched=false;}
+  if(stEl)stEl.textContent=t('Options — tap to use:');
+  const ch=$('#'+TR.chips);
+  if(ch)ch.innerHTML=[r.main,...r.alts].map(a=>`<button class="chip" onclick="$('#${TR.ru}').value='${q1(a)}';ruTouched=true">${esc(a)}</button>`).join('');
 }
 function saveWord(){
   const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim(),ex=$('#fEx').value.trim();
@@ -2051,7 +2286,13 @@ function startCards(review){
       setTimeout(()=>{flip=!flip;draw();const n=$('#cd');if(n){n.classList.add('fin');setTimeout(()=>n.classList.remove('fin'),270);}},185);
     };
     $('#sp').onclick=()=>speak(w.en,langOf(w));
-    $('#yes').onclick=()=>{if(!review){const r=award(w,true);save();if(r==='arch')toast('“'+w.en+'” → '+t('Archive')+' ✓');}i++;flip=false;draw();};
+    $('#yes').onclick=()=>{
+      const step=()=>{i++;flip=false;draw();};
+      if(review)return step();
+      const r=award(w,true);save();
+      if(r==='ready')return archAsk([w],()=>step());
+      step();
+    };
     $('#no').onclick=()=>{if(!review){award(w,false);save();}unknown.push(w);i++;flip=false;draw();};
     if(!flip&&dir==='en')speak(w.en,langOf(w));
   }
@@ -2081,13 +2322,18 @@ function startLearn(review){
     pulse($('#qb'));
     renderQ($('#qb'),q,{feedback:true,onDone:ok=>{
       const before=lvl(w);
+      let ready=false;
       if(review){B[w.id]=ok?Math.min(3,before+1):Math.max(0,before-1);}
-      else{const r=award(w,ok);save();if(ok&&r==='arch')toast('“'+w.en+'” → '+t('Archive')+' ✓');}
-      const after=lvl(w);
-      if(ok){gained+=Math.max(0,after-before);
-        if(after<3)queue.splice(Math.min(queue.length,3+(Math.random()*3|0)),0,w);}
-      else queue.splice(Math.min(queue.length,2),0,w);
-      next();
+      else{ready=(award(w,ok)==='ready');save();}
+      const step=()=>{
+        const after=lvl(w);
+        if(ok){gained+=Math.max(0,after-before);
+          if(after<3)queue.splice(Math.min(queue.length,3+(Math.random()*3|0)),0,w);}
+        else queue.splice(Math.min(queue.length,2),0,w);
+        next();
+      };
+      if(ready)return archAsk([w],()=>step());
+      step();
     }});
   }
   next();
@@ -2174,6 +2420,23 @@ function runTest(words,kinds,review){
   }
   function result(){
     shown=-1;
+    /* grade first, collect what got mastered, then ask before drawing the result */
+    if(!review){
+      const ready=[];
+      qs.forEach((q,ix)=>{
+        const en2ru=q.dir==='en2ru',answer=en2ru?q.w.ru:q.w.en;let ok;
+        if(q.type==='mc'){const k=ans[ix];ok=k!=null&&q.opts[k].c;}
+        else if(q.type==='tf'){ok=ans[ix]!=null&&ans[ix]===q.isTrue;}
+        else{const v=(ans[ix]||'').trim();ok=v?checkAns(v,answer,en2ru)!=='no':false;}
+        if(award(q.w,ok)==='ready')ready.push(q.w);
+      });
+      save();
+      if(ready.length)return archAsk(ready,()=>draw2());
+      return draw2();
+    }
+    draw2();
+  }
+  function draw2(){
     const res=qs.map((q,ix)=>{
       const en2ru=q.dir==='en2ru',answer=en2ru?q.w.ru:q.w.en;let ok,given,near=false;
       if(q.type==='mc'){const k=ans[ix];ok=k!=null&&q.opts[k].c;given=k!=null?q.opts[k].t:'';}
@@ -2182,7 +2445,7 @@ function runTest(words,kinds,review){
       const correct=q.type==='tf'?(q.isTrue?'True':'False'):answer;
       return {w:q.w,ok,given,correct,near};
     });
-    if(!review){res.forEach(r=>award(r.w,r.ok));save();}
+    /* grading already happened in result() */
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100),bad=res.filter(r=>!r.ok);
     const slips=res.filter(r=>r.ok&&r.near);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
