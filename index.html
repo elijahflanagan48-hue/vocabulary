@@ -1267,10 +1267,10 @@ async function onSignedIn(user){
       if(mergePrefsFrom(data))save();}
   }catch(e){}
   if(AUTH.profile&&AUTH.profile.role==='teacher')await loadStudents();
-  render();
+  softRender();
   await cloudPull();
   await cloudPush();
-  render();
+  softRender();
 }
 async function loadStudents(){
   try{
@@ -1389,7 +1389,11 @@ function go(name,p={}){
   if(name!=='archive'||(p.lang||null)!==(view.lang||null))archRange=null;
   view=Object.assign({name},p);render();scrollTo(0,0);
   const a=$('#app');if(a){a.classList.remove('viewin');void a.offsetWidth;a.classList.add('viewin');}}
-function render(){(VIEWS[view.name]||VIEWS.today)($('#app'));}
+/* true while a study screen (learn / cards / test / match / daily session) is on screen */
+let studyBusy=false;
+function render(){studyBusy=false;(VIEWS[view.name]||VIEWS.today)($('#app'));}
+/* background refreshes (sync, tab focus) must never throw the student out of a session */
+function softRender(){if(studyBusy)return;render();}
 const pulse=el=>{if(!el)return;el.classList.remove('viewin');void el.offsetWidth;el.classList.add('viewin');};
 const hdr=(title,back,right='')=>{
   try{document.title=(title&&title!=='Vocabulary')?title+' · Vocabulary':'Vocabulary';}catch(e){}
@@ -2633,14 +2637,19 @@ function startMatch(){
   });
 }
 
+/* mark the study screens, so background work leaves them alone */
+['startSession','startCards','startLearn','runTest','startMatch'].forEach(n=>{
+  const o=window[n];if(typeof o!=='function')return;
+  window[n]=function(){const r=o.apply(this,arguments);if($('#qb')||$('#app .topbar')||$('#app .pbar')||$('#app .qdot')||$('#app .tiles'))studyBusy=true;return r;};
+});
 /* ---------- boot ---------- */
 loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
 applyTheme();
 try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.addEventListener&&mq.addEventListener('change',()=>{if((S.settings.theme||'auto')==='auto')applyTheme();});}}catch(e){}
 render();
 authInit();
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled())cloudPull().then(render);});
-setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(render);},150000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled())cloudPull().then(softRender);});
+setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(softRender);},150000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
