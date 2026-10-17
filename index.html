@@ -545,7 +545,7 @@ const langOf=w=>(w&&lgIdx().get(w.id))||DEF_LANG;
 
 const SR_PLANS={gentle:[1,3,8,21,45],standard:[1,3,7,16,35],intense:[1,2,4,8,16]};
 const DEF_SR={on:true,plan:'gentle',days:null,limit:20,onFail:'repeat',picked:false};
-const DEF_STATS={day:'',ids:[],streak:0,best:0,goal:10,met:false};
+const DEF_STATS={day:'',ids:[],streak:0,best:0,goal:10,met:false,upd:0};
 const DB=()=>({v:2,sets:[],settings:{prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,lang:'ru',sr:Object.assign({},DEF_SR),goal:10},stats:Object.assign({},DEF_STATS)});
 
 /* ---------- icons: one line weight, one colour, drawn on a 24 grid ---------- */
@@ -573,12 +573,19 @@ function migrate(d){ // v1 -> v2
 function fix(d){
   d=d||DB();
   _lgIdx=null;
-  d.settings=Object.assign({prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,lang:'ru'},d.settings||{});
+  d.settings=Object.assign({prov:'google',hideBanner:false,theme:'auto',accent:'uk',geo:null,lang:'ru',upd:0},d.settings||{});
   d.settings.sr=Object.assign({},DEF_SR,d.settings.sr||{});
   /* nobody has chosen a pace yet → follow the current default */
   if(!d.settings.sr.picked)d.settings.sr.plan=DEF_SR.plan;
+  /* a device that already has non-default settings should upload them once */
+  if(!d.settings.upd){
+    const custom=d.settings.prov!=='google'||d.settings.accent!=='uk'||d.settings.lang!=='ru'||d.settings.sr.picked;
+    d.settings.upd=custom?1:0;   /* uploads once, but any real change (Date.now) beats it */
+  }
   d.stats=Object.assign({},DEF_STATS,d.stats||{});
   if(!Array.isArray(d.stats.ids))d.stats.ids=[];
+  /* older saves have no upd — stamp them once so an existing streak gets pushed */
+  if(!d.stats.upd&&(d.stats.streak||d.stats.best||d.stats.day))d.stats.upd=Date.now();
   /* a list with no language is English — that is all there was before */
   d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,lang:LANG_MAP[s.lang]?s.lang:DEF_LANG,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map(w=>({
     id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),
@@ -819,13 +826,14 @@ function rollDay(){
   if(st.day===k)return;
   const y=dayKey(new Date(Date.now()-DAY));
   if(!(st.day===y&&st.met))st.streak=0;
-  st.day=k;st.ids=[];st.met=false;
+  st.day=k;st.ids=[];st.met=false;st.upd=Date.now();
 }
 function bumpStudy(id){
   rollDay();const st=S.stats;
   if(st.ids.indexOf(id)<0)st.ids.push(id);
   const goal=st.goal||10;
   if(!st.met&&st.ids.length>=goal){st.met=true;st.streak=(st.streak||0)+1;if(st.streak>(st.best||0))st.best=st.streak;}
+  st.upd=Date.now();
 }
 function todayCount(){rollDay();return S.stats.ids.length;}
 
@@ -894,7 +902,7 @@ function applyTheme(){
 }
 function themeIcon(){return ic(document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');}
 function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();render();}
-function setLang(l){S.settings.lang=l;save();settingsSheet();render();}
+function setLang(l){S.settings.lang=l;S.settings.upd=Date.now();save();settingsSheet();render();}
 function setTheme(m){S.settings.theme=m;save();applyTheme();if($('#scrim'))settingsSheet();render();}
 function useLocation(){
   if(!navigator.geolocation)return toast(t('Location not available'));
@@ -1041,6 +1049,85 @@ function missingLangCol(e){
 }
 const withLang=(rows,sets)=>noLangCol?rows:rows.map((r,i)=>Object.assign({},r,{lang:setLangOf(sets[i])}));
 
+/* ---- cross-device sync of streak, daily goal and settings (jsonb on profiles) ---- */
+let noPrefsSync=false,noSettingsCol=false,statsSyncedUpd=0,settingsSyncedUpd=0;
+function errText(e){return ((e&&(e.message||e.details||e.hint||e.code||''))+'').toLowerCase();}
+function colMissing(e){const m=errText(e);return m.indexOf('column')>=0||m.indexOf('schema')>=0||m.indexOf('does not exist')>=0||m.indexOf('not found')>=0;}
+function permBlocked(e){const m=errText(e);return m.indexOf('row-level')>=0||m.indexOf('42501')>=0||m.indexOf('permission')>=0;}
+const dayNum=k=>{if(!k)return 0;const p=String(k).split('-');return (+p[0]||0)*10000+(+p[1]||0)*100+(+p[2]||0);};
+
+function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0};}
+/* combine another device's stats into ours without ever losing a streak */
+function mergeStats(r){
+  if(!r||typeof r!=='object')return false;
+  const l=S.stats;let ch=false;
+  const best=Math.max(l.best||0,r.best||0);
+  if(best!==(l.best||0)){l.best=best;ch=true;}
+  const ln=dayNum(l.day),rn=dayNum(r.day);
+  if(rn>ln){                                  /* the other device has a more recent day */
+    l.day=r.day;l.ids=Array.isArray(r.ids)?r.ids.slice():[];l.met=!!r.met;l.streak=r.streak||0;ch=true;
+  }else if(rn===ln&&rn>0){                     /* same day on both — combine the progress */
+    const set=new Set(l.ids||[]);let grew=false;
+    (r.ids||[]).forEach(x=>{if(!set.has(x)){set.add(x);grew=true;}});
+    if(grew){l.ids=[...set];ch=true;}
+    if(r.met&&!l.met){l.met=true;ch=true;}
+    const st=Math.max(l.streak||0,r.streak||0);
+    if(st!==(l.streak||0)){l.streak=st;ch=true;}
+  }
+  if(r.goal&&(r.upd||0)>(l.upd||0)&&r.goal!==l.goal){l.goal=r.goal;ch=true;}
+  if((l.best||0)<(l.streak||0)){l.best=l.streak;ch=true;}
+  if(ch)l.upd=Math.max(l.upd||0,r.upd||0,Date.now());   /* re-sync the merged truth */
+  return ch;
+}
+
+/* everything in settings EXCEPT the day/night theme (and the geo it uses) travels between devices */
+function settingsBlob(){const s=S.settings;return {prov:s.prov,accent:s.accent,lang:s.lang,sr:s.sr,upd:s.upd||0};}
+/* last-write-wins on the whole settings blob */
+function mergeSettings(r){
+  if(!r||typeof r!=='object')return false;
+  if((r.upd||0)<=(S.settings.upd||0))return false;      /* ours is newer */
+  let ch=false;
+  ['prov','accent','lang'].forEach(k=>{if(r[k]!==undefined&&r[k]!==S.settings[k]){S.settings[k]=r[k];ch=true;}});
+  if(r.sr&&typeof r.sr==='object'){S.settings.sr=Object.assign({},DEF_SR,r.sr);ch=true;}
+  if(ch)S.settings.upd=r.upd;
+  return ch;
+}
+
+async function pushPrefs(me){
+  if(noPrefsSync)return;
+  const patch={};
+  if((S.stats.upd||0)>0&&(S.stats.upd||0)!==statsSyncedUpd)patch.stats=statsBlob();
+  if(!noSettingsCol&&(S.settings.upd||0)>0&&(S.settings.upd||0)!==settingsSyncedUpd)patch.settings=settingsBlob();
+  if(!Object.keys(patch).length)return;
+  let {error}=await sb.from('profiles').update(patch).eq('id',me);
+  /* a database that has stats but not the newer settings column — send stats alone */
+  if(error&&('settings' in patch)&&colMissing(error)&&errText(error).indexOf('settings')>=0){
+    noSettingsCol=true;delete patch.settings;
+    if(Object.keys(patch).length)({error}=await sb.from('profiles').update(patch).eq('id',me));
+  }
+  if(error){if(permBlocked(error)||colMissing(error))noPrefsSync=true;return;}
+  if(patch.stats)statsSyncedUpd=S.stats.upd||0;
+  if(patch.settings)settingsSyncedUpd=S.settings.upd||0;
+}
+async function pullPrefs(me){
+  if(noPrefsSync)return;
+  let {data,error}=await sb.from('profiles').select(noSettingsCol?'stats':'stats,settings').eq('id',me).maybeSingle();
+  if(error&&!noSettingsCol&&colMissing(error)&&errText(error).indexOf('settings')>=0){
+    noSettingsCol=true;({data,error}=await sb.from('profiles').select('stats').eq('id',me).maybeSingle());
+  }
+  if(error){if(permBlocked(error)||colMissing(error))noPrefsSync=true;return;}
+  let ch=false;
+  if(data){if(data.stats&&mergeStats(data.stats))ch=true;if(data.settings&&mergeSettings(data.settings))ch=true;}
+  if(ch){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+}
+/* merge whatever the profile row already carried (called right after sign-in) */
+function mergePrefsFrom(profile){
+  if(!profile)return false;let ch=false;
+  if(profile.stats&&mergeStats(profile.stats))ch=true;
+  if(profile.settings&&mergeSettings(profile.settings))ch=true;
+  return ch;
+}
+
 let _pushTimer=null;
 function cloudKick(){
   if(!cloudEnabled())return;
@@ -1053,7 +1140,8 @@ async function cloudPush(){
   const dirtySets=S.sets.filter(s=>!s.synced);
   const dirtyWords=[];
   S.sets.forEach(s=>s.words.forEach((w,i)=>{if(!w.synced)dirtyWords.push({w,s,i});}));
-  if(!dirtySets.length&&!dirtyWords.length)return;
+  const prefsDirty=!noPrefsSync&&(((S.stats.upd||0)>0&&(S.stats.upd||0)!==statsSyncedUpd)||(!noSettingsCol&&(S.settings.upd||0)>0&&(S.settings.upd||0)!==settingsSyncedUpd));
+  if(!dirtySets.length&&!dirtyWords.length&&!prefsDirty)return;
   syncing=true;
   try{
     const me=AUTH.user.id;
@@ -1077,6 +1165,7 @@ async function cloudPush(){
       const {error}=await sb.from('words').upsert(rows);
       if(!error)slice.forEach(({w})=>{w.synced=true;});
     }
+    if(prefsDirty)await pushPrefs(me);
     try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   }catch(e){}
   syncing=false;
@@ -1101,9 +1190,10 @@ async function cloudPull(){
     const [rs,rw]=await Promise.all([fetchPaged('sets',me),fetchPaged('words',me)]);
     if(!rs.complete||!rw.complete){
       /* a partial answer must never look like "everything else was deleted" */
-      mergeCloud(rs.rows,rw.rows,false);syncing=false;return;
+      mergeCloud(rs.rows,rw.rows,false);await pullPrefs(me);syncing=false;return;
     }
     mergeCloud(rs.rows,rw.rows,true);
+    await pullPrefs(me);
   }catch(e){}
   syncing=false;
 }
@@ -1162,7 +1252,8 @@ async function onSignedIn(user){
   try{const c=JSON.parse(localStorage.getItem(PKEY)||'null');if(c&&c.id===user.id)AUTH.profile=c;}catch(e){}
   try{
     const {data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();
-    if(data){AUTH.profile=data;try{localStorage.setItem(PKEY,JSON.stringify(data));}catch(e){}}
+    if(data){AUTH.profile=data;try{localStorage.setItem(PKEY,JSON.stringify(data));}catch(e){}
+      if(mergePrefsFrom(data))save();}
   }catch(e){}
   if(AUTH.profile&&AUTH.profile.role==='teacher')await loadStudents();
   render();
@@ -2124,7 +2215,7 @@ function goalSheet(){
      <div class="hint">${t('Current:')} <b>${S.stats.streak||0}</b> ${plr(S.stats.streak||0,t('day'),t('day2'),t('days'))} · ${t('best:')} <b>${S.stats.best||0}</b></div></div>
    <button class="btn ghost" onclick="closeSheet()">${t('Close')}</button>`);
 }
-function setGoal(v){S.stats.goal=v;rollDay();if(!S.stats.met&&S.stats.ids.length>=v){S.stats.met=true;S.stats.streak=(S.stats.streak||0)+1;}save();goalSheet();render();}
+function setGoal(v){S.stats.goal=v;rollDay();if(!S.stats.met&&S.stats.ids.length>=v){S.stats.met=true;S.stats.streak=(S.stats.streak||0)+1;if(S.stats.streak>(S.stats.best||0))S.stats.best=S.stats.streak;}S.stats.upd=Date.now();save();goalSheet();render();}
 
 /* ---------- review settings ---------- */
 function srSheet(){
@@ -2157,7 +2248,7 @@ function srSet(k,v){
   S.settings.sr=Object.assign({},srCfg(),{[k]:v});
   if(k==='plan'){S.settings.sr.picked=true;if(v!=='custom')S.settings.sr.days=null;}
   if(k==='on'&&v===true)S.sets.forEach(s=>s.words.forEach(w=>{if(w.arch&&!w.due)srSchedule(w,true);}));
-  save();srSheet();render();
+  S.settings.upd=Date.now();save();srSheet();render();
 }
 function srCustom(){
   const raw=($('#srDays')||{}).value||'';
@@ -2165,7 +2256,7 @@ function srCustom(){
   if(!days.length)return toast(t('Enter days, e.g. 1, 3, 7, 14'));
   days.sort((a,b)=>a-b);
   S.settings.sr=Object.assign({},srCfg(),{plan:'custom',days});
-  save();srSheet();toast(t('Schedule saved ✓'));
+  S.settings.upd=Date.now();save();srSheet();toast(t('Schedule saved ✓'));
 }
 
 /* ---------- settings / backup ---------- */
@@ -2183,12 +2274,12 @@ function settingsHtml(){
      ${th==='auto'?`<div class="hint">${t('Light by day, dark at night.')}${S.settings.geo?' '+t('Using your location for exact sunrise & sunset.'):` <span onclick="useLocation()" style="color:var(--pri);font-weight:700">${t('Use my location')}</span> ${t('for exact sunrise & sunset.')}`}</div>`:''}</div>
    ${(()=>{const ls=langsUsed();return (!ls.length||ls.indexOf('en')>=0)?
      `<div class="field"><label>${t('Pronunciation')}</label>
-       <select class="inp" onchange="S.settings.accent=this.value;save()">
+       <select class="inp" onchange="S.settings.accent=this.value;S.settings.upd=Date.now();save()">
          <option value="uk" ${ac==='uk'?'selected':''}>${t('British — academic')}</option>
          <option value="us" ${ac==='us'?'selected':''}>${t('American')}</option></select>
        <div class="hint">${ls.length>1?t('Only for English lists.')+' ':''}${t('The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an')} <b>Enhanced</b> ${t('voice.')}</div></div>`:'';})()}
    <div class="field"><label>${t('Auto-translate')}</label>
-     <select class="inp" onchange="S.settings.prov=this.value;save()">
+     <select class="inp" onchange="S.settings.prov=this.value;S.settings.upd=Date.now();save()">
        <option value="google" ${S.settings.prov==='google'?'selected':''}>${t('Google (fallback: MyMemory)')}</option>
        <option value="mm" ${S.settings.prov==='mm'?'selected':''}>${t('MyMemory only')}</option></select></div>`;
 }
@@ -2536,7 +2627,7 @@ try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.
 render();
 authInit();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled())cloudPull().then(render);});
-setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull();},150000);
+setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(render);},150000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
