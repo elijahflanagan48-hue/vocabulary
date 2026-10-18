@@ -1994,8 +1994,29 @@ function tSetMenu(){
   sheet(`<h2>${esc(TV.setName||'')}</h2><div class="stack">
    <button class="btn" onclick="importSheet(true)">${ic('download')}${t('Import words')}</button>
    <button class="btn" onclick="closeSheet();tToggleSel()">${ic('check',18,2)}${t('Select words')}</button>
+   <button class="btn ghost" onclick="tRenameSet()">${ic('pen',18)}${t('Rename')}</button>
    <button class="btn danger ghost" onclick="tDelSet()">${ic('trash',18)}${t('Delete list')}</button>
    <button class="btn ghost" onclick="closeSheet()">${t('Close')}</button></div>`);
+}
+function tRenameSet(){
+  sheet(`<h2>${t('Rename')}</h2>
+   <div class="field"><label>${t('Name')}</label><input class="inp" id="rnIn" maxlength="80" value="${esc(TV.setName||'')}"></div>
+   <div class="err" id="rnErr"></div>
+   <button class="btn pri" id="rnBtn" onclick="tSaveSetName()">${t('Save')}</button>`);
+  setTimeout(()=>{const e=$('#rnIn');if(e){e.focus();e.select();}},60);
+}
+async function tSaveSetName(){
+  const n=((($('#rnIn')||{}).value)||'').trim().replace(/\s+/g,' ');
+  const err=$('#rnErr'),btn=$('#rnBtn');
+  if(!n||n===ARCH_NAME){if(err)err.textContent=t('Enter a name');return;}
+  btn.disabled=true;
+  try{
+    const {data,error}=await sb.from('sets').update({name:n,updated_at:new Date().toISOString()}).eq('id',TV.setId).select('id');
+    if(error)throw error;
+    if(!data||!data.length)throw {message:'no row updated'};
+    closeSheet();toast(t('Saved ✓'));
+    go('twords',{sid:TV.sid,sname:TV.sname,setId:TV.setId,setName:n});
+  }catch(e){if(err)err.textContent=srvMsg(e,t('Couldn’t save — check your connection'));btn.disabled=false;}
 }
 function tBack(){
   tClearSel();
@@ -2266,7 +2287,20 @@ function setMenu(){
    <button class="btn danger ghost" onclick="delSet()">${ic('trash',18)}${t('Delete list')}</button></div>`);
 }
 function studyThisSet(){const s=curSet();if(!s)return;setScope('set',s.id);closeSheet();modesSheet();}
-function renameSet(){const s=curSet();const n=prompt('New name',s.name);if(n&&n.trim()){s.name=n.trim();touch(s);save();closeSheet();render();}}
+function renameSet(){
+  const s=curSet();if(!s)return;
+  sheet(`<h2>${t('Rename')}</h2>
+   <div class="field"><label>${t('Name')}</label><input class="inp" id="rnIn" maxlength="80" value="${esc(s.name)}"></div>
+   <div class="err" id="rnErr"></div>
+   <button class="btn pri" onclick="saveRename()">${t('Save')}</button>`);
+  setTimeout(()=>{const e=$('#rnIn');if(e){e.focus();e.select();}},60);
+}
+function saveRename(){
+  const s=curSet(),n=((($('#rnIn')||{}).value)||'').trim().replace(/\s+/g,' ');
+  if(!s)return closeSheet();
+  if(!n||n===ARCH_NAME){const e=$('#rnErr');if(e)e.textContent=t('Enter a name');return;}
+  s.name=n;touch(s);save();closeSheet();render();toast(t('Saved ✓'));
+}
 function resetProg(){const s=curSet();if(confirm(t('Move all words of this list back from Archive and reset progress?'))){s.words.forEach(w=>{w.box=0;w.arch=false;touch(w);});save();closeSheet();render();toast(t('Progress reset'));}}
 async function delSet(){
   const s=curSet();if(!s)return;
