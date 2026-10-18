@@ -1,4 +1,4 @@
-const CACHE = 'vocab-v50';
+const CACHE = 'vocab-v52';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v2.png', './icon-512-v2.png', './icon-mask-512-v2.png', './favicon-32-v2.png', './favicon-192-v2.png',
   './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const EXTERNAL = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
