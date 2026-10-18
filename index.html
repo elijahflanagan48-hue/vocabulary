@@ -184,6 +184,10 @@ header h1{flex:1;min-width:0;margin:0;font-family:var(--ff-serif);font-size:25px
 .qdot.cur{background:var(--pri);color:var(--on-pri);border-color:transparent}
 .opt.pick{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
 .btn.selp{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
+.btn.tfy{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+.btn.tfn{border-color:var(--bad);background:var(--bad-soft);color:var(--bad);font-weight:700}
+.btn.tfy.selp{background:var(--ok);border-color:var(--ok);color:#fff;box-shadow:0 6px 16px rgba(27,122,77,.28)}
+.btn.tfn.selp{background:var(--bad);border-color:var(--bad);color:#fff;box-shadow:0 6px 16px rgba(192,58,40,.28)}
 .arch-ic{width:44px;height:44px;flex:none;border-radius:13px;background:var(--surf2);border:1px solid var(--line);color:var(--mut);display:flex;align-items:center;justify-content:center}
 .src{color:var(--fade);font-size:12.5px;font-weight:600}
 
@@ -338,8 +342,8 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .hero-ic{width:62px;height:62px;margin:0 auto;border-radius:20px;background:var(--pri-soft);color:var(--pri);
   display:flex;align-items:center;justify-content:center;animation:pop .34s ease-out both}
 @keyframes pop{0%{transform:scale(.94);opacity:0}100%{transform:scale(1);opacity:1}}
-@keyframes viewin{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
-.viewin{animation:viewin .26s cubic-bezier(.33,1,.68,1)}
+@keyframes viewin{from{opacity:.4}to{opacity:1}}
+.viewin{animation:viewin .22s ease-out}
 /* top loading pill: slides down from above, never replaces content */
 #tload{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));z-index:60;display:flex;align-items:center;gap:8px;
   padding:8px 15px 8px 12px;border-radius:99px;background:var(--surf);color:var(--mut);font-size:13px;font-weight:650;
@@ -384,6 +388,11 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   padding:7px 4px;border-radius:12px;color:var(--fade);font-size:11.5px;font-weight:600;
   transition:color .18s ease,background-color .18s ease}
 .tab.on{color:var(--pri)}
+.tabs{transition:transform .38s cubic-bezier(.33,1,.68,1),opacity .3s ease;will-change:transform}
+.tabs.hide{transform:translateY(105%);opacity:0;pointer-events:none}
+.tab .ti{display:flex;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.tab.on .ti{transform:translateY(-1px) scale(1.08)}
+.tab:active .ti{transform:scale(.9)}
 .tab:active{background:var(--surf2)}
 
 /* today: the one thing to do */
@@ -1510,7 +1519,7 @@ function acctSheet(){
 }
 async function manualSync(){
   if(!cloudEnabled())return toast(t('Not signed in'));
-  topLoad(true);noPrefsSync=false;prefsErr='';statsSyncedUpd=-1;settingsSyncedUpd=-1;try{await cloudPull();await cloudPush();}finally{topLoad(false);}render();
+  topLoad(true);noPrefsSync=false;prefsErr='';statsSyncedUpd=-1;settingsSyncedUpd=-1;try{await cloudPull();await cloudPush();}finally{topLoad(false);}softRender();
   if(prefsErr){toast(t('Streak/settings not synced')+': '+prefsErr);}else toast(t('Synced ✓'));
 }
 async function linkTeacher(){
@@ -1544,12 +1553,27 @@ function go(name,p={}){
   if(name!=='set'||p.id!==view.id)setRange=null;
   if(scope.kind==='prac'){setScope('all');PRACTICE=null;}
   view=Object.assign({name},p);render();scrollTo(0,0);
-  const a=$('#app');if(a){a.classList.remove('viewin');void a.offsetWidth;a.classList.add('viewin');}}
+  const a=$('#app');if(a){a.classList.remove('viewin','stag');void a.offsetWidth;a.classList.add('viewin','stag');
+    clearTimeout(go._t);go._t=setTimeout(()=>a.classList.remove('stag'),700);}}
 /* true while a study screen (learn / cards / test / match / daily session) is on screen */
 let studyBusy=false;
-function render(){studyBusy=false;(VIEWS[view.name]||VIEWS.today)($('#app'));}
-/* background refreshes (sync, tab focus) must never throw the student out of a session */
-function softRender(){if(studyBusy)return;render();}
+function render(){studyBusy=false;tabWanted=false;(VIEWS[view.name]||VIEWS.today)($('#app'));syncTabs();}
+/* background refreshes (sync, tab focus) must never throw the student out of a session,
+   and must be invisible: identical markup is not touched, scroll position is kept */
+let softMode=false;
+(function(){
+  const app=document.getElementById('app'),d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+  if(!app||!d)return;
+  Object.defineProperty(app,'innerHTML',{configurable:true,get(){return d.get.call(this);},set(v){
+    if(softMode&&v===this._last)return;
+    this._last=v;
+    const y=softMode?window.scrollY:null;
+    if(softMode)this.style.minHeight=this.offsetHeight+'px';
+    d.set.call(this,v);
+    if(softMode){window.scrollTo(0,y);requestAnimationFrame(()=>{this.style.minHeight='';});}
+  }});
+})();
+function softRender(){if(studyBusy)return;softMode=true;try{render();}finally{softMode=false;}}
 const pulse=el=>{if(!el)return;el.classList.remove('viewin');void el.offsetWidth;el.classList.add('viewin');};
 const hdr=(title,back,right='')=>{
   try{document.title=(title&&title!=='Vocabulary')?title+' · Vocabulary':'Vocabulary';}catch(e){}
@@ -1569,16 +1593,35 @@ function dayStrip(){
 
 
 /* ---------- the three places you can be ---------- */
-function tabBar(){
-  if(selMode)return '';
-  const cur=view.name, isT=AUTH.profile&&AUTH.profile.role==='teacher';
+/* the bottom bar lives outside #app: it is created once and only ever updated in place */
+let tabWanted=false,tabsKey='';
+function syncTabs(){
+  let nav=document.getElementById('tabs');
+  const cur=view.name==='home'?'today':view.name,isT=!!(AUTH.profile&&AUTH.profile.role==='teacher');
   const tabs=[['today','target',t('Today')],['vocab','book',t('Vocabulary')]];
   if(isT)tabs.push(['students','users',t('Students')]);
   tabs.push(['me','user',t('Profile')]);
+  const key=tabs.map(x=>x[0]+x[2]).join('|');
+  if(!nav){nav=document.createElement('nav');nav.id='tabs';nav.className='tabs hide';document.body.appendChild(nav);tabsKey='';}
+  if(key!==tabsKey){
+    tabsKey=key;
+    nav.innerHTML=tabs.map(([n,i,l])=>`<button class="tab" data-tab="${n}" onclick="go('${n}')"><span class="ti"></span><span>${esc(l)}</span></button>`).join('');
+    nav._on={};
+  }
   const act=n=>n===cur||(n==='students'&&(cur==='tsets'||cur==='twords'));
-  return '<nav class="tabs">'+tabs.map(([n,i,l])=>
-    `<button class="tab ${act(n)?'on':''}" onclick="go('${n}')">${ic(i,21,act(n)?'fill':'')}<span>${esc(l)}</span></button>`).join('')+'</nav>';
+  tabs.forEach(([n,i])=>{
+    const b=nav.querySelector('[data-tab="'+n+'"]');if(!b)return;
+    const on=act(n);
+    if(nav._on[n]===on)return;
+    nav._on[n]=on;
+    b.classList.toggle('on',on);
+    b.querySelector('.ti').innerHTML=ic(i,21,on?'fill':'');
+  });
+  const show=tabWanted&&!selMode;
+  nav.classList.toggle('hide',!show);
+  document.body.classList.toggle('hastabs',show);
 }
+function tabBar(){tabWanted=true;syncTabs();return '';}
 const themeBtn=()=>`<button class="ic" aria-label="Theme" onclick="toggleTheme()">${themeIcon()}</button>`;
 
 /* the Archive card on the Dictionary screen — lang null means “every language” */
@@ -2791,9 +2834,9 @@ function renderQ(box,q,o){
   const w=q.w,en2ru=q.dir==='en2ru',prompt=en2ru?w.en:w.ru,answer=en2ru?w.ru:w.en;
   let lbl=qLabel(q);
   let h=`<div class="card" style="min-height:min(34vh,200px)"><div class="lbl">${lbl}</div>
-    <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
+    <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:rgba(255,255,255,.72);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
   if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,i)=>`<button class="opt" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
-  if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn" data-tf="1">✓ True</button><button class="btn" data-tf="0">✗ False</button></div>`;
+  if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn tfy" data-tf="1">✓ True</button><button class="btn tfn" data-tf="0">✗ False</button></div>`;
   if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
     <div style="height:9px"></div><button class="btn pri" id="tsub">${t('Check')}</button>
     <div style="height:8px"></div><button class="btn ghost" id="tskip">${t("Don't know")}</button></div>`;
@@ -2982,9 +3025,9 @@ function runTest(words,kinds,review,resume){
       `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div><span class="stat">${ca}/${total}</span></div>`+
       `<div class="qpalbox"><div class="qpal${palOpen?' open':''}" id="qpal">${dots}</div><button class="qmore" id="qmore" aria-label="${palOpen?t('Collapse'):t('Show all questions')}">${palOpen?ic('up',18):ic('down',18)}</button></div>`+
       `<div class="card" style="min-height:min(30vh,180px)"><div class="lbl">${lbl}</div>
-        <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:var(--mut);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
+        <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:rgba(255,255,255,.72);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
     if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[i]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
-    if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
+    if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn tfy ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn tfn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
     if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" value="${esc(ans[i]||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>`;
     h+=`<div style="height:14px"></div><div class="row2">
       <button class="btn ghost" id="tback" ${i===0?'disabled':''}>${ic('arrowLeft',18)}${t('Back')}</button>
