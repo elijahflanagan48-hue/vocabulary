@@ -338,8 +338,26 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .hero-ic{width:62px;height:62px;margin:0 auto;border-radius:20px;background:var(--pri-soft);color:var(--pri);
   display:flex;align-items:center;justify-content:center;animation:pop .34s ease-out both}
 @keyframes pop{0%{transform:scale(.94);opacity:0}100%{transform:scale(1);opacity:1}}
-@keyframes viewin{from{opacity:.3}to{opacity:1}}
-.viewin{animation:viewin .17s ease-out}
+@keyframes viewin{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:none}}
+.viewin{animation:viewin .26s cubic-bezier(.33,1,.68,1)}
+/* top loading pill: slides down from above, never replaces content */
+#tload{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));z-index:60;display:flex;align-items:center;gap:8px;
+  padding:8px 15px 8px 12px;border-radius:99px;background:var(--surf);color:var(--mut);font-size:13px;font-weight:650;
+  border:1px solid var(--line);box-shadow:0 8px 22px rgba(10,12,20,.14);pointer-events:none;
+  transform:translate(-50%,-70px);opacity:0;transition:transform .42s cubic-bezier(.34,1.3,.64,1),opacity .25s ease}
+#tload.on{transform:translate(-50%,0);opacity:1}
+#tload i{width:13px;height:13px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--pri);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* list entrance: items glide in one after another */
+@keyframes itemin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.stag>*{animation:itemin .38s cubic-bezier(.33,1,.68,1) both}
+.stag>*:nth-child(2){animation-delay:.04s}.stag>*:nth-child(3){animation-delay:.08s}.stag>*:nth-child(4){animation-delay:.12s}
+.stag>*:nth-child(5){animation-delay:.16s}.stag>*:nth-child(6){animation-delay:.2s}.stag>*:nth-child(n+7){animation-delay:.24s}
+/* skeleton placeholders */
+.skel{height:68px;border-radius:15px;margin-bottom:9px;background:linear-gradient(100deg,var(--line) 30%,var(--line2) 50%,var(--line) 70%);
+  background-size:220% 100%;animation:shim 1.3s ease-in-out infinite;opacity:.7}
+@keyframes shim{from{background-position:120% 0}to{background-position:-120% 0}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important;transition-duration:.01s!important}}
 @keyframes flipout{from{transform:rotateY(0)}to{transform:rotateY(90deg)}}
 @keyframes flipin{from{transform:rotateY(-90deg)}to{transform:rotateY(0)}}
 .card.fout{animation:flipout .19s cubic-bezier(.4,0,.8,.45) forwards}
@@ -1405,17 +1423,19 @@ async function tSaveName(){
 }
 async function loadStudents(){
   try{
-    const {data:links}=await sb.from('links').select('student_id').eq('teacher_id',AUTH.user.id);
+    const {data:links,error:e1}=await sb.from('links').select('student_id').eq('teacher_id',AUTH.user.id);
+    if(e1)return false;
     const ids=(links||[]).map(l=>l.student_id);
-    if(!ids.length){AUTH.students=[];return;}
-    const {data:profs}=await sb.from('profiles').select('id,display_name').in('id',ids);
-    AUTH.students=profs||[];
-  }catch(e){AUTH.students=[];}
+    if(!ids.length){AUTH.students=[];return true;}
+    const {data:profs,error:e2}=await sb.from('profiles').select('id,display_name').in('id',ids);
+    if(e2)return false;
+    AUTH.students=profs||[];return true;
+  }catch(e){return false;}
 }
 async function doSignOut(){
   try{await sb.auth.signOut();}catch(e){}
   try{localStorage.removeItem(PKEY);}catch(e){}
-  AUTH={user:null,profile:null,ready:true,students:[]};
+  AUTH={user:null,profile:null,ready:true,students:[]};TC.students=null;TC.owner={};
   closeSheet();go('home');toast(t('Signed out'));
 }
 let authTab='signin';
@@ -1490,7 +1510,7 @@ function acctSheet(){
 }
 async function manualSync(){
   if(!cloudEnabled())return toast(t('Not signed in'));
-  toast(t('Syncing…'));noPrefsSync=false;prefsErr='';statsSyncedUpd=-1;settingsSyncedUpd=-1;await cloudPull();await cloudPush();render();
+  topLoad(true);noPrefsSync=false;prefsErr='';statsSyncedUpd=-1;settingsSyncedUpd=-1;try{await cloudPull();await cloudPush();}finally{topLoad(false);}render();
   if(prefsErr){toast(t('Streak/settings not synced')+': '+prefsErr);}else toast(t('Synced ✓'));
 }
 async function linkTeacher(){
@@ -1793,8 +1813,8 @@ let TV={sid:null,sname:'',setId:null,setName:'',words:[],sets:[]};
 async function fetchOwner(ownerId){
   try{
     const [rs,rw]=await Promise.all([fetchPaged('sets',ownerId),fetchPaged('words',ownerId)]);
-    return {sets:rs.rows.sort((a,b)=>(a.position||0)-(b.position||0)),words:rw.rows};
-  }catch(e){return {sets:[],words:[]};}
+    return {sets:rs.rows.sort((a,b)=>(a.position||0)-(b.position||0)),words:rw.rows,ok:rs.complete&&rw.complete};
+  }catch(e){return {sets:[],words:[],ok:false};}
 }
 function agoTxt(ts){
   if(!ts)return t('no activity yet');
@@ -1805,46 +1825,72 @@ function agoTxt(ts){
   if(d<30){const w=Math.round(d/7);return t('last seen')+' '+w+' '+plr(w,t('week'),t('week2'),t('weeks'))+' '+t('ago');}
   const mo=Math.round(d/30);return t('last seen')+' '+mo+' '+plr(mo,t('month'),t('month2'),t('months'))+' '+t('ago');
 }
+/* teacher screens keep what they last showed and refresh it quietly */
+const TC={students:null,owner:{}};
+let _tl=0;
+function topLoad(on){
+  _tl=Math.max(0,_tl+(on?1:-1));
+  let b=$('#tload');
+  if(_tl>0){
+    if(!b){b=document.createElement('div');b.id='tload';b.innerHTML='<i></i>'+t('Loading…');document.body.appendChild(b);void b.offsetWidth;}
+    b.classList.add('on');
+  }else if(b){b.classList.remove('on');setTimeout(()=>{if(!_tl&&b.parentNode)b.remove();},450);}
+}
+const skel=n=>Array.from({length:n},()=>'<div class="skel"></div>').join('');
+function paint(el,html,anim){
+  if(!el||el._h===html)return;
+  el._h=html;el.innerHTML=html;
+  el.classList.remove('stag');
+  if(anim){void el.offsetWidth;el.classList.add('stag');}
+}
 VIEWS.students=async function(app){
-  app.innerHTML=hdr(t('My students'),'')+`<div id="rl"><div class="empty"><p>${t('Loading…')}</p></div></div>`+tabBar();
-  await loadStudents();
-  const el=$('#rl');if(!el)return;
-  if(!AUTH.students.length){
-    el.innerHTML=`<div class="empty"><div class="big">${ic('users',26)}</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`+tabBar();
-    return;
-  }
-  const ids=AUTH.students.map(s=>s.id);
-  let words=[];
-  try{const {data}=await sb.from('words').select('owner_id,arch,ok,bad,updated_at').in('owner_id',ids).eq('deleted',false);words=data||[];}catch(e){}
-  const week=Date.now()-7*DAY;
-  const el2=$('#rl');if(!el2)return;
-  el2.innerHTML=AUTH.students.map(s=>{
-    const nm=s.display_name||'Student',mine=words.filter(w=>w.owner_id===s.id);
-    const last=mine.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0);
-    const weekN=mine.filter(w=>+new Date(w.updated_at)>week).length;
-    const learned=mine.filter(w=>w.arch).length;
-    const stale=last&&(Date.now()-last)>7*DAY;
-    return `<div class="roster" onclick="go('tsets',{sid:'${s.id}',sname:'${q1(nm)}'})">
+  app.innerHTML=hdr(t('My students'),'')+`<div id="rl"></div>`+tabBar();
+  const draw=d=>{
+    if(!d.students.length)return `<div class="empty"><div class="big">${ic('users',26)}</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`;
+    const week=Date.now()-7*DAY;
+    return d.students.map(s=>{
+      const nm=s.display_name||'Student',mine=d.words.filter(w=>w.owner_id===s.id);
+      const last=mine.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0);
+      const weekN=mine.filter(w=>+new Date(w.updated_at)>week).length;
+      const learned=mine.filter(w=>w.arch).length;
+      const stale=last&&(Date.now()-last)>7*DAY;
+      return `<div class="roster" onclick="go('tsets',{sid:'${s.id}',sname:'${q1(nm)}'})">
       <div class="av"${stale?' style="background:var(--line2);color:var(--mut)"':''}>${esc(nm.trim().charAt(0).toUpperCase()||'?')}</div>
       <div class="t"><div class="nm">${esc(nm)}</div>
         <div class="meta">${nWords(mine.length)} · ${learned} ${t('learned')}</div>
         <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${agoTxt(last)}${weekN?` · ${weekN} ${t('this week')}`:''}</div></div>
       ${ic('right',18)}</div>`;
-  }).join('');
+    }).join('');
+  };
+  const had=!!TC.students;
+  if(had)paint($('#rl'),draw(TC.students),false);else $('#rl').innerHTML=skel(4);
+  topLoad(true);
+  let fresh=null;
+  try{
+    const ok=await loadStudents();
+    if(ok){
+      let words=[];
+      if(AUTH.students.length){
+        const ids=AUTH.students.map(s=>s.id);
+        const {data,error}=await sb.from('words').select('owner_id,arch,ok,bad,updated_at').in('owner_id',ids).eq('deleted',false);
+        if(!error)words=data||[];else if(had)words=TC.students.words;
+      }
+      fresh={students:AUTH.students.slice(),words};
+    }
+  }catch(e){}
+  topLoad(false);
+  if(view.name!=='students')return;
+  if(fresh){TC.students=fresh;paint($('#rl'),draw(fresh),!had);}
+  else if(!had)paint($('#rl'),draw({students:[],words:[]}),true);
 };
-VIEWS.tsets=async function(app){
-  const sid=view.sid,sname=view.sname||'Student';
-  app.innerHTML=hdr(sname,"go('students')",`<button class="ic" aria-label="Rename" onclick="tRenameSheet()">${ic('pen')}</button>`)+`<div id="tl"><div class="empty"><p>${t('Loading…')}</p></div></div>`;
-  const {sets,words}=await fetchOwner(sid);
-  TV={sid,sname,setId:null,setName:'',words,sets};
-  const el=$('#tl');if(!el)return;
+function tsetsHtml(){
+  const {sid,sname,words,sets}=TV;
   const archN=words.filter(w=>w.arch).length;
   const last=words.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0);
   const weekN=words.filter(w=>+new Date(w.updated_at)>Date.now()-7*DAY).length;
   const dueN=words.filter(w=>w.arch&&w.due&&w.due<=Date.now()).length;
   const tricky=words.filter(w=>(w.bad||0)>=2&&(w.bad||0)>(w.ok||0)).sort((a,b)=>((b.bad||0)-(b.ok||0))-((a.bad||0)-(a.ok||0))).slice(0,6);
-  el.innerHTML=
-   `<div class="daycard" style="align-items:flex-start">
+  return `<div class="daycard" style="align-items:flex-start">
       <div class="t"><div class="lbl"><span>${esc(agoTxt(last))}</span><b>${nWords(words.length)}</b></div>
       <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:5px">
         ${archN} ${t('learned')} · ${weekN} ${t('this week')}${dueN?` · ${dueN} ${t('due for review')}`:''}</div></div></div>`+
@@ -1867,6 +1913,23 @@ VIEWS.tsets=async function(app){
       <div class="t"><div class="nm">${t('Archive')}</div><div class="meta">${archN?nWords(archN):t('learned words')}</div></div>
       <span style="color:var(--fade);font-size:22px">›</span></div>
     <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">${ic('plus',18)}${t('New list for')} ${esc(sname)}</button>`;
+}
+VIEWS.tsets=async function(app){
+  const sid=view.sid,sname=view.sname||'Student';
+  app.innerHTML=hdr(sname,"go('students')",`<button class="ic" aria-label="Rename" onclick="tRenameSheet()">${ic('pen')}</button>`)+`<div id="tl"></div>`;
+  const c=TC.owner[sid];
+  if(c){TV={sid,sname,setId:null,setName:'',words:c.words,sets:c.sets};paint($('#tl'),tsetsHtml(),false);}
+  else $('#tl').innerHTML=skel(3);
+  topLoad(true);
+  const r=await fetchOwner(sid);
+  topLoad(false);
+  if(view.name!=='tsets'||view.sid!==sid)return;
+  if(!r.ok&&c)return;
+  const same=c&&JSON.stringify(c.words)===JSON.stringify(r.words)&&JSON.stringify(c.sets)===JSON.stringify(r.sets);
+  if(same)return;
+  TC.owner[sid]={sets:r.sets,words:r.words};
+  TV={sid,sname,setId:null,setName:'',words:r.words,sets:r.sets};
+  paint($('#tl'),tsetsHtml(),!c);
 };
 VIEWS.twords=async function(app){
   const {sid,sname,setId,setName}=view;
@@ -1874,13 +1937,23 @@ VIEWS.twords=async function(app){
     setId==='archive'
       ?`<button class="ic" aria-label="Import" onclick="importSheet(true,{arch:true})">${ic('download')}</button><button class="ic" aria-label="PDF" onclick="tPdf()">${ic('send')}</button><button class="ic" aria-label="Select" onclick="tToggleSel()">${ic('check',20,2)}</button>`
       :`<button class="ic" aria-label="Menu" onclick="tSetMenu()">${ic('more')}</button>`)+
-   `<div id="tl"><div class="empty"><p>${t('Loading…')}</p></div></div>`;
-  const {sets,words}=await fetchOwner(sid);
-  TV={sid,sname,setId,setName,words,sets};
-  tDrawWords();
+   `<div id="tl"></div>`;
+  const c=TC.owner[sid];
+  if(c){TV={sid,sname,setId,setName,words:c.words,sets:c.sets};tDrawWords(false);}
+  else $('#tl').innerHTML=skel(5);
+  topLoad(true);
+  const r=await fetchOwner(sid);
+  topLoad(false);
+  if(view.name!=='twords'||view.sid!==sid||view.setId!==setId)return;
+  if(!r.ok&&c)return;
+  const same=c&&JSON.stringify(c.words)===JSON.stringify(r.words)&&JSON.stringify(c.sets)===JSON.stringify(r.sets);
+  if(same)return;
+  TC.owner[sid]={sets:r.sets,words:r.words};
+  TV={sid,sname,setId,setName,words:r.words,sets:r.sets};
+  tDrawWords(!c);
 };
 /* redraw the word list from what we already hold, without going back to the cloud */
-function tDrawWords(){
+function tDrawWords(anim){
   const el=$('#tl');if(!el)return;
   const {setId,words,sets}=TV;
   const inArch=setId==='archive';
@@ -1895,7 +1968,7 @@ function tDrawWords(){
   const tbar=tSelMode
    ?`<div class="tbar"><button class="lnk" onclick="tSelAll()">${tSelIds.size>=list.length&&list.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="tToggleSel()">${t('Cancel')}</button></div>`
    :(list.length?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span><button class="lnk" onclick="tToggleSel()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
-  el.innerHTML=(tSelMode?'':rangeBarHtml(rctx())+(list.length?tModesTop():''))+(list.length
+  paint(el,(tSelMode?'':rangeBarHtml(rctx())+(list.length?tModesTop():''))+(list.length
     ?tbar+
      '<div class="wlist">'+list.map(w=>{
        const picked=tSelIds.has(w.id);
@@ -1907,7 +1980,7 @@ function tDrawWords(){
        ${(!tSelMode&&!inArch)?`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`:''}
        ${tSelMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button>`}</div>`;}).join('')+'</div>'
     :`<div class="empty"><div class="big">${inArch?ic('archive',26):ic('pen',26)}</div><b>${inArch?t('Archive is empty'):t('No words yet')}</b><p>${inArch?t('Words this student has mastered will show up here.'):t('Tap ＋ to add the first word, or import a whole list from the ⋯ menu.')}</p></div>`)+
-   (tSelMode?tSelBar(inArch):(`<button class="fab" aria-label="Add word" onclick="tWordForm()">${ic('plus',24,2)}</button>`));
+   (tSelMode?tSelBar(inArch):(`<button class="fab" aria-label="Add word" onclick="tWordForm()">${ic('plus',24,2)}</button>`)),anim);
 }
 /* the teacher practises a student's list or archive: the words are copied into memory and run in review mode,
    so nothing about the student's progress is ever touched */
