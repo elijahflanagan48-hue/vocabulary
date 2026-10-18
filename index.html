@@ -3043,12 +3043,14 @@ function runTest(words,kinds,review,resume){
       if(rows<=2&&!palOpen){more.style.display='none';}
       else{
         more.style.display='';
-        /* never leave the question you are on hidden */
+        /* stays folded until the user opens it; the folded strip just scrolls to the current question's row */
         const cur=pal.querySelector('.qdot.cur');
-        if(!palOpen&&cur&&top(cur)>pal.clientHeight-10){palOpen=true;pal.classList.add('open');more.innerHTML=ic('up',18);}
+        const fit=()=>{if(cur)pal.scrollTop=palOpen?Math.max(0,top(cur)-pal.clientHeight/2+18):Math.max(0,top(cur)-4);};
+        fit();
         more.onclick=()=>{palOpen=!palOpen;pal.classList.toggle('open',palOpen);
           more.innerHTML=palOpen?ic('up',18):ic('down',18);
-          more.setAttribute('aria-label',palOpen?t('Collapse'):t('Show all questions'));};
+          more.setAttribute('aria-label',palOpen?t('Collapse'):t('Show all questions'));
+          requestAnimationFrame(fit);};
       }
     }
     $$('.qdot').forEach(b=>b.onclick=()=>go2(+b.dataset.ix));
