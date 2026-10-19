@@ -1084,7 +1084,7 @@ function archAsk(ws,onDone){
    <div style="height:9px"></div>
    <button class="btn ghost" onclick="_archNo()">${one?t('Keep in the list'):t('Keep all in the lists')}</button>`);
   /* tapping the backdrop must not strand the session — treat it as “keep” */
-  const d=$('#scrim');if(d)d.onclick=e=>{if(e.target===d)window._archNo();};
+  const d=$('#scrim');if(d)backdrop(d,()=>window._archNo());
 }
 function ringSvg(done,total,size=46){
   const r=(size-7)/2,c=2*Math.PI*r,p=total?done/total:0;
@@ -2299,6 +2299,13 @@ function filterList(v){
 }
 
 /* ---------- sheets ---------- */
+/* a backdrop closes its sheet only when the press AND the release both happen on it —
+   dragging a text selection out of the sheet must never count as a tap outside */
+function backdrop(d,fn){
+  d._dn=false;
+  d.addEventListener('pointerdown',e=>{d._dn=(e.target===d);},true);
+  d.onclick=e=>{const ok=e.target===d&&d._dn;d._dn=false;if(ok)fn();};
+}
 function sheet(html){
   const ex=$('#scrim');
   if(ex&&!ex.classList.contains('closing')){      /* already open: swap the contents, don't replay the slide-up */
@@ -2316,7 +2323,7 @@ function sheet(html){
     return;
   }
   const d=document.createElement('div');d.className='scrim';d.id='scrim';
-  d.onclick=e=>{if(e.target===d)closeSheet();};
+  backdrop(d,closeSheet);
   d.innerHTML=`<div class="sheet"><div class="grip"></div>${html}</div>`;
   document.body.appendChild(d);d.querySelector('.sheet').scrollTop=0;
 }
