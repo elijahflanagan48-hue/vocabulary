@@ -388,6 +388,17 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   padding:7px 4px;border-radius:12px;color:var(--fade);font-size:11.5px;font-weight:600;
   transition:color .18s ease,background-color .18s ease}
 .tab.on{color:var(--pri)}
+:root{--m1:#e5484d;--m2:#f0902f;--m3:#e6bd1f;--m4:#30a46c;--m5:#3b82f6;--m6:#9b5de5}
+.item[data-m]{box-shadow:inset 4px 0 0 var(--mc);background:color-mix(in srgb,var(--mc) 11%,transparent)}
+.wlist .item[data-m]{box-shadow:inset 4px 0 0 var(--mc);background:color-mix(in srgb,var(--mc) 11%,transparent)}
+.item[data-m="1"],.msw[data-m="1"]{--mc:var(--m1)}.item[data-m="2"],.msw[data-m="2"]{--mc:var(--m2)}.item[data-m="3"],.msw[data-m="3"]{--mc:var(--m3)}
+.item[data-m="4"],.msw[data-m="4"]{--mc:var(--m4)}.item[data-m="5"],.msw[data-m="5"]{--mc:var(--m5)}.item[data-m="6"],.msw[data-m="6"]{--mc:var(--m6)}
+.mrow{display:flex;gap:11px;flex-wrap:wrap;padding:4px 0 2px}
+.msw{width:34px;height:34px;border-radius:50%;background:var(--mc,transparent);border:3px solid transparent;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),border-color .18s ease}
+.msw.none{border:2px dashed var(--line2);background:none;color:var(--fade);font-size:15px;display:flex;align-items:center;justify-content:center}
+.msw.on{border-color:var(--tx);transform:scale(1.12)}
+.msw:active{transform:scale(.92)}
 .linkbtn{display:block;margin:-2px 0 8px auto;padding:6px 2px;color:var(--pri);font-size:14px;font-weight:650}
 .tabs{transition:transform .38s cubic-bezier(.33,1,.68,1),opacity .3s ease;will-change:transform}
 .tabs.hide{transform:translateY(105%);opacity:0;pointer-events:none}
@@ -456,7 +467,7 @@ const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const KEY='vocab.v2';
 /* ---------- interface language ---------- */
-const RU_DICT={"word":"слово","words2":"слова","words":"слов","question":"вопрос","questions":"вопросов","day2":"дня","Русский":"Русский","Lists":"Списки","Archive":"Архив","Tricky words":"Сложные слова","My students":"Мои ученики","Settings":"Настройки","Account":"Аккаунт","Search":"Поиск","Close":"Закрыть","Done":"Готово","Cancel":"Отмена","Create":"Создать","Add":"Добавить","Save":"Сохранить","Delete":"Удалить","Rename":"Переименовать","Again":"Ещё раз","Check":"Проверить","Answer":"Ответ","Name":"Имя","Email":"Почта","Password":"Пароль","Pace":"Темп","Streak":"Серия","Loading…":"Загрузка…","New list":"Новый список","New name":"Новое название","Your name":"Ваше имя","e.g. Unit 1":"например, Unit 1","you@example.com":"you@example.com","reliable":"reliable","a reliable friend":"a reliable friend","надёжный":"надёжный","Word (English)":"Слово (английский)","Translation":"Перевод","Example (optional)":"Пример (необязательно)","Import words":"Импорт слов","Reset progress":"Сбросить прогресс","Delete list":"Удалить список","Flashcards":"Карточки","Learn":"Учить","Test":"Тест","Match":"Пары","Review":"Повторение","Result":"Результат","Vocabulary":"Словарь","flip through":"листать","until mastered":"до усвоения","check yourself":"проверка","race the clock":"на время","review":"повторение","revise":"повторить","Select":"Выбрать","Select all":"Выбрать все","Clear selection":"Снять выделение","Learning":"Учу","Learned":"Выучено","Needs work":"Нужно подтянуть","learning":"учу","learned":"выучено","Your word lists will live here":"Здесь будут ваши списки слов","Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.":"Создайте список — например «Unit 1» — и добавляйте слова. Выученные собираются в общий Архив.","Add your first word":"Добавьте первое слово","Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.":"Нажмите ＋ внизу, чтобы ввести слово и перевод, или импортируйте список целиком через меню ⋯.","Nothing found":"Ничего не найдено","Archive is empty":"Архив пуст","Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из всех списков — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».","Nothing tricky right now":"Пока всё даётся легко","Words you keep missing in tests and Learn will gather here, so you can drill exactly those.":"Слова, в которых вы часто ошибаетесь, будут собираться здесь — чтобы отрабатывать именно их.","Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.":"Слова, где ошибок больше, чем верных ответов. Они уйдут отсюда, как только вы начнёте отвечать правильно чаще.","learned words from all lists":"выученные слова из всех списков","from all lists":"из всех списков","Add to Home Screen.":"Добавьте на экран «Домой».","In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","Today":"Сегодня","day":"день","days":"дней","Daily goal":"Цель на день","A day counts towards your streak once you've studied this many different words.":"День засчитывается в серию, когда вы разобрали столько разных слов.","Current:":"Сейчас:","best:":"рекорд:","Review schedule":"График повторений","Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.":"Выученные слова возвращаются из Архива через растущие промежутки — так они действительно запоминаются. Если выключить, Архив будет просто хранилищем.","Spaced review":"Интервальные повторения","Gentle":"Щадящий","Standard":"Обычный","Intense":"Интенсивный","Custom":"Свой","Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.":"Спокойный режим, стоит по умолчанию. Переключитесь на «Обычный» или «Интенсивный», если слова успевают забыться.","Your intervals (days, comma separated)":"Свои промежутки (дни через запятую)","Most per session":"Не больше за подход","If you forget a word":"Если слово забыто","Ask again tomorrow":"Спросить завтра","Send back to the list":"Вернуть в список","The word leaves the Archive and goes back into your list to learn again.":"Слово уйдёт из Архива обратно в список — учить заново.","The word stays in the Archive and returns tomorrow.":"Слово останется в Архиве и вернётся завтра.","Enter days, e.g. 1, 3, 7, 14":"Введите дни, например 1, 3, 7, 14","Schedule saved ✓":"График сохранён ✓","Appearance":"Оформление","Auto":"Авто","Light by day, dark at night.":"Днём светлая, ночью тёмная.","Using your location for exact sunrise & sunset.":"Рассвет и закат вычисляются по вашему местоположению.","Use my location":"Использовать геопозицию","for exact sunrise & sunset.":"— для точного рассвета и заката.","Requesting location…":"Запрашиваю геопозицию…","Location denied":"Доступ к геопозиции запрещён","Location not available":"Геопозиция недоступна","Using your sunrise & sunset":"Считаю по вашему рассвету и закату","Language":"Язык","Pronunciation":"Произношение","British — academic":"Британское — академическое","American":"Американское","The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an":"Голос берётся из вашего устройства. Для самой естественной речи на iPhone: Настройки → Универсальный доступ → Устный контент → Голоса → English → скачайте голос","voice.":"(Enhanced).","Auto-translate":"Автоперевод","Google (fallback: MyMemory)":"Google (запасной — MyMemory)","MyMemory only":"Только MyMemory","The translation fills in automatically as you type":"Перевод подставится сам, пока вы печатаете","Translating…":"Перевожу…","Options — tap to use:":"Варианты — нажмите, чтобы подставить:","Add the next word":"Добавьте следующее слово","Enter a word":"Введите слово","Enter a translation":"Введите перевод","Enter a name":"Введите название","Added ✓":"Добавлено ✓","Progress reset":"Прогресс сброшен","Moved to Archive ✓":"В Архив ✓","Moved back to learning":"Вернул в список","Nothing due right now":"Сейчас нечего повторять","No words":"Нет слов","No words to learn":"Нет слов для изучения","Need at least 3 words":"Нужно хотя бы 3 слова","Nothing to import":"Нечего импортировать","Imported ✓":"Импортировано ✓","No storage space left":"На устройстве кончилось место — сделайте резервную копию или войдите в аккаунт","Couldn’t read the file":"Не удалось прочитать файл","Exit this session?":"Выйти из занятия?","Move all words of this list back from Archive and reset progress?":"Вернуть все слова списка из Архива и обнулить прогресс?","Correct ✓":"Верно ✓","Wrong":"Неверно","Almost — mind the spelling":"Почти — следите за написанием","Correct spelling: ":"Правильное написание: ","Answer: ":"Ответ: ","the match is correct":"пара верна","the match is wrong":"пара неверна","Is this a correct match?":"Пара подобрана верно?","Type the translation":"Напишите перевод","Type in English":"Напишите по-английски","Choose the translation":"Выберите перевод","Choose the word":"Выберите слово","tap to flip":"нажмите, чтобы перевернуть","Don't know":"Не знаю","Deck complete":"Колода пройдена","Review tough ones":"Повторить трудные","Great job!":"Отлично!","Review complete":"Повторение завершено","You revised every word in this session.":"Вы повторили все слова этого подхода.","Every word this session is mastered and moved to the Archive.":"Все слова подхода усвоены и ушли в Архив.","Excellent!":"Превосходно!","Good effort":"Неплохо","Keep practising":"Нужно ещё поработать","How many questions":"Сколько вопросов","Question types":"Типы вопросов","Multiple choice":"Выбор из вариантов","Type the answer":"Ввод ответа","True / false":"Верно / неверно","Start test":"Начать тест","Pick at least one type":"Выберите хотя бы один тип","Finish test":"Завершить тест","Retry mistakes":"Повторить ошибки","Mistakes":"Ошибки","Spelling slips":"Описки","no answer":"нет ответа","Match each word with its translation":"Соедините слово с переводом","Preview will appear here":"Здесь появится предпросмотр","Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.":"Вставьте список из Quizlet, Excel или обычного текста. Переводы можно не писать — подставятся сами.","Between word and translation":"Между словом и переводом","Between cards":"Между карточками","Tab ⇥":"Табуляция ⇥","Dash –":"Тире –","Comma":"Запятая","New line":"Новая строка","; semicolon":"; точка с запятой","Blank line":"Пустая строка","Translate when the translation is missing":"Переводить, если перевода нет","Sign in":"Войти","Sign up":"Регистрация","Sign out":"Выйти","Create account":"Создать аккаунт","Please wait…":"Минутку…","An account syncs your words across devices. Using the app without one keeps everything on this device only.":"С аккаунтом слова синхронизируются между устройствами. Без него всё хранится только на этом устройстве.","Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.":"Не получается связаться с сервисом входа. Проверьте интернет — на этом устройстве приложение работает и без него.","Enter email and password":"Введите почту и пароль","This email is already registered — sign in instead.":"Эта почта уже зарегистрирована — войдите.","Wrong email or password.":"Неверная почта или пароль.","Password must be at least 6 characters.":"Пароль должен быть не короче 6 символов.","Confirm your email first — check your inbox.":"Сначала подтвердите почту — проверьте входящие.","That email address doesn’t look right.":"Адрес почты выглядит неправильно.","No connection — try again when you’re online.":"Нет связи — попробуйте, когда появится интернет.","Something went wrong":"Что-то пошло не так","Account created ✓":"Аккаунт создан ✓","Check your email to confirm, then sign in":"Подтвердите почту по письму и войдите","Signed in ✓":"Вы вошли ✓","Signed out":"Вы вышли","Loading your profile…":"Загружаю профиль…","Teacher":"Учитель","Student":"Ученик","words sync automatically":"слова синхронизируются","Your code — give it to students":"Ваш код — дайте его ученикам","A student enters this in their Account to give you access to their lists.":"Ученик вводит его в разделе «Аккаунт», и вы получаете доступ к его спискам.","Link to a teacher":"Привязаться к учителю","Teacher's code":"Код учителя","Your teacher can then see and edit your lists.":"После этого учитель сможет видеть и править ваши списки.","Enter the code":"Введите код","No teacher found with that code":"Учитель с таким кодом не найден","Couldn’t link — try again":"Не удалось привязаться — попробуйте ещё раз","Not signed in":"Вы не вошли","Syncing…":"Синхронизирую…","Synced ✓":"Синхронизировано ✓","No students linked yet":"Пока нет привязанных учеников","Open Account and share your code. Once a student enters it, their lists appear here.":"Откройте «Аккаунт» и передайте свой код. Как только ученик его введёт, его списки появятся здесь.","No lists yet":"Пока нет списков","You can create the first list for this student below.":"Первый список для этого ученика можно создать ниже.","No words yet":"Пока нет слов","Tap ＋ to add the first word.":"Нажмите ＋, чтобы добавить первое слово.","Words this student has mastered will show up here.":"Здесь появятся слова, которые ученик уже усвоил.","New word":"Новое слово","Word":"Слово","Couldn’t save — check your connection":"Не удалось сохранить — проверьте связь","Couldn’t create — check your connection":"Не удалось создать — проверьте связь","Couldn’t delete":"Не удалось удалить","Couldn’t update":"Не удалось обновить","Saved ✓":"Сохранено ✓","Creating…":"Создаю…","Saving…":"Сохраняю…","Delete this word from the student’s list?":"Удалить это слово из списка ученика?","Deleted":"Удалено","active today":"занимался сегодня","active yesterday":"занимался вчера","no activity yet":"ещё не занимался","this week":"за неделю","Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.":"Слова хранятся только на этом устройстве. Войдите, чтобы они синхронизировались, — или пользуйтесь локально и время от времени делайте резервную копию.","Your words sync to your account and are available on any device you sign in on.":"Слова привязаны к аккаунту и доступны на любом устройстве, где вы вошли.","All words":"Все слова","mastered":"выучено","due for review":"к повторению","Repeats after":"Повторы через","Due now":"Сейчас к повторению","off":"выкл","At least 6 characters":"Не короче 6 символов","learned words":"выученные слова","This list will appear in the student’s app.":"Список появится в приложении ученика.","correct":"верно","moved to Archive":"ушло в Архив","Next review":"Следующее повторение","next review":"следующее повторение","Still blank":"Без ответа осталось","Finish anyway?":"Всё равно завершить?","Delete words?":"Удалить слова?","This can't be undone.":"Это нельзя отменить.","Added":"Добавлено","Found":"Найдено","without translation":"без перевода","Linked to":"Привязались к","Can’t reach the translator — enter the translation manually":"Переводчик недоступен — введите перевод вручную","Didn’t know":"Не знал","active":"занимался","ago":"назад","last seen":"был","today":"сегодня","tomorrow":"завтра","in":"через","week":"неделю","week2":"недели","weeks":"недель","month":"месяц","month2":"месяца","months":"месяцев","English":"English","In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","with mistakes":"с ошибками","Show all questions":"Показать все вопросы","Collapse":"Свернуть","Backup (all lists)":"Резервная копия (все списки)","Restore from file":"Восстановить из файла","Send to student (file)":"Отправить ученику (файл)","Sync now":"Синхронизировать","Export PDF":"Скачать PDF","Show":"Показывать","Words and translations":"Слова и переводы","Words only — translations hidden":"Только слова — переводы скрыты","Translations only — words hidden":"Только переводы — слова скрыты","Include examples":"С примерами","Create PDF":"Создать PDF","Couldn’t create the PDF":"Не удалось создать PDF","Whole list":"Весь список","Pick which words of this list to practise — for example from 5 to 15.":"Выберите, какие слова списка тренировать, например с 5 по 15.","Pick which words to practise — for example from 5 to 15.":"Выберите, какие слова тренировать, например с 5 по 15.","Your login expired — sign out and sign in again.":"Вход устарел — выйдите из аккаунта и войдите снова.","Take a test to move them to the Archive.":"Пройдите тест, чтобы перенести их в Архив.","Every word this session is mastered.":"Все слова подхода усвоены.","Resume test":"Продолжить тест","Discard":"Отменить","Student name":"Имя ученика","Run the rename SQL in Supabase first (see the instructions).":"Сначала выполните SQL для переименования в Supabase (см. инструкцию).","These words go straight to the Archive.":"Эти слова сразу попадут в Архив.","Learned words stay in the Archive.":"Выученные слова останутся в Архиве.","This word goes straight to the Archive.":"Слово сразу попадёт в Архив.","Added to the Archive ✓":"Добавлено в Архив ✓","Streak/settings not synced":"Серия и настройки не синхронизированы","Sign in / Sign up":"Войти / Зарегистрироваться","To learning":"В список","To Archive":"В Архив","Pronounce":"Произнести","Light":"Светлая","Dark":"Тёмная","The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.":"Слово показывается по-русски — вспомните и напишите (или выберите) английское. Между вопросами можно свободно ходить и править ответы до завершения.","New list for":"Новый список для","Back":"Назад","Next":"Дальше","Finish":"Завершить","Know":"Знаю","Study":"Заниматься","Practice anyway":"Позаниматься всё равно","Choose a mode":"Выбрать режим","to review":"повторить","new":"новых","tricky":"сложных","Session":"Занятие","reviewed":"повторено","returned to learning":"вернулось в список","Nothing due today":"На сегодня всё","Start with a few words":"Начните с нескольких слов","Add words to your dictionary and this screen will plan each day for you.":"Добавьте слова в словарь — и этот экран будет планировать занятия за вас.","Go to the dictionary":"Открыть словарь","Tricky":"Сложные","Scope":"Что учим","Me":"Я","Profile":"Профиль","Students":"Ученики","Dictionary":"Словарь","Interface":"Интерфейс","Learning plan":"План занятий","Data":"Данные","Words stay on this device":"Слова только на этом устройстве","for today":"на сегодня","My words":"Мои слова","Study this list":"Заниматься по списку","Show all":"Показать все","The words go straight into the student’s list.":"Слова попадут сразу в список ученика.","Tap ＋ to add the first word, or import a whole list from the ⋯ menu.":"Нажмите ＋, чтобы добавить первое слово, или импортируйте список целиком через меню ⋯.","The database refused this. Open Supabase → SQL Editor and run the access-rule fix.":"База отклонила запись: не хватает правила доступа. Откройте Supabase → SQL Editor и выполните исправление.","Forgot password?":"Забыли пароль?","Reset password":"Восстановление пароля","We’ll email you a link to set a new password.":"Мы отправим на почту ссылку, чтобы задать новый пароль.","Send link":"Отправить ссылку","Check your email — the link is on its way.":"Проверьте почту — ссылка уже в пути.","New password":"Новый пароль","Repeat password":"Повторите пароль","Save password":"Сохранить пароль","Passwords don’t match":"Пароли не совпадают","Password changed ✓":"Пароль изменён ✓","Set a new password":"Задайте новый пароль","Back to sign in":"Назад ко входу","Remove student":"Убрать ученика","Remove":"Убрать","Remove this student from your list? Their words stay with them — you just lose access to them.":"Убрать ученика из вашего списка? Его слова останутся у него — просто вы перестанете их видеть.","Student removed":"Ученик убран","Couldn’t remove — run the unlink SQL in Supabase first.":"Не удалось убрать — сначала выполните SQL в Supabase (см. инструкцию).","Edit":"Изменить"};
+const RU_DICT={"word":"слово","words2":"слова","words":"слов","question":"вопрос","questions":"вопросов","day2":"дня","Русский":"Русский","Lists":"Списки","Archive":"Архив","Tricky words":"Сложные слова","My students":"Мои ученики","Settings":"Настройки","Account":"Аккаунт","Search":"Поиск","Close":"Закрыть","Done":"Готово","Cancel":"Отмена","Create":"Создать","Add":"Добавить","Save":"Сохранить","Delete":"Удалить","Rename":"Переименовать","Again":"Ещё раз","Check":"Проверить","Answer":"Ответ","Name":"Имя","Email":"Почта","Password":"Пароль","Pace":"Темп","Streak":"Серия","Loading…":"Загрузка…","New list":"Новый список","New name":"Новое название","Your name":"Ваше имя","e.g. Unit 1":"например, Unit 1","you@example.com":"you@example.com","reliable":"reliable","a reliable friend":"a reliable friend","надёжный":"надёжный","Word (English)":"Слово (английский)","Translation":"Перевод","Example (optional)":"Пример (необязательно)","Import words":"Импорт слов","Reset progress":"Сбросить прогресс","Delete list":"Удалить список","Flashcards":"Карточки","Learn":"Учить","Test":"Тест","Match":"Пары","Review":"Повторение","Result":"Результат","Vocabulary":"Словарь","flip through":"листать","until mastered":"до усвоения","check yourself":"проверка","race the clock":"на время","review":"повторение","revise":"повторить","Select":"Выбрать","Select all":"Выбрать все","Clear selection":"Снять выделение","Learning":"Учу","Learned":"Выучено","Needs work":"Нужно подтянуть","learning":"учу","learned":"выучено","Your word lists will live here":"Здесь будут ваши списки слов","Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.":"Создайте список — например «Unit 1» — и добавляйте слова. Выученные собираются в общий Архив.","Add your first word":"Добавьте первое слово","Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.":"Нажмите ＋ внизу, чтобы ввести слово и перевод, или импортируйте список целиком через меню ⋯.","Nothing found":"Ничего не найдено","Archive is empty":"Архив пуст","Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из всех списков — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».","Nothing tricky right now":"Пока всё даётся легко","Words you keep missing in tests and Learn will gather here, so you can drill exactly those.":"Слова, в которых вы часто ошибаетесь, будут собираться здесь — чтобы отрабатывать именно их.","Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.":"Слова, где ошибок больше, чем верных ответов. Они уйдут отсюда, как только вы начнёте отвечать правильно чаще.","learned words from all lists":"выученные слова из всех списков","from all lists":"из всех списков","Add to Home Screen.":"Добавьте на экран «Домой».","In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","Today":"Сегодня","day":"день","days":"дней","Daily goal":"Цель на день","A day counts towards your streak once you've studied this many different words.":"День засчитывается в серию, когда вы разобрали столько разных слов.","Current:":"Сейчас:","best:":"рекорд:","Review schedule":"График повторений","Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.":"Выученные слова возвращаются из Архива через растущие промежутки — так они действительно запоминаются. Если выключить, Архив будет просто хранилищем.","Spaced review":"Интервальные повторения","Gentle":"Щадящий","Standard":"Обычный","Intense":"Интенсивный","Custom":"Свой","Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.":"Спокойный режим, стоит по умолчанию. Переключитесь на «Обычный» или «Интенсивный», если слова успевают забыться.","Your intervals (days, comma separated)":"Свои промежутки (дни через запятую)","Most per session":"Не больше за подход","If you forget a word":"Если слово забыто","Ask again tomorrow":"Спросить завтра","Send back to the list":"Вернуть в список","The word leaves the Archive and goes back into your list to learn again.":"Слово уйдёт из Архива обратно в список — учить заново.","The word stays in the Archive and returns tomorrow.":"Слово останется в Архиве и вернётся завтра.","Enter days, e.g. 1, 3, 7, 14":"Введите дни, например 1, 3, 7, 14","Schedule saved ✓":"График сохранён ✓","Appearance":"Оформление","Auto":"Авто","Light by day, dark at night.":"Днём светлая, ночью тёмная.","Using your location for exact sunrise & sunset.":"Рассвет и закат вычисляются по вашему местоположению.","Use my location":"Использовать геопозицию","for exact sunrise & sunset.":"— для точного рассвета и заката.","Requesting location…":"Запрашиваю геопозицию…","Location denied":"Доступ к геопозиции запрещён","Location not available":"Геопозиция недоступна","Using your sunrise & sunset":"Считаю по вашему рассвету и закату","Language":"Язык","Pronunciation":"Произношение","British — academic":"Британское — академическое","American":"Американское","The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an":"Голос берётся из вашего устройства. Для самой естественной речи на iPhone: Настройки → Универсальный доступ → Устный контент → Голоса → English → скачайте голос","voice.":"(Enhanced).","Auto-translate":"Автоперевод","Google (fallback: MyMemory)":"Google (запасной — MyMemory)","MyMemory only":"Только MyMemory","The translation fills in automatically as you type":"Перевод подставится сам, пока вы печатаете","Translating…":"Перевожу…","Options — tap to use:":"Варианты — нажмите, чтобы подставить:","Add the next word":"Добавьте следующее слово","Enter a word":"Введите слово","Enter a translation":"Введите перевод","Enter a name":"Введите название","Added ✓":"Добавлено ✓","Progress reset":"Прогресс сброшен","Moved to Archive ✓":"В Архив ✓","Moved back to learning":"Вернул в список","Nothing due right now":"Сейчас нечего повторять","No words":"Нет слов","No words to learn":"Нет слов для изучения","Need at least 3 words":"Нужно хотя бы 3 слова","Nothing to import":"Нечего импортировать","Imported ✓":"Импортировано ✓","No storage space left":"На устройстве кончилось место — сделайте резервную копию или войдите в аккаунт","Couldn’t read the file":"Не удалось прочитать файл","Exit this session?":"Выйти из занятия?","Move all words of this list back from Archive and reset progress?":"Вернуть все слова списка из Архива и обнулить прогресс?","Correct ✓":"Верно ✓","Wrong":"Неверно","Almost — mind the spelling":"Почти — следите за написанием","Correct spelling: ":"Правильное написание: ","Answer: ":"Ответ: ","the match is correct":"пара верна","the match is wrong":"пара неверна","Is this a correct match?":"Пара подобрана верно?","Type the translation":"Напишите перевод","Type in English":"Напишите по-английски","Choose the translation":"Выберите перевод","Choose the word":"Выберите слово","tap to flip":"нажмите, чтобы перевернуть","Don't know":"Не знаю","Deck complete":"Колода пройдена","Review tough ones":"Повторить трудные","Great job!":"Отлично!","Review complete":"Повторение завершено","You revised every word in this session.":"Вы повторили все слова этого подхода.","Every word this session is mastered and moved to the Archive.":"Все слова подхода усвоены и ушли в Архив.","Excellent!":"Превосходно!","Good effort":"Неплохо","Keep practising":"Нужно ещё поработать","How many questions":"Сколько вопросов","Question types":"Типы вопросов","Multiple choice":"Выбор из вариантов","Type the answer":"Ввод ответа","True / false":"Верно / неверно","Start test":"Начать тест","Pick at least one type":"Выберите хотя бы один тип","Finish test":"Завершить тест","Retry mistakes":"Повторить ошибки","Mistakes":"Ошибки","Spelling slips":"Описки","no answer":"нет ответа","Match each word with its translation":"Соедините слово с переводом","Preview will appear here":"Здесь появится предпросмотр","Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.":"Вставьте список из Quizlet, Excel или обычного текста. Переводы можно не писать — подставятся сами.","Between word and translation":"Между словом и переводом","Between cards":"Между карточками","Tab ⇥":"Табуляция ⇥","Dash –":"Тире –","Comma":"Запятая","New line":"Новая строка","; semicolon":"; точка с запятой","Blank line":"Пустая строка","Translate when the translation is missing":"Переводить, если перевода нет","Sign in":"Войти","Sign up":"Регистрация","Sign out":"Выйти","Create account":"Создать аккаунт","Please wait…":"Минутку…","An account syncs your words across devices. Using the app without one keeps everything on this device only.":"С аккаунтом слова синхронизируются между устройствами. Без него всё хранится только на этом устройстве.","Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.":"Не получается связаться с сервисом входа. Проверьте интернет — на этом устройстве приложение работает и без него.","Enter email and password":"Введите почту и пароль","This email is already registered — sign in instead.":"Эта почта уже зарегистрирована — войдите.","Wrong email or password.":"Неверная почта или пароль.","Password must be at least 6 characters.":"Пароль должен быть не короче 6 символов.","Confirm your email first — check your inbox.":"Сначала подтвердите почту — проверьте входящие.","That email address doesn’t look right.":"Адрес почты выглядит неправильно.","No connection — try again when you’re online.":"Нет связи — попробуйте, когда появится интернет.","Something went wrong":"Что-то пошло не так","Account created ✓":"Аккаунт создан ✓","Check your email to confirm, then sign in":"Подтвердите почту по письму и войдите","Signed in ✓":"Вы вошли ✓","Signed out":"Вы вышли","Loading your profile…":"Загружаю профиль…","Teacher":"Учитель","Student":"Ученик","words sync automatically":"слова синхронизируются","Your code — give it to students":"Ваш код — дайте его ученикам","A student enters this in their Account to give you access to their lists.":"Ученик вводит его в разделе «Аккаунт», и вы получаете доступ к его спискам.","Link to a teacher":"Привязаться к учителю","Teacher's code":"Код учителя","Your teacher can then see and edit your lists.":"После этого учитель сможет видеть и править ваши списки.","Enter the code":"Введите код","No teacher found with that code":"Учитель с таким кодом не найден","Couldn’t link — try again":"Не удалось привязаться — попробуйте ещё раз","Not signed in":"Вы не вошли","Syncing…":"Синхронизирую…","Synced ✓":"Синхронизировано ✓","No students linked yet":"Пока нет привязанных учеников","Open Account and share your code. Once a student enters it, their lists appear here.":"Откройте «Аккаунт» и передайте свой код. Как только ученик его введёт, его списки появятся здесь.","No lists yet":"Пока нет списков","You can create the first list for this student below.":"Первый список для этого ученика можно создать ниже.","No words yet":"Пока нет слов","Tap ＋ to add the first word.":"Нажмите ＋, чтобы добавить первое слово.","Words this student has mastered will show up here.":"Здесь появятся слова, которые ученик уже усвоил.","New word":"Новое слово","Word":"Слово","Couldn’t save — check your connection":"Не удалось сохранить — проверьте связь","Couldn’t create — check your connection":"Не удалось создать — проверьте связь","Couldn’t delete":"Не удалось удалить","Couldn’t update":"Не удалось обновить","Saved ✓":"Сохранено ✓","Creating…":"Создаю…","Saving…":"Сохраняю…","Delete this word from the student’s list?":"Удалить это слово из списка ученика?","Deleted":"Удалено","active today":"занимался сегодня","active yesterday":"занимался вчера","no activity yet":"ещё не занимался","this week":"за неделю","Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.":"Слова хранятся только на этом устройстве. Войдите, чтобы они синхронизировались, — или пользуйтесь локально и время от времени делайте резервную копию.","Your words sync to your account and are available on any device you sign in on.":"Слова привязаны к аккаунту и доступны на любом устройстве, где вы вошли.","All words":"Все слова","mastered":"выучено","due for review":"к повторению","Repeats after":"Повторы через","Due now":"Сейчас к повторению","off":"выкл","At least 6 characters":"Не короче 6 символов","learned words":"выученные слова","This list will appear in the student’s app.":"Список появится в приложении ученика.","correct":"верно","moved to Archive":"ушло в Архив","Next review":"Следующее повторение","next review":"следующее повторение","Still blank":"Без ответа осталось","Finish anyway?":"Всё равно завершить?","Delete words?":"Удалить слова?","This can't be undone.":"Это нельзя отменить.","Added":"Добавлено","Found":"Найдено","without translation":"без перевода","Linked to":"Привязались к","Can’t reach the translator — enter the translation manually":"Переводчик недоступен — введите перевод вручную","Didn’t know":"Не знал","active":"занимался","ago":"назад","last seen":"был","today":"сегодня","tomorrow":"завтра","in":"через","week":"неделю","week2":"недели","weeks":"недель","month":"месяц","month2":"месяца","months":"месяцев","English":"English","In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","with mistakes":"с ошибками","Show all questions":"Показать все вопросы","Collapse":"Свернуть","Backup (all lists)":"Резервная копия (все списки)","Restore from file":"Восстановить из файла","Send to student (file)":"Отправить ученику (файл)","Sync now":"Синхронизировать","Export PDF":"Скачать PDF","Show":"Показывать","Words and translations":"Слова и переводы","Words only — translations hidden":"Только слова — переводы скрыты","Translations only — words hidden":"Только переводы — слова скрыты","Include examples":"С примерами","Create PDF":"Создать PDF","Couldn’t create the PDF":"Не удалось создать PDF","Whole list":"Весь список","Pick which words of this list to practise — for example from 5 to 15.":"Выберите, какие слова списка тренировать, например с 5 по 15.","Pick which words to practise — for example from 5 to 15.":"Выберите, какие слова тренировать, например с 5 по 15.","Your login expired — sign out and sign in again.":"Вход устарел — выйдите из аккаунта и войдите снова.","Take a test to move them to the Archive.":"Пройдите тест, чтобы перенести их в Архив.","Every word this session is mastered.":"Все слова подхода усвоены.","Resume test":"Продолжить тест","Discard":"Отменить","Student name":"Имя ученика","Run the rename SQL in Supabase first (see the instructions).":"Сначала выполните SQL для переименования в Supabase (см. инструкцию).","These words go straight to the Archive.":"Эти слова сразу попадут в Архив.","Learned words stay in the Archive.":"Выученные слова останутся в Архиве.","This word goes straight to the Archive.":"Слово сразу попадёт в Архив.","Added to the Archive ✓":"Добавлено в Архив ✓","Streak/settings not synced":"Серия и настройки не синхронизированы","Sign in / Sign up":"Войти / Зарегистрироваться","To learning":"В список","To Archive":"В Архив","Pronounce":"Произнести","Light":"Светлая","Dark":"Тёмная","The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.":"Слово показывается по-русски — вспомните и напишите (или выберите) английское. Между вопросами можно свободно ходить и править ответы до завершения.","New list for":"Новый список для","Back":"Назад","Next":"Дальше","Finish":"Завершить","Know":"Знаю","Study":"Заниматься","Practice anyway":"Позаниматься всё равно","Choose a mode":"Выбрать режим","to review":"повторить","new":"новых","tricky":"сложных","Session":"Занятие","reviewed":"повторено","returned to learning":"вернулось в список","Nothing due today":"На сегодня всё","Start with a few words":"Начните с нескольких слов","Add words to your dictionary and this screen will plan each day for you.":"Добавьте слова в словарь — и этот экран будет планировать занятия за вас.","Go to the dictionary":"Открыть словарь","Tricky":"Сложные","Scope":"Что учим","Me":"Я","Profile":"Профиль","Students":"Ученики","Dictionary":"Словарь","Interface":"Интерфейс","Learning plan":"План занятий","Data":"Данные","Words stay on this device":"Слова только на этом устройстве","for today":"на сегодня","My words":"Мои слова","Study this list":"Заниматься по списку","Show all":"Показать все","The words go straight into the student’s list.":"Слова попадут сразу в список ученика.","Tap ＋ to add the first word, or import a whole list from the ⋯ menu.":"Нажмите ＋, чтобы добавить первое слово, или импортируйте список целиком через меню ⋯.","The database refused this. Open Supabase → SQL Editor and run the access-rule fix.":"База отклонила запись: не хватает правила доступа. Откройте Supabase → SQL Editor и выполните исправление.","Forgot password?":"Забыли пароль?","Reset password":"Восстановление пароля","We’ll email you a link to set a new password.":"Мы отправим на почту ссылку, чтобы задать новый пароль.","Send link":"Отправить ссылку","Check your email — the link is on its way.":"Проверьте почту — ссылка уже в пути.","New password":"Новый пароль","Repeat password":"Повторите пароль","Save password":"Сохранить пароль","Passwords don’t match":"Пароли не совпадают","Password changed ✓":"Пароль изменён ✓","Set a new password":"Задайте новый пароль","Back to sign in":"Назад ко входу","Remove student":"Убрать ученика","Remove":"Убрать","Remove this student from your list? Their words stay with them — you just lose access to them.":"Убрать ученика из вашего списка? Его слова останутся у него — просто вы перестанете их видеть.","Student removed":"Ученик убран","Couldn’t remove — run the unlink SQL in Supabase first.":"Не удалось убрать — сначала выполните SQL в Supabase (см. инструкцию).","Edit":"Изменить","Color":"Цвет","No color":"Без цвета","Colors need a database update — run the SQL from the instructions.":"Для цветов нужен SQL в Supabase (см. инструкцию).","Duplicates":"Дубликаты","No duplicates":"Дубликатов нет","These words are in the Archive more than once. Delete the extra copies and keep one of each?":"Эти слова есть в Архиве больше одного раза. Удалить лишние копии и оставить по одной?","Delete copies":"Удалить копии","Keep both":"Оставить как есть","Copies removed":"Копии удалены","is already in the Archive":"уже есть в Архиве","copies":"копий"};
 function t(s){try{if((S.settings.lang||"ru")==="en")return s;}catch(e){}return RU_DICT[s]||s;}
 function plr(n,one,few,many){const a=n%10,b=n%100;return (S.settings.lang||"ru")==="en"?(n===1?one:few):(a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many));}
 const nWords=n=>n+" "+plr(n,t("word"),t("words2"),t("words"));
@@ -616,10 +627,11 @@ function fix(d){
   /* older saves have no upd — stamp them once so an existing streak gets pushed */
   if(!d.stats.upd&&(d.stats.streak||d.stats.best||d.stats.day))d.stats.upd=Date.now();
   /* a list with no language is English — that is all there was before */
-  d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,lang:LANG_MAP[s.lang]?s.lang:DEF_LANG,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map(w=>({
-    id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),aat:w.aat||0,
+  d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,lang:LANG_MAP[s.lang]?s.lang:DEF_LANG,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map((w,wi)=>({
+    id:w.id,pos:w.pos!=null?w.pos:wi,mark:w.mark||0,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),aat:w.aat||0,
     due:w.due||0,rep:w.rep||0,upd:w.upd||Date.now(),synced:!!w.synced
   }))}));
+  d.sets.forEach(sortPos);
   return d;
 }
 let S=load();
@@ -697,11 +709,26 @@ function checkAns(inp,correct,isRu){
    so the newest batch sits on top while each batch keeps its own order */
 let _ab=0,_abt=0;
 const archStamp=()=>{const n=Date.now();if(n-_abt>2500)_ab=n;_abt=n;return _ab;};
-let noAatCol=false;
-const withAat=o=>{if(noAatCol&&o&&'aat' in o){o=Object.assign({},o);delete o.aat;}return o;};
-const aatErr=e=>/aat/i.test(((e&&(e.message||e.details||e.hint))||'')+'');
-async function aatRetry(run){let r=await run();if(r&&r.error&&!noAatCol&&aatErr(r.error)){noAatCol=true;r=await run();}return r;}
-const newWord=(en,ru,ex='',ipa='')=>({id:uid(),en:en.trim(),ru:ru.trim(),ex:ex.trim(),ipa:ipa.trim(),box:0,arch:false,ok:0,bad:0,added:Date.now(),due:0,rep:0,upd:Date.now(),synced:false});
+let noAatCol=false,noMarkCol=false;
+const withAat=o=>{if(!o)return o;let c=null;
+  if(noAatCol&&'aat' in o){c=Object.assign({},o);delete c.aat;}
+  if(noMarkCol&&'mark' in o){c=c||Object.assign({},o);delete c.mark;}
+  return c||o;};
+/* an older database without the aat / mark column: drop that column and try once more */
+async function aatRetry(run){
+  let r=await run();
+  for(let k=0;k<2&&r&&r.error;k++){
+    const m=((r.error.message||r.error.details||r.error.hint||'')+'');
+    if(!noAatCol&&/aat/i.test(m))noAatCol=true;else if(!noMarkCol&&/mark/i.test(m))noMarkCol=true;else break;
+    r=await run();
+  }
+  return r;
+}
+/* new words go to the top of a list: position counts down with time, so newest = smallest */
+const posNow=(i=0,n=1)=>-Math.floor(Date.now()/1000)-(n-i);
+const MARKS=6;
+function sortPos(s){s.words=s.words.map((w,i)=>[w,i]).sort((a,b)=>((a[0].pos||0)-(b[0].pos||0))||(a[1]-b[1])).map(x=>x[0]);}
+const newWord=(en,ru,ex='',ipa='')=>({id:uid(),en:en.trim(),ru:ru.trim(),ex:ex.trim(),ipa:ipa.trim(),box:0,arch:false,pos:posNow(),mark:0,ok:0,bad:0,added:Date.now(),due:0,rep:0,upd:Date.now(),synced:false});
 const touch=x=>{x.upd=Date.now();x.synced=false;};
 const curSet=()=>S.sets.find(s=>s.id===(view.id||view.set));
 /* new words land in the list you are filtered to, else the last one you used */
@@ -958,9 +985,35 @@ function bestVoice(tag){
   const exact=fam.filter(v=>(v.lang||'').replace('_','-').toLowerCase()===want);
   return (exact.length?exact:fam).slice().sort((a,b)=>vScore(b)-vScore(a))[0];
 }
+/* a device without a proper voice for the language (typical for Windows with Russian only) reads English with a Russian
+   voice — in that case, and on Windows when only old robotic voices exist, use an online voice instead */
+const IS_WIN=/Windows/i.test(navigator.userAgent||'');
+let _aud=null;
+function speakOnline(txt,tag){
+  try{
+    const base=(tag||'en').split('-')[0];
+    const tl=base==='en'?(tag==='en-GB'?'en-GB':'en-US'):base;
+    if(_aud){try{_aud.pause();}catch(e){}}
+    const a=new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(txt));
+    _aud=a;a.volume=1;
+    return a.play().then(()=>true).catch(()=>false);
+  }catch(e){return Promise.resolve(false);}
+}
+function speakDevice(txt,tag,v){
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang=(v&&v.lang)||tag;u.rate=.9;u.pitch=1;
+  if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);
+}
 function speak(txt,lang){try{
   const tag=ttsTag(lang);if(!tag)return;            /* Latin and the like: no voice to ask for */
-  const u=new SpeechSynthesisUtterance(txt);const v=bestVoice(tag);
+  const v=bestVoice(tag);
+  const weak=!v||(IS_WIN&&vScore(v)<30&&!/online|natural/i.test(v.name||''));
+  if(weak&&navigator.onLine!==false){
+    speechSynthesis.cancel();
+    speakOnline(txt,tag).then(ok=>{if(!ok&&v)speakDevice(txt,tag,v);else if(!ok)speakDevice(txt,tag,null);});
+    return;
+  }
+  const u=new SpeechSynthesisUtterance(txt);
   u.lang=(v&&v.lang)||tag;u.rate=.9;u.pitch=1;
   if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 /* speak a word in the language of the list it belongs to */
@@ -1064,7 +1117,7 @@ function award(w,correct){
   return '';
 }
 /* the two answers to “mastered — what now?” */
-function archYes(w){w.arch=true;w.box=3;w.aat=archStamp();srStart(w);touch(w);}
+function archYes(w){w.arch=true;w.box=3;w.mark=0;w.aat=archStamp();srStart(w);touch(w);}
 function archNo(w){w.box=KEPT;w.arch=false;w.aat=0;w.due=0;w.rep=0;touch(w);}
 
 /* ask before anything leaves a list. Dismissing the sheet keeps the words. */
@@ -1107,10 +1160,40 @@ function ringSvg(done,total,size=46){
    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a56db"/><stop offset=".6" stop-color="#2f86f5"/><stop offset="1" stop-color="#9ed0ff"/></linearGradient></defs></svg>`;
 }
 
+/* answer fields in tests: no autocorrect, suggestions, autofill or grammar helpers */
+const NOASSIST='autocapitalize="none" autocorrect="off" autocomplete="off" spellcheck="false" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" enterkeyhint="done" writingsuggestions="false"';
+function hardenInput(el){
+  if(!el)return;
+  el.setAttribute('autocomplete','off');el.setAttribute('autocorrect','off');el.setAttribute('autocapitalize','none');el.setAttribute('spellcheck','false');
+  el.spellcheck=false;
+  /* a suggestion or autocorrect that swaps the whole word in is refused */
+  el.addEventListener('beforeinput',e=>{if(e.inputType==='insertReplacementText'){e.preventDefault();}});
+}
+
 /* ---------- translation ---------- */
 /* txt is translated from the list's language into Russian */
+/* “to go”: translate the verb, not the preposition — only infinitives (-ть, -ти, -чь, -ться) are offered */
+const INF_RU=/(ть|ти|чь|ться|тись|чься)$/i;
+const cleanPrep=x=>(x||'').replace(/^(к|в|на|до|чтобы|для|по)\s+/i,'').trim();
+const looksInf=x=>{const w=(x||'').trim().split(/\s+/);return INF_RU.test(w[0])||INF_RU.test(w[w.length-1]);};
+async function translateVerb(bare){
+  const u=q=>'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&dt=bd&q='+encodeURIComponent(q);
+  try{
+    const [a,b]=await Promise.all([fetch(u(bare)),fetch(u('to '+bare))]);
+    if(!a.ok)return null;
+    const ja=await a.json(),jb=b.ok?await b.json():null;
+    const main=j=>((j&&j[0])||[]).map(x=>x[0]).join('').trim();
+    const verbs=(ja[1]||[]).filter(e=>/verb|глагол/i.test(e[0]||'')).flatMap(e=>e[1]||[]);
+    const all=[...verbs,main(ja),cleanPrep(main(jb))].map(cleanPrep).filter(x=>x);
+    const inf=[...new Set(all.filter(looksInf).map(x=>x.toLowerCase()))];
+    if(!inf.length)return null;
+    return {main:inf[0],alts:inf.slice(1,7)};
+  }catch(e){return null;}
+}
 async function translate(txt,lang){
   const src=LANG_MAP[lang]?lang:DEF_LANG;
+  const vm=src==='en'&&S.settings.prov!=='mm'&&/^to\s+(\S.*)$/i.exec((txt||'').trim());
+  if(vm){const r=await translateVerb(vm[1].trim());if(r)return r;}
   const order=S.settings.prov==='mm'?['mm']:['google','mm'];
   for(const p of order){
     try{
@@ -1118,7 +1201,7 @@ async function translate(txt,lang){
         const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+src+'&tl=ru&dt=t&dt=bd&q='+encodeURIComponent(txt));
         if(!r.ok)continue;const j=await r.json();const main=(j[0]||[]).map(x=>x[0]).join('').trim();
         const alts=(j[1]||[]).flatMap(e=>e[1]||[]).filter(x=>x&&x.toLowerCase()!==main.toLowerCase()).slice(0,6);
-        if(main)return{main,alts};
+        if(main)return{main:(src==='en'&&/^to\s/i.test(txt.trim()))?(cleanPrep(main)||main):main,alts};
       }else{
         const r=await fetch('https://api.mymemory.translated.net/get?langpair='+src+'|ru&q='+encodeURIComponent(txt));
         if(!r.ok)continue;const j=await r.json();const main=(j.responseData.translatedText||'').trim();
@@ -1283,7 +1366,7 @@ async function cloudPush(){
     for(let i=0;i<dirtyWords.length;i+=200){
       const slice=dirtyWords.slice(i,i+200);
       const mkRows=()=>slice.map(({w,s,i:pos})=>withAat({id:w.id,set_id:s.id,owner_id:me,en:w.en,ru:w.ru||'',ex:w.ex||'',
-        ipa:w.ipa||'',due:w.due||0,rep:w.rep||0,box:w.box||0,arch:!!w.arch,aat:w.aat||0,ok:w.ok||0,bad:w.bad||0,position:pos,
+        ipa:w.ipa||'',due:w.due||0,rep:w.rep||0,box:w.box||0,arch:!!w.arch,aat:w.aat||0,mark:w.arch?0:(w.mark||0),ok:w.ok||0,bad:w.bad||0,position:(w.pos!=null?w.pos:pos),
         deleted:false,updated_at:new Date(w.upd||Date.now()).toISOString()}));
       const {error}=await aatRetry(()=>sb.from('words').upsert(mkRows()));
       if(!error)slice.forEach(({w})=>{w.synced=true;});
@@ -1343,10 +1426,11 @@ function mergeCloud(cs,cw,authoritative){
         other.s.words=other.s.words.filter(x=>x!==other.w);
       }
       const l=s.words.find(x=>x.id===c.id);
-      if(!l)s.words.push({id:c.id,en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,ok:c.ok||0,bad:c.bad||0,added:u,upd:u,synced:true});
-      else if(u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
+      if(!l)s.words.push({id:c.id,en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,mark:c.arch?0:(c.mark||0),pos:Number.isFinite(c.position)?c.position:0,ok:c.ok||0,bad:c.bad||0,added:u,upd:u,synced:true});
+      else if(u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,mark:c.arch?0:(c.mark||0),pos:Number.isFinite(c.position)?c.position:(l.pos||0),ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
     });
     if(authoritative)S.sets.forEach(s=>{s.words=s.words.filter(w=>wordIds.has(w.id)||!w.synced);});
+    S.sets.forEach(sortPos);
     _lgIdx=null;
     try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   }catch(e){}
@@ -1801,7 +1885,7 @@ archive(app){
   const lang=view.lang||null,total=archCount(lang),items=archSlice(lang);
   const tbar=selMode
    ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
-   :(items.length?`<div class="tbar"><span class="t">${t('Learned')} · ${items.length}</span><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
+   :(items.length?`<div class="tbar"><span class="t">${t('Learned')} · ${items.length}</span>${dupGroups().length?`<button class="lnk" onclick="dupSheet()">${t('Duplicates')} · ${dupGroups().length}</button>`:''}<button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   /* pick the slice first, then the mode — practice runs on exactly what is shown */
   const rangeBar=(total>1&&!selMode)
    ?`<button class="rangebar ${archRange?'on':''}" onclick="rangeSheet()">
@@ -1860,6 +1944,48 @@ me(app){
 /* one row renderer for every word list */
 let rowCap=400;
 function showAllRows(){rowCap=1e9;render();}
+/* colour marks: six colours, only on words in lists (they reset when a word goes to the Archive) */
+const markRow=(cur,fn)=>`<div class="mrow" id="mrow"><button class="msw none ${cur?'':'on'}" aria-label="${t('No color')}" onclick="${fn}(0)">✕</button>`+
+  Array.from({length:MARKS},(_,i)=>`<button class="msw ${cur===i+1?'on':''}" data-m="${i+1}" aria-label="${t('Color')} ${i+1}" onclick="${fn}(${i+1})"></button>`).join('')+'</div>';
+function setMark(m){
+  const f=editId?findWord(editId):null;if(!f)return;
+  f.w.mark=(f.w.mark===m)?0:m;touch(f.w);save();
+  const r=$('#mrow');if(r)r.outerHTML=markRow(f.w.mark||0,'setMark');
+  render();
+}
+function markSheet(){
+  sheet(`<h2>${t('Color')}</h2>${markRow(-1,'bulkMark')}`);
+}
+function bulkMark(m){
+  S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&!w.arch){w.mark=m;touch(w);}}));
+  save();closeSheet();clearSel();render();
+}
+/* the same word twice in the Archive (same language, ignoring case and accents) */
+function dupGroups(){
+  const map=new Map();
+  S.sets.forEach(s=>{const lg=setLangOf(s);s.words.forEach(w=>{
+    if(!w.arch)return;const k=lg+'|'+fold(w.en);let a=map.get(k);if(!a){a=[];map.set(k,a);}a.push({w,s});});});
+  return [...map.values()].filter(g=>g.length>1).map(g=>g.sort((a,b)=>((a.w.aat||0)-(b.w.aat||0))||((a.w.added||0)-(b.w.added||0))));
+}
+const dupGroupsFor=(lang,en)=>S.sets.some(s=>setLangOf(s)===lang&&s.words.some(w=>w.arch&&fold(w.en)===fold(en)));
+function dupSheet(ids){
+  let gs=dupGroups();if(ids)gs=gs.filter(g=>g.some(x=>ids.has(x.w.id)));
+  if(!gs.length){if(!ids)toast(t('No duplicates'));return;}
+  window._dupG=gs;
+  const extra=gs.reduce((n,g)=>n+g.length-1,0);
+  sheet(`<h2>${t('Duplicates')} · ${gs.length}</h2>
+   <div class="hint">${t('These words are in the Archive more than once. Delete the extra copies and keep one of each?')}</div>
+   <div class="wlist aklist">${gs.map(g=>`<div class="item"><div class="t"><div class="en">${esc(g[0].w.en)} <span class="src">×${g.length}</span></div>
+     <div class="ru">${esc(g.map(x=>x.w.ru).filter((v,i,a)=>a.indexOf(v)===i).join(' / '))}</div></div></div>`).join('')}</div>
+   <button class="btn pri" onclick="dupDelete()">${ic('trash')}${t('Delete copies')} (${extra})</button>
+   <div style="height:9px"></div><button class="btn ghost" onclick="closeSheet()">${t('Keep both')}</button>`);
+}
+function dupDelete(){
+  const gs=window._dupG||[];
+  gs.forEach(g=>g.slice(1).forEach(x=>{cloudDeleteWord(x.w);x.s.words=x.s.words.filter(w=>w.id!==x.w.id);}));
+  save();closeSheet();render();toast(t('Copies removed'));
+}
+const dupSoon=ids=>{const set=new Set(ids);setTimeout(()=>dupSheet(set),450);};
 function wordRows(items,qs,showSrc){
   qs=fold(qs);
   let its=qs?items.filter(x=>fold(x.w.en+' '+x.w.ru+' '+(x.w.ex||'')).includes(qs)):items;
@@ -1877,7 +2003,7 @@ function wordRows(items,qs,showSrc){
         :tricky?`<span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>`
         :`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`);
     const meta=[showSrc?esc(sn):'',w.arch&&w.due?esc(whenTxt(w.due)):''].filter(Boolean).join(' · ');
-    return `<div class="item ${picked&&selMode?'pick':''}" onclick="${selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`}">
+    return `<div class="item ${picked&&selMode?'pick':''}"${(!w.arch&&w.mark)?` data-m="${w.mark}"`:''} onclick="${selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`}">
       ${left}
       <div class="t"><div class="en">${esc(w.en)}</div>
       <div class="ru">${esc(w.ru)}${meta?`<span class="src"> · ${meta}</span>`:''}</div></div>
@@ -2134,12 +2260,12 @@ function tDrawWords(anim){
   const sb=$('#tsb');if(sb)sb.style.display=(base.length&&!tSelMode)?'':'none';
   const tbar=tSelMode
    ?`<div class="tbar"><button class="lnk" onclick="tSelAll()">${tSelIds.size>=list.length&&list.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="tToggleSel()">${t('Cancel')}</button></div>`
-   :(list.length?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span><button class="lnk" onclick="tToggleSel()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
+   :(list.length?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span>${(inArch&&tDupGroups().length)?`<button class="lnk" onclick="tDupSheet()">${t('Duplicates')} · ${tDupGroups().length}</button>`:''}<button class="lnk" onclick="tToggleSel()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   paint(el,(tSelMode?'':rangeBarHtml(rctx())+(list.length?tModesTop():''))+(list.length
     ?tbar+
      (shown.length?'<div class="wlist">':'<div class="empty"><p>'+t('Nothing found')+'</p></div><div class="wlist">')+shown.map(w=>{
        const picked=tSelIds.has(w.id);
-       return `<div class="item ${picked&&tSelMode?'pick':''}" onclick="${tSelMode?`tPick('${w.id}')`:`tWordForm('${w.id}')`}">
+       return `<div class="item ${picked&&tSelMode?'pick':''}"${(!inArch&&w.mark)?` data-m="${w.mark}"`:''} onclick="${tSelMode?`tPick('${w.id}')`:`tWordForm('${w.id}')`}">
        ${tSelMode
          ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
          :`<span class="numx">${numOf.get(w.id)}</span>`}
@@ -2182,19 +2308,87 @@ function tRedraw(){tDrawWords();}
 function tSelBar(inArch){
   const n=tSelIds.size;
   return `<div class="selbar"><div class="in row2">
+    ${inArch?'':`<button class="btn ghost" style="grid-column:1/-1" ${n?'':'disabled'} onclick="tMarkSheet()">${t('Color')}${n?` (${n})`:''}</button>`}
     <button class="btn pri" ${n?'':'disabled'} onclick="tBulkArch(${inArch?'false':'true'})">${inArch?ic('reset')+t('To learning'):ic('archive')+t('To Archive')}${n?` (${n})`:''}</button>
     <button class="btn danger" ${n?'':'disabled'} onclick="tBulkDelete()">${ic('trash')}${t('Delete')}${n?` (${n})`:''}</button>
   </div></div>`;
+}
+let tEditId=null;
+async function tPutMark(ids,m){
+  const now=new Date().toISOString();
+  for(let i=0;i<ids.length;i+=100){
+    const {error}=await aatRetry(()=>sb.from('words').update(withAat({mark:m,updated_at:now})).in('id',ids.slice(i,i+100)));
+    if(error)throw error;
+  }
+  if(noMarkCol){toast(t('Colors need a database update — run the SQL from the instructions.'));return false;}
+  const set=new Set(ids);TV.words.forEach(w=>{if(set.has(w.id))w.mark=m;});
+  return true;
+}
+async function tSetMark(m){
+  const w=TV.words.find(x=>x.id===tEditId);if(!w)return;
+  const nm=(w.mark===m)?0:m;
+  try{
+    if(!await tPutMark([w.id],nm))return;
+    const r=$('#mrow');if(r)r.outerHTML=markRow(nm,'tSetMark');
+    tDrawWords(false);
+  }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
+}
+function tMarkSheet(){sheet(`<h2>${t('Color')}</h2>${markRow(-1,'tBulkMark')}`);}
+async function tBulkMark(m){
+  const ids=[...tSelIds];if(!ids.length)return;
+  try{if(await tPutMark(ids,m)){closeSheet();tClearSel();tDrawWords(false);}}catch(e){toast(srvMsg(e,t('Couldn’t update')));}
+}
+/* duplicates in a student's Archive */
+function tDupGroups(){
+  const map=new Map();
+  (TV.words||[]).forEach(w=>{if(!w.arch)return;const k=tSetLang(w.set_id)+'|'+fold(w.en);let a=map.get(k);if(!a){a=[];map.set(k,a);}a.push(w);});
+  return [...map.values()].filter(g=>g.length>1).map(g=>g.sort((a,b)=>((a.aat||0)-(b.aat||0))||((a.position||0)-(b.position||0))));
+}
+function tDupSheet(ids){
+  let gs=tDupGroups();if(ids)gs=gs.filter(g=>g.some(w=>ids.has(w.id)));
+  if(!gs.length){if(!ids)toast(t('No duplicates'));return;}
+  window._tDupG=gs;
+  const extra=gs.reduce((n,g)=>n+g.length-1,0);
+  sheet(`<h2>${t('Duplicates')} · ${gs.length}</h2>
+   <div class="hint">${t('These words are in the Archive more than once. Delete the extra copies and keep one of each?')}</div>
+   <div class="wlist aklist">${gs.map(g=>`<div class="item"><div class="t"><div class="en">${esc(g[0].en)} <span class="src">×${g.length}</span></div>
+     <div class="ru">${esc(g.map(x=>x.ru).filter((v,i,a)=>a.indexOf(v)===i).join(' / '))}</div></div></div>`).join('')}</div>
+   <button class="btn pri" onclick="tDupDelete()">${ic('trash')}${t('Delete copies')} (${extra})</button>
+   <div style="height:9px"></div><button class="btn ghost" onclick="closeSheet()">${t('Keep both')}</button>`);
+}
+async function tDupDelete(){
+  const ids=(window._tDupG||[]).flatMap(g=>g.slice(1).map(w=>w.id));
+  try{
+    for(let i=0;i<ids.length;i+=100){
+      const {error}=await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).in('id',ids.slice(i,i+100));
+      if(error)throw error;
+    }
+    TV.words=TV.words.filter(w=>ids.indexOf(w.id)<0);
+    if(TC.owner[TV.sid])TC.owner[TV.sid].words=TV.words;
+    closeSheet();toast(t('Copies removed'));tDrawWords(false);
+  }catch(e){toast(srvMsg(e,t('Couldn’t delete')));}
+}
+/* after something was moved or imported into the Archive: look for copies once the fresh data is in */
+function tDupSoon(ids){
+  const sid=TV.sid,set=new Set(ids);
+  setTimeout(async()=>{
+    if(TV.sid!==sid)return;
+    const r=await fetchOwner(sid);
+    if(!r.ok||TV.sid!==sid)return;
+    TC.owner[sid]={sets:r.sets,words:r.words};TV.words=r.words;TV.sets=r.sets;
+    tDupSheet(set);
+  },900);
 }
 async function tBulkArch(toArch){
   const ids=[...tSelIds];if(!ids.length)return;
   const st=Date.now();
   try{
     for(let i=0;i<ids.length;i+=100){
-      const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?st:0,updated_at:new Date().toISOString()})).in('id',ids.slice(i,i+100)));
+      const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?st:0,mark:0,updated_at:new Date().toISOString()})).in('id',ids.slice(i,i+100)));
       if(error)throw error;
     }
     tClearSel();toast((toArch?t('Moved to Archive ✓'):t('Moved back to learning'))+': '+ids.length);tBack();
+    if(toArch)tDupSoon(ids);
   }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
 }
 async function tBulkDelete(){
@@ -2279,6 +2473,7 @@ async function tHolderId(lg){
 let tArchLg=DEF_LANG;
 function tArchLangChange(v){tArchLg=v;TR.lang=v;const l=$('#tWl');if(l)l.textContent=t('Word')+' ('+langNameLc(v)+')';}
 function tWordForm(id){
+  tEditId=id||null;
   const w=id?TV.words.find(x=>x.id===id):null;
   const toArch=!w&&TV.setId==='archive';
   if(toArch){const first=(TV.sets||[]).map(x=>tSetLang(x.id))[0];tArchLg=first||DEF_LANG;}
@@ -2296,6 +2491,7 @@ function tWordForm(id){
    <div class="hint" id="tTrSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="tChips"></div>
    <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none"></div>
+   ${(w&&!w.arch)?`<div class="field"><label>${t('Color')}</label>${markRow(w.mark||0,'tSetMark')}</div>`:''}
    <div class="err" id="tErr"></div>
    <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
@@ -2315,6 +2511,9 @@ async function tSaveWord(id){
       if(error)throw error;
     }else{
       const toArch=TV.setId==='archive';
+      if(toArch&&TV.words.some(x=>x.arch&&tSetLang(x.set_id)===tArchLg&&fold(x.en)===fold(en))){
+        err.textContent='“'+en+'” '+t('is already in the Archive');btn.disabled=false;btn.textContent=t('Add');return;
+      }
       let setId=TV.setId,extra={box:0,arch:false};
       if(toArch){
         setId=await tHolderId(tArchLg);
@@ -2322,7 +2521,7 @@ async function tSaveWord(id){
         extra={box:3,arch:true,aat:Date.now(),due:tmp.due||0,rep:tmp.rep||0};
       }
       const row=Object.assign({id:uid(),set_id:setId,owner_id:TV.sid,en,ru,ex,
-        ok:0,bad:0,position:TV.words.length,deleted:false,updated_at:now},extra);
+        ok:0,bad:0,position:posNow(),deleted:false,updated_at:now},extra);
       const {error}=await aatRetry(()=>sb.from('words').insert(withAat(row)));
       if(error)throw error;
       if(noAatCol)delete row.aat;
@@ -2343,9 +2542,10 @@ async function tSaveWord(id){
 }
 async function tToggleArch(id,toArch){
   try{
-    const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?Date.now():0,updated_at:new Date().toISOString()})).eq('id',id));
+    const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?Date.now():0,mark:0,updated_at:new Date().toISOString()})).eq('id',id));
     if(error)throw error;
     closeSheet();toast(toArch?t('Moved to Archive ✓'):t('Moved back to learning'));tBack();
+    if(toArch)tDupSoon([id]);
   }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
 }
 async function tDelWord(id){
@@ -2394,6 +2594,7 @@ function selBar(inArch){
   const n=selIds.size;
   const moveLabel=inArch?`${ic('reset')}${t('To learning')}${n?` (${n})`:''}`:`${ic('archive')}${t('To Archive')}${n?` (${n})`:''}`;
   return `<div class="selbar"><div class="in row2">
+    ${inArch?'':`<button class="btn ghost" style="grid-column:1/-1" ${n?'':'disabled'} onclick="markSheet()">${t('Color')}${n?` (${n})`:''}</button>`}
     <button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${moveLabel}</button>
     <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">${ic('trash')}${t('Delete')}${n?` (${n})`:''}</button>
   </div></div>`;
@@ -2402,13 +2603,14 @@ function toggleSelMode(){selMode=!selMode;selIds.clear();render();}
 function togglePick(id){if(selIds.has(id))selIds.delete(id);else selIds.add(id);render();}
 function selAll(){const p=viewPool();if(selIds.size>=p.length)selIds.clear();else p.forEach(w=>selIds.add(w.id));render();}
 function bulkArch(toArch){
-  let n=0;
+  let n=0;const moved=[];
   S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){
-    w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);w.aat=toArch?archStamp():0;
+    w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);w.aat=toArch?archStamp():0;w.mark=0;
     if(toArch)srStart(w);else{w.due=0;w.rep=0;}
-    touch(w);n++;}}));
+    touch(w);n++;moved.push(w.id);}}));
   save();clearSel();render();
   toast((toArch?t('Moved to Archive'):t('Moved back to learning'))+': '+n);
+  if(toArch&&moved.length)dupSoon(moved);
 }
 function bulkDelete(){
   const n=selIds.size;if(!n)return;
@@ -2600,6 +2802,7 @@ function wordForm(id,opts){
    <div class="chips" id="chips"></div>
    <div class="field"><label>${t('Example (optional)')}</label>
      <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none"></div>
+   ${(w&&!w.arch)?`<div class="field"><label>${t('Color')}</label>${markRow(w.mark||0,'setMark')}</div>`:''}
    <button class="btn pri" onclick="saveWord()">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
      ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('reset')}${t('To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('archive')}${t('To Archive')}</button>`}
@@ -2629,7 +2832,9 @@ function saveWord(){
   if(!en)return toast(t('Enter a word'));if(!ru)return toast(t('Enter a translation'));
   if(editId){const f=findWord(editId);if(f){Object.assign(f.w,{en,ru,ex});touch(f.w);}save();closeSheet();render();}
   else if(formArch){
-    const h=holderFor(formArch.lang),w=newWord(en,ru,ex);w.arch=true;w.box=3;w.aat=archStamp();srStart(w);h.words.unshift(w);
+    const dup=dupGroupsFor(formArch.lang,en);
+    if(dup){toast('“'+en+'” '+t('is already in the Archive'));return;}
+    const h=holderFor(formArch.lang),w=newWord(en,ru,ex);w.arch=true;w.box=3;w.mark=0;w.aat=archStamp();srStart(w);h.words.unshift(w);
     save();render();toast(t('Added to the Archive ✓'));
     $('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';ruTouched=false;
     $('#trSt').textContent=t('Add the next word');$('#fEn').focus();
@@ -2639,9 +2844,10 @@ function saveWord(){
     $('#trSt').textContent=t('Add the next word');$('#fEn').focus();}
 }
 function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;
-  if(!w.arch){w.box=Math.min(w.box,2);w.due=0;w.rep=0;w.aat=0;}else{w.box=3;w.aat=archStamp();srStart(w);}
+  if(!w.arch){w.box=Math.min(w.box,2);w.due=0;w.rep=0;w.aat=0;}else{w.box=3;w.mark=0;w.aat=archStamp();srStart(w);}
   touch(w);save();closeSheet();render();
-  toast(w.arch?(w.due?t('Moved to Archive ✓')+' · '+whenTxt(w.due):t('Moved to Archive ✓')):t('Moved back to learning'));}
+  toast(w.arch?(w.due?t('Moved to Archive ✓')+' · '+whenTxt(w.due):t('Moved to Archive ✓')):t('Moved back to learning'));
+  if(w.arch)dupSoon([w.id]);}
 function delWord(){const f=findWord(editId);if(f){cloudDeleteWord(f.w);f.s.words=f.s.words.filter(w=>w.id!==editId);}save();closeSheet();render();}
 
 
@@ -2822,10 +3028,11 @@ async function runImport(){
   if(impTo)return tFinishImport(pairs,btn,lg);
   if(impArch){
     const h=holderFor(lg);
-    {const st=archStamp();pairs.forEach(p=>{const w=newWord(p.en,p.ru||'—');w.arch=true;w.box=3;w.aat=st;srStart(w);h.words.push(w);});}
-    save();closeSheet();render();toast(t('Added to the Archive ✓')+': '+nWords(pairs.length));return;
+    const idsNew=[];
+    {const st=archStamp();pairs.forEach(p=>{const w=newWord(p.en,p.ru||'—');w.arch=true;w.box=3;w.aat=st;srStart(w);h.words.push(w);idsNew.push(w.id);});}
+    save();closeSheet();render();toast(t('Added to the Archive ✓')+': '+nWords(pairs.length));dupSoon(idsNew);return;
   }
-  pairs.forEach(p=>s.words.push(newWord(p.en,p.ru||'—')));
+  s.words.unshift(...pairs.map((p,i)=>{const w=newWord(p.en,p.ru||'—');w.pos=posNow(i,pairs.length);return w;}));
   save();closeSheet();render();toast(t('Added')+': '+nWords(pairs.length));
 }
 /* write an imported batch into the student's list, in chunks the server accepts */
@@ -2839,13 +3046,14 @@ async function tFinishImport(pairs,btn,lg){
       mk=()=>{const tmp={box:3,arch:true,due:0,rep:0};srStart(tmp);return {box:3,arch:true,aat:st,due:tmp.due||0,rep:tmp.rep||0};};
     }
     const rows=pairs.map((p,i)=>Object.assign({id:uid(),set_id:setId,owner_id:impTo.sid,en:p.en,ru:p.ru||'—',ex:'',
-      ok:0,bad:0,position:base+i,deleted:false,updated_at:now},mk()));
+      ok:0,bad:0,position:posNow(i,pairs.length),deleted:false,updated_at:now},mk()));
     for(let i=0;i<rows.length;i+=100){
       if(btn)btn.textContent=t('Saving…')+' '+Math.min(i+100,rows.length)+'/'+rows.length;
       const {error}=await aatRetry(()=>sb.from('words').insert(rows.slice(i,i+100).map(withAat)));
       if(error)throw error;
     }
     closeSheet();toast(t('Added')+': '+nWords(rows.length));tBack();
+    if(impArch)tDupSoon(rows.map(r=>r.id));
   }catch(e){
     const el=$('#impErr');if(el)el.textContent=srvMsg(e,t('Couldn’t save — check your connection'));
     if(btn){btn.disabled=false;btn.textContent=t('Add');}
@@ -2985,7 +3193,7 @@ function renderQ(box,q,o){
     <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:rgba(255,255,255,.72);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
   if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,i)=>`<button class="opt" data-i="${i}">${esc(x.t)}</button>`).join('')}</div>`;
   if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn tfy" data-tf="1">✓ True</button><button class="btn tfn" data-tf="0">✗ False</button></div>`;
-  if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off">
+  if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" ${NOASSIST}>
     <div style="height:9px"></div><button class="btn pri" id="tsub">${t('Check')}</button>
     <div style="height:8px"></div><button class="btn ghost" id="tskip">${t("Don't know")}</button></div>`;
   h+=`<div id="fbx"></div>`;box.innerHTML=h;
@@ -3008,7 +3216,7 @@ function renderQ(box,q,o){
     if(o.feedback){box.querySelectorAll('.opt').forEach((bb,i)=>{if(q.opts[i].c)bb.classList.add('ok');});if(!x.c)b.classList.add('bad');}
     finish(x.c,x.t);});
   if(q.type==='tf')box.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>finish((b.dataset.tf==='1')===q.isTrue,b.dataset.tf==='1'?'True':'False'));
-  if(q.type==='type'){const ta=$('#ta');setTimeout(()=>ta&&ta.isConnected&&ta.focus(),60);
+  if(q.type==='type'){const ta=$('#ta');hardenInput(ta);setTimeout(()=>ta&&ta.isConnected&&ta.focus(),60);
     const chk=()=>{if(done)return;const v=checkAns(ta.value,answer,en2ru);ta.disabled=true;finish(v==='ok',ta.value,v==='near');};
     $('#tsub').onclick=chk;ta.addEventListener('keydown',e=>{if(e.key==='Enter')chk();});
     $('#tskip').onclick=()=>{if(done)return;ta.disabled=true;finish(false,'');};}
@@ -3080,7 +3288,7 @@ function startLearn(review){
   function finish(){
     app.innerHTML=hdr(t('Learn'),"render()")+
       `<div class="hero"><div class="hero-ic">${ic('award',30,1.6)}</div><div class="hero-title" style="margin-top:14px">${review?t('Review complete'):t('Great job!')}</div>
-       <div class="hero-sub">${N} / ${N} ${t('mastered')}<br>${review?t('You revised every word in this session.'):t('Every word this session is mastered.')+' '+t('Take a test to move them to the Archive.')}</div></div>
+       <div class="hero-sub">${N} / ${N} ${t('mastered')}<br>${review?t('You revised every word in this session.'):t('Every word this session is mastered.')}</div></div>
       <div style="height:14px"></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;
     confetti(90);
   }
@@ -3176,7 +3384,7 @@ function runTest(words,kinds,review,resume){
         <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word" style="font-size:24px;color:rgba(255,255,255,.72);margin-top:10px">= ${esc(q.shown)}</div>`:''}</div>`;
     if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[i]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
     if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn tfy ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn tfn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
-    if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" value="${esc(ans[i]||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>`;
+    if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" value="${esc(ans[i]||'')}" ${NOASSIST}></div>`;
     h+=`<div style="height:14px"></div><div class="row2">
       <button class="btn ghost" id="tback" ${i===0?'disabled':''}>${ic('arrowLeft',18)}${t('Back')}</button>
       ${i<total-1?`<button class="btn pri" id="tnext">${t('Next')}${ic('arrowRight',18)}</button>`:`<button class="btn pri tfinbtn">${ic('check',18,2)}${t('Finish')}</button>`}</div>
@@ -3204,7 +3412,7 @@ function runTest(words,kinds,review,resume){
     $$('.qdot').forEach(b=>b.onclick=()=>go2(+b.dataset.ix));
     if(q.type==='mc')$$('.opt').forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.k;draw();});
     if(q.type==='tf')$$('[data-tf]').forEach(b=>b.onclick=()=>{ans[i]=(b.dataset.tf==='1');draw();});
-    if(q.type==='type'){const ta=$('#ta');if(ta){ta.oninput=()=>{ans[i]=ta.value;persist();};ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&i<total-1)go2(i+1);});setTimeout(()=>ta.isConnected&&ta.focus(),40);}}
+    if(q.type==='type'){const ta=$('#ta');hardenInput(ta);if(ta){ta.oninput=()=>{ans[i]=ta.value;persist();};ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&i<total-1)go2(i+1);});setTimeout(()=>ta.isConnected&&ta.focus(),40);}}
     const bk=$('#tback');if(bk)bk.onclick=()=>go2(i-1);
     const nx=$('#tnext');if(nx)nx.onclick=()=>go2(i+1);
     $$('.tfinbtn').forEach(b=>b.onclick=finishTest);
@@ -3222,7 +3430,6 @@ function runTest(words,kinds,review,resume){
         if(award(q.w,ok)==='ready')ready.push(q.w);
       });
       save();
-      if(ready.length)return archAsk(ready,()=>draw2());
       return draw2();
     }
     draw2();
