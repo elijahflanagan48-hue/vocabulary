@@ -1446,7 +1446,8 @@ async function loadStudents(){
     if(e1)return false;
     const ids=(links||[]).map(l=>l.student_id);
     if(!ids.length){AUTH.students=[];return true;}
-    const {data:profs,error:e2}=await sb.from('profiles').select('id,display_name').in('id',ids);
+    let {data:profs,error:e2}=await sb.from('profiles').select('id,display_name,stats').in('id',ids);
+    if(e2)({data:profs,error:e2}=await sb.from('profiles').select('id,display_name').in('id',ids));
     if(e2)return false;
     AUTH.students=profs||[];return true;
   }catch(e){return false;}
@@ -1903,7 +1904,9 @@ VIEWS.students=async function(app){
     const week=Date.now()-7*DAY;
     return d.students.map(s=>{
       const nm=s.display_name||'Student',mine=d.words.filter(w=>w.owner_id===s.id);
-      const last=mine.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0);
+      /* last activity: the newest word change, or the day the student last practised (streak data) */
+      const stT=s.stats&&s.stats.upd?+s.stats.upd:0;
+      const last=Math.max(mine.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0),stT);
       const weekN=mine.filter(w=>+new Date(w.updated_at)>week).length;
       const learned=mine.filter(w=>w.arch).length;
       const stale=last&&(Date.now()-last)>7*DAY;
@@ -1924,9 +1927,21 @@ VIEWS.students=async function(app){
     if(ok){
       let words=[];
       if(AUTH.students.length){
-        const ids=AUTH.students.map(s=>s.id);
-        const {data,error}=await sb.from('words').select('owner_id,arch,ok,bad,updated_at').in('owner_id',ids).eq('deleted',false);
-        if(!error)words=data||[];else if(had)words=TC.students.words;
+        /* one student at a time, page by page: a single combined query is cut off at 1000 rows,
+           which silently dropped every student after the biggest ones */
+        let failed=false;
+        const per=await Promise.all(AUTH.students.map(async st=>{
+          let rows=[];
+          for(let from=0;from<100000;from+=1000){
+            const {data,error}=await sb.from('words').select('owner_id,arch,ok,bad,updated_at').eq('owner_id',st.id).eq('deleted',false).range(from,from+999);
+            if(error){failed=true;return rows;}
+            rows=rows.concat(data||[]);
+            if(!data||data.length<1000)break;
+          }
+          return rows;
+        }));
+        words=[].concat(...per);
+        if(failed&&had)words=TC.students.words;
       }
       fresh={students:AUTH.students.slice(),words};
     }
