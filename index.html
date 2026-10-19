@@ -616,7 +616,7 @@ function fix(d){
   if(!d.stats.upd&&(d.stats.streak||d.stats.best||d.stats.day))d.stats.upd=Date.now();
   /* a list with no language is English — that is all there was before */
   d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,lang:LANG_MAP[s.lang]?s.lang:DEF_LANG,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map(w=>({
-    id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),
+    id:w.id,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),aat:w.aat||0,
     due:w.due||0,rep:w.rep||0,upd:w.upd||Date.now(),synced:!!w.synced
   }))}));
   return d;
@@ -692,6 +692,14 @@ function checkAns(inp,correct,isRu){
   }
   return 'no';
 }
+/* the moment a word entered the Archive; words archived together (one test, one import) share it,
+   so the newest batch sits on top while each batch keeps its own order */
+let _ab=0,_abt=0;
+const archStamp=()=>{const n=Date.now();if(n-_abt>2500)_ab=n;_abt=n;return _ab;};
+let noAatCol=false;
+const withAat=o=>{if(noAatCol&&o&&'aat' in o){o=Object.assign({},o);delete o.aat;}return o;};
+const aatErr=e=>/aat/i.test(((e&&(e.message||e.details||e.hint))||'')+'');
+async function aatRetry(run){let r=await run();if(r&&r.error&&!noAatCol&&aatErr(r.error)){noAatCol=true;r=await run();}return r;}
 const newWord=(en,ru,ex='',ipa='')=>({id:uid(),en:en.trim(),ru:ru.trim(),ex:ex.trim(),ipa:ipa.trim(),box:0,arch:false,ok:0,bad:0,added:Date.now(),due:0,rep:0,upd:Date.now(),synced:false});
 const touch=x=>{x.upd=Date.now();x.synced=false;};
 const curSet=()=>S.sets.find(s=>s.id===(view.id||view.set));
@@ -713,7 +721,9 @@ const active=s=>s.words.filter(w=>!w.arch);
 const archived=s=>s.words.filter(w=>w.arch);
 /* with no language given these cover every list, exactly as they used to */
 const inLang=(s,lang)=>!lang||setLangOf(s)===lang;
-const allArchived=lang=>S.sets.filter(s=>inLang(s,lang)).flatMap(s=>s.words.filter(w=>w.arch).map(w=>({w,sn:isHolder(s)?'':s.name,sid:s.id,lg:setLangOf(s)})));
+const allArchived=lang=>S.sets.filter(s=>inLang(s,lang)).flatMap((s,si)=>s.words.map((w,wi)=>({w,sn:isHolder(s)?'':s.name,sid:s.id,lg:setLangOf(s),si,wi})).filter(x=>x.w.arch))
+  /* newest batch first; inside a batch — the order the words were added to their list */
+  .sort((a,b)=>((b.w.aat||0)-(a.w.aat||0))||(a.si-b.si)||((a.w.added||0)-(b.w.added||0))||(a.wi-b.wi));
 const archCount=lang=>S.sets.reduce((n,s)=>n+(inLang(s,lang)?s.words.filter(w=>w.arch).length:0),0);
 /* a slice of the Archive the student picked to work on, e.g. words 650–750 */
 let archRange=null;
@@ -871,7 +881,7 @@ function srStart(w){if(!srCfg().on){w.due=0;w.rep=0;return;}w.rep=0;srSchedule(w
 function srAnswer(w,ok){
   const c=srCfg();
   if(ok){w.rep=(w.rep||0)+1;srSchedule(w,false);return 'kept';}
-  if(c.onFail==='relearn'){w.arch=false;w.box=1;w.rep=0;w.due=0;return 'relearn';}
+  if(c.onFail==='relearn'){w.arch=false;w.aat=0;w.box=1;w.rep=0;w.due=0;return 'relearn';}
   w.rep=Math.max(0,(w.rep||0)-1);w.due=Date.now()+DAY;return 'again';
 }
 function dueAll(lang){
@@ -1053,8 +1063,8 @@ function award(w,correct){
   return '';
 }
 /* the two answers to “mastered — what now?” */
-function archYes(w){w.arch=true;w.box=3;srStart(w);touch(w);}
-function archNo(w){w.box=KEPT;w.arch=false;w.due=0;w.rep=0;touch(w);}
+function archYes(w){w.arch=true;w.box=3;w.aat=archStamp();srStart(w);touch(w);}
+function archNo(w){w.box=KEPT;w.arch=false;w.aat=0;w.due=0;w.rep=0;touch(w);}
 
 /* ask before anything leaves a list. Dismissing the sheet keeps the words. */
 function archAsk(ws,onDone){
@@ -1271,10 +1281,10 @@ async function cloudPush(){
     }
     for(let i=0;i<dirtyWords.length;i+=200){
       const slice=dirtyWords.slice(i,i+200);
-      const rows=slice.map(({w,s,i:pos})=>({id:w.id,set_id:s.id,owner_id:me,en:w.en,ru:w.ru||'',ex:w.ex||'',
-        ipa:w.ipa||'',due:w.due||0,rep:w.rep||0,box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,position:pos,
+      const mkRows=()=>slice.map(({w,s,i:pos})=>withAat({id:w.id,set_id:s.id,owner_id:me,en:w.en,ru:w.ru||'',ex:w.ex||'',
+        ipa:w.ipa||'',due:w.due||0,rep:w.rep||0,box:w.box||0,arch:!!w.arch,aat:w.aat||0,ok:w.ok||0,bad:w.bad||0,position:pos,
         deleted:false,updated_at:new Date(w.upd||Date.now()).toISOString()}));
-      const {error}=await sb.from('words').upsert(rows);
+      const {error}=await aatRetry(()=>sb.from('words').upsert(mkRows()));
       if(!error)slice.forEach(({w})=>{w.synced=true;});
     }
     if(prefsDirty)await pushPrefs(me);
@@ -1332,8 +1342,8 @@ function mergeCloud(cs,cw,authoritative){
         other.s.words=other.s.words.filter(x=>x!==other.w);
       }
       const l=s.words.find(x=>x.id===c.id);
-      if(!l)s.words.push({id:c.id,en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,ok:c.ok||0,bad:c.bad||0,added:u,upd:u,synced:true});
-      else if(u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
+      if(!l)s.words.push({id:c.id,en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,ok:c.ok||0,bad:c.bad||0,added:u,upd:u,synced:true});
+      else if(u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
     });
     if(authoritative)S.sets.forEach(s=>{s.words=s.words.filter(w=>wordIds.has(w.id)||!w.synced);});
     _lgIdx=null;
@@ -2001,7 +2011,7 @@ function tDrawWords(anim){
   const {setId,words,sets}=TV;
   const inArch=setId==='archive';
   const base=(inArch?words.filter(w=>w.arch):words.filter(w=>w.set_id===setId&&!w.arch))
-    .slice().sort((a,b)=>(a.position||0)-(b.position||0)||String(a.id).localeCompare(String(b.id)));
+    .slice().sort((a,b)=>(inArch?((b.aat||0)-(a.aat||0)):0)||(a.position||0)-(b.position||0)||String(a.id).localeCompare(String(b.id)));
   TV.base=base;
   const numOf=new Map(base.map((w,i)=>[w.id,i+1]));
   const rg=(tRange&&tRange.setId===setId)?tRange:null;
@@ -2064,9 +2074,10 @@ function tSelBar(inArch){
 }
 async function tBulkArch(toArch){
   const ids=[...tSelIds];if(!ids.length)return;
+  const st=Date.now();
   try{
     for(let i=0;i<ids.length;i+=100){
-      const {error}=await sb.from('words').update({arch:toArch,box:toArch?3:2,updated_at:new Date().toISOString()}).in('id',ids.slice(i,i+100));
+      const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?st:0,updated_at:new Date().toISOString()})).in('id',ids.slice(i,i+100)));
       if(error)throw error;
     }
     tClearSel();toast((toArch?t('Moved to Archive ✓'):t('Moved back to learning'))+': '+ids.length);tBack();
@@ -2194,12 +2205,13 @@ async function tSaveWord(id){
       if(toArch){
         setId=await tHolderId(tArchLg);
         const tmp={box:3,arch:true,due:0,rep:0};srStart(tmp);
-        extra={box:3,arch:true,due:tmp.due||0,rep:tmp.rep||0};
+        extra={box:3,arch:true,aat:Date.now(),due:tmp.due||0,rep:tmp.rep||0};
       }
       const row=Object.assign({id:uid(),set_id:setId,owner_id:TV.sid,en,ru,ex,
         ok:0,bad:0,position:TV.words.length,deleted:false,updated_at:now},extra);
-      const {error}=await sb.from('words').insert(row);
+      const {error}=await aatRetry(()=>sb.from('words').insert(withAat(row)));
       if(error)throw error;
+      if(noAatCol)delete row.aat;
       /* keep the form open so a whole batch can be typed in one go */
       TV.words.push(row);tDrawWords();
       toast(t('Added ✓'));
@@ -2217,7 +2229,7 @@ async function tSaveWord(id){
 }
 async function tToggleArch(id,toArch){
   try{
-    const {error}=await sb.from('words').update({arch:toArch,box:toArch?3:2,updated_at:new Date().toISOString()}).eq('id',id);
+    const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?Date.now():0,updated_at:new Date().toISOString()})).eq('id',id));
     if(error)throw error;
     closeSheet();toast(toArch?t('Moved to Archive ✓'):t('Moved back to learning'));tBack();
   }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
@@ -2278,7 +2290,7 @@ function selAll(){const p=viewPool();if(selIds.size>=p.length)selIds.clear();els
 function bulkArch(toArch){
   let n=0;
   S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){
-    w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);
+    w.arch=toArch;w.box=toArch?3:Math.min(w.box,2);w.aat=toArch?archStamp():0;
     if(toArch)srStart(w);else{w.due=0;w.rep=0;}
     touch(w);n++;}}));
   save();clearSel();render();
@@ -2426,7 +2438,7 @@ function saveRename(){
   if(!n||n===ARCH_NAME){const e=$('#rnErr');if(e)e.textContent=t('Enter a name');return;}
   s.name=n;touch(s);save();closeSheet();render();toast(t('Saved ✓'));
 }
-function resetProg(){const s=curSet();if(confirm(t('Move all words of this list back from Archive and reset progress?'))){s.words.forEach(w=>{w.box=0;w.arch=false;touch(w);});save();closeSheet();render();toast(t('Progress reset'));}}
+function resetProg(){const s=curSet();if(confirm(t('Move all words of this list back from Archive and reset progress?'))){s.words.forEach(w=>{w.box=0;w.arch=false;w.aat=0;touch(w);});save();closeSheet();render();toast(t('Progress reset'));}}
 async function delSet(){
   const s=curSet();if(!s)return;
   const keep=s.words.filter(w=>w.arch);
@@ -2489,7 +2501,7 @@ function saveWord(){
   if(!en)return toast(t('Enter a word'));if(!ru)return toast(t('Enter a translation'));
   if(editId){const f=findWord(editId);if(f){Object.assign(f.w,{en,ru,ex});touch(f.w);}save();closeSheet();render();}
   else if(formArch){
-    const h=holderFor(formArch.lang),w=newWord(en,ru,ex);w.arch=true;w.box=3;srStart(w);h.words.unshift(w);
+    const h=holderFor(formArch.lang),w=newWord(en,ru,ex);w.arch=true;w.box=3;w.aat=archStamp();srStart(w);h.words.unshift(w);
     save();render();toast(t('Added to the Archive ✓'));
     $('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';ruTouched=false;
     $('#trSt').textContent=t('Add the next word');$('#fEn').focus();
@@ -2499,7 +2511,7 @@ function saveWord(){
     $('#trSt').textContent=t('Add the next word');$('#fEn').focus();}
 }
 function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;
-  if(!w.arch){w.box=Math.min(w.box,2);w.due=0;w.rep=0;}else{w.box=3;srStart(w);}
+  if(!w.arch){w.box=Math.min(w.box,2);w.due=0;w.rep=0;w.aat=0;}else{w.box=3;w.aat=archStamp();srStart(w);}
   touch(w);save();closeSheet();render();
   toast(w.arch?(w.due?t('Moved to Archive ✓')+' · '+whenTxt(w.due):t('Moved to Archive ✓')):t('Moved back to learning'));}
 function delWord(){const f=findWord(editId);if(f){cloudDeleteWord(f.w);f.s.words=f.s.words.filter(w=>w.id!==editId);}save();closeSheet();render();}
@@ -2682,7 +2694,7 @@ async function runImport(){
   if(impTo)return tFinishImport(pairs,btn,lg);
   if(impArch){
     const h=holderFor(lg);
-    pairs.forEach(p=>{const w=newWord(p.en,p.ru||'—');w.arch=true;w.box=3;srStart(w);h.words.push(w);});
+    {const st=archStamp();pairs.forEach(p=>{const w=newWord(p.en,p.ru||'—');w.arch=true;w.box=3;w.aat=st;srStart(w);h.words.push(w);});}
     save();closeSheet();render();toast(t('Added to the Archive ✓')+': '+nWords(pairs.length));return;
   }
   pairs.forEach(p=>s.words.push(newWord(p.en,p.ru||'—')));
@@ -2695,13 +2707,14 @@ async function tFinishImport(pairs,btn,lg){
     let setId=impTo.setId,mk=()=>({box:0,arch:false,due:0,rep:0});
     if(impArch){
       setId=await tHolderId(lg);
-      mk=()=>{const tmp={box:3,arch:true,due:0,rep:0};srStart(tmp);return {box:3,arch:true,due:tmp.due||0,rep:tmp.rep||0};};
+      const st=Date.now();
+      mk=()=>{const tmp={box:3,arch:true,due:0,rep:0};srStart(tmp);return {box:3,arch:true,aat:st,due:tmp.due||0,rep:tmp.rep||0};};
     }
     const rows=pairs.map((p,i)=>Object.assign({id:uid(),set_id:setId,owner_id:impTo.sid,en:p.en,ru:p.ru||'—',ex:'',
       ok:0,bad:0,position:base+i,deleted:false,updated_at:now},mk()));
     for(let i=0;i<rows.length;i+=100){
       if(btn)btn.textContent=t('Saving…')+' '+Math.min(i+100,rows.length)+'/'+rows.length;
-      const {error}=await sb.from('words').insert(rows.slice(i,i+100));
+      const {error}=await aatRetry(()=>sb.from('words').insert(rows.slice(i,i+100).map(withAat)));
       if(error)throw error;
     }
     closeSheet();toast(t('Added')+': '+nWords(rows.length));tBack();
