@@ -520,6 +520,130 @@ html[data-bg="stars"] body::after{
 @media (prefers-reduced-motion:reduce){html[data-bg="stars"] body::after{animation:none}}
 .card .word.sub{font-size:clamp(26px,7.2vw,38px);color:rgba(255,255,255,.8);margin-top:12px;font-weight:600}
 @media (min-width:700px){.card .word.sub{font-size:clamp(30px,4vw,42px)}}
+/* ===== v69: constellation, celebrations ===== */
+:root{
+  --cs-bg:linear-gradient(168deg,#c9deff 0%,#e6f0ff 46%,#fff3d9 100%);
+  --cs-cardbg:linear-gradient(165deg,#e1ecff 0%,#f5f9ff 58%,#fff5df 100%);
+  --cs-star:#1a56db; --cs-halo-c:#2f86f5; --cs-hot-c:#ffb400; --cs-hot:#ffb81c; --cs-hot-st:#e58a00;
+  --cs-line:rgba(26,86,219,.52); --cs-line2:rgba(26,86,219,.16);
+  --cs-miss:#b1bfda; --cs-lbl:#6b7ea3; --cs-lblon:#0f1a2e;
+  --cs-tx:#0f1a2e; --cs-mut:#4a5d85; --cs-dot:#1a56db;
+  --cs-card:#ffffff; --cs-cardst:#1a56db; --cs-g1:#1a56db; --cs-g2:#62adff;
+  --cs-num:linear-gradient(180deg,#4a9aff 0%,#1a56db 55%,#0b3394 100%);
+  --cs-cta:#1a56db; --cs-ctatx:#fff; --cs-ctash:#0f3c9c;
+  --cs-glow:rgba(255,196,60,.5); --cs-ping:rgba(255,184,28,.55);
+}
+:root[data-theme="dark"]{
+  --cs-bg:radial-gradient(110% 70% at 50% 108%,#17295a 0%,rgba(23,41,90,0) 60%),linear-gradient(180deg,#03060f 0%,#08112a 100%);
+  --cs-cardbg:linear-gradient(180deg,#0a1226 0%,#101d3f 100%);
+  --cs-star:#dfeaff; --cs-halo-c:#8fb4ff; --cs-hot-c:#cfe0ff; --cs-hot:#ffffff; --cs-hot-st:#bcd3ff;
+  --cs-line:rgba(190,214,255,.55); --cs-line2:rgba(190,214,255,.16);
+  --cs-miss:#5d6b88; --cs-lbl:rgba(255,255,255,.5); --cs-lblon:#ffffff;
+  --cs-tx:#ffffff; --cs-mut:rgba(255,255,255,.68); --cs-dot:#ffffff;
+  --cs-card:#141e32; --cs-cardst:#9fc0ff; --cs-g1:#7db4ff; --cs-g2:#e3efff;
+  --cs-num:linear-gradient(180deg,#ffffff 8%,#cfe0ff 60%,#8fb4ff 100%);
+  --cs-cta:#8fb4ff; --cs-ctatx:#071433; --cs-ctash:#4d74c7;
+  --cs-glow:rgba(143,180,255,.35); --cs-ping:rgba(150,190,255,.5);
+}
+.fb,.nd{transform-box:fill-box;transform-origin:center}
+.cs-s{fill:var(--cs-star)}
+.cs-hot{fill:var(--cs-hot);stroke:var(--cs-hot-st);stroke-width:.9;stroke-linejoin:round}
+.cs-ghost{fill:none;stroke:var(--cs-star);stroke-width:1.5;stroke-linejoin:round;stroke-dasharray:3 3;opacity:.8}
+.cs-miss{fill:var(--cs-miss)}
+.cs-fut{fill:none;stroke:var(--cs-miss);stroke-width:1.2;stroke-dasharray:2 2.4}
+.cs-l{font-family:var(--ff-serif);font-weight:700;font-size:12px;text-anchor:middle;fill:var(--cs-lbl)}
+.cs-l.now{fill:var(--cs-lblon)}
+.cl{stroke:var(--cs-line2);stroke-width:1.4;stroke-linecap:round;fill:none}
+.cl.on{stroke:var(--cs-line)}
+.cs-arc-t{fill:none;stroke:var(--cs-line2);stroke-width:2.4}
+.cs-arc{fill:none;stroke:var(--cs-hot);stroke-width:2.6;stroke-linecap:round}
+.cs-ping{fill:none;stroke:var(--cs-hot);stroke-width:1.5}
+
+/* ---------- Today: the streak card ---------- */
+.cst-card{background:var(--cs-cardbg);border:1px solid var(--line);border-radius:22px;padding:16px 16px 14px;margin-bottom:12px;color:var(--cs-tx);position:relative;overflow:hidden;box-shadow:var(--sh-sm)}
+.cst-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.cst-n b{display:block;font-family:var(--ff-serif);font-size:58px;line-height:.95;font-weight:800;letter-spacing:-.035em;background:var(--cs-num);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+.cst-n span{display:block;font-size:14px;font-weight:600;color:var(--cs-mut);margin-top:4px}
+.cst-goal{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:color-mix(in srgb,var(--surf) 70%,transparent);border:1px solid var(--line2);color:var(--cs-tx);font:inherit;font-size:14px;cursor:pointer}
+.cst-goal b{font-family:var(--ff-serif);font-weight:700;font-variant-numeric:tabular-nums}
+.cst-goal .i{color:var(--cs-star)}
+.cst-svg{display:block;width:100%;max-width:430px;height:auto;margin:2px auto;overflow:visible}
+.cst-foot .pbar{margin-top:6px}
+.cst-ft{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:13px;font-weight:600;color:var(--cs-mut)}
+.cst-card.met .cst-ft span:first-child{color:var(--cs-tx)}
+.cst-card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 80% 8%,rgba(255,200,80,.20),transparent 70%)}
+:root[data-theme="dark"] .cst-card::before{background:radial-gradient(60% 50% at 80% 8%,rgba(143,180,255,.16),transparent 70%)}
+@media (prefers-reduced-motion:no-preference){
+  .cst-svg .nd{transform-box:fill-box;transform-origin:center;animation:cstIn .7s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i)*70ms)}
+  .cst-svg .nd.done .cs-s{animation:cstTw 3.4s ease-in-out infinite alternate;animation-delay:calc(var(--i)*-.7s)}
+  .cst-svg .nd.lit .cs-hot{transform-box:fill-box;transform-origin:center;animation:cstBeat 2.6s ease-in-out infinite alternate}
+  .cst-svg .nd.today .cs-ping{transform-box:fill-box;transform-origin:center;animation:cstPing 2.6s ease-out infinite}
+  .wsk{animation:cstIn .55s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i)*90ms + 120ms)}
+}
+@keyframes cstIn{from{opacity:0;transform:translateY(8px) scale(.5)}to{opacity:1;transform:none}}
+@keyframes cstTw{from{opacity:1}to{opacity:.62}}
+@keyframes cstBeat{from{transform:scale(1)}to{transform:scale(1.1)}}
+@keyframes cstPing{0%{opacity:.8;transform:scale(.7)}100%{opacity:0;transform:scale(1.9)}}
+
+/* the words under the streak */
+.wsky{background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:14px 14px 10px;margin-bottom:12px}
+.wsky-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 2px 8px}
+.wsky-h span{font-size:13px;font-weight:700;color:var(--mut);letter-spacing:.02em}
+.wsky-h button{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:var(--pri);font:inherit;font-size:13px;font-weight:650;padding:4px 6px;border-radius:8px;cursor:pointer}
+.wsky-h button:active{background:var(--pri-soft)}
+.wsk{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;font:inherit;color:inherit;padding:9px 4px;border-radius:12px;cursor:pointer;border-top:1px solid var(--line)}
+.wsk:first-of-type{border-top:0}
+.wsk:active{background:var(--surf2)}
+.wsk-s{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--pri-soft);color:var(--pri)}
+.wsk-t{flex:1;min-width:0}
+.wsk-t b{display:block;font-family:var(--ff-serif);font-size:19px;font-weight:700;letter-spacing:-.015em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wsk-t em{display:block;font-style:normal;color:var(--mut);font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wsk-p{flex:none;display:flex;gap:3px}
+.wsk-p i{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+.wsk-p i.on{background:var(--cs-hot);box-shadow:0 0 6px var(--cs-hot-c)}
+
+/* ---------- the streak overlay ---------- */
+.celeb{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--cs-tx);overflow:hidden;touch-action:manipulation}
+.cel-bg{position:absolute;inset:0;background:var(--cs-bg)}
+.cel-sky{position:absolute;inset:0;width:100%;height:100%}
+.cel-cloud{position:absolute;border-radius:50%;background:#fff;filter:blur(26px);opacity:.7}
+:root[data-theme="dark"] .cel-cloud{display:none}
+@media (prefers-reduced-motion:no-preference){
+  .cel-cloud{animation:celDrift 26s ease-in-out infinite alternate}
+}
+@keyframes celDrift{from{transform:translateX(-26px)}to{transform:translateX(30px)}}
+.cel-glow{position:absolute;left:50%;top:30%;width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;background:radial-gradient(closest-side,var(--cs-glow),transparent);opacity:0;pointer-events:none}
+.cel-col{position:relative;z-index:2;width:min(100%,430px);padding:0 22px 104px;display:flex;flex-direction:column;align-items:center}
+.cel-hero{width:100%;max-width:380px}
+.cel-hero svg{width:100%;height:auto;overflow:visible;display:block}
+.cel-num{margin-top:8px;font-family:var(--ff-serif);font-weight:800;font-size:92px;line-height:1.04;height:1.04em;overflow:hidden;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.cel-num .tr{display:flex;flex-direction:column}
+.cel-num span{display:block;height:1.04em;background:var(--cs-num);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cel-lbl{font-family:var(--ff-serif);font-weight:700;font-size:19px;margin-top:2px;color:var(--cs-tx);opacity:.92}
+.cel-hl{font-family:var(--ff-serif);font-weight:800;font-size:27px;letter-spacing:-.015em;margin-top:18px;line-height:1.15;text-wrap:balance}
+.cel-hl i{font-style:normal;display:inline-block;will-change:transform}
+.cel-sub{color:var(--cs-mut);font-size:15px;margin-top:8px;font-weight:500}
+.cel-cta{position:absolute;left:0;right:0;margin:0 auto;width:min(calc(100% - 44px),420px);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:6}
+.cel-cta button{width:100%;padding:16px;border:0;border-radius:16px;font-family:var(--ff-serif);font-weight:800;font-size:17px;letter-spacing:.03em;text-transform:uppercase;background:var(--cs-cta);color:var(--cs-ctatx);box-shadow:0 5px 0 var(--cs-ctash);cursor:pointer;transition:transform .1s,box-shadow .1s}
+.cel-cta button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--cs-ctash)}
+.cel-cta button:focus-visible{outline:3px solid var(--cs-hot);outline-offset:3px}
+.cel-cv{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+@media (max-height:660px){.cel-num{font-size:68px}.cel-hero{max-width:300px}.cel-hl{font-size:23px;margin-top:10px}}
+
+/* ---------- finale heroes ---------- */
+.chero{width:min(100%,260px);margin:0 auto;position:relative}
+.chero svg{display:block;width:100%;height:auto;overflow:visible}
+.k-test .chero{width:min(100%,214px)}
+.k-session .chero{width:min(100%,280px)}
+.ch-card{fill:var(--cs-card);stroke:var(--cs-cardst);stroke-width:1.6}
+.ch-ln{fill:var(--cs-line)}
+.ch-ln2{fill:var(--cs-line2)}
+.ch-track{fill:none;stroke:var(--cs-line2)}
+.ch-num{font-family:var(--ff-serif);font-weight:800;font-size:46px;fill:var(--tx);letter-spacing:-.03em;text-anchor:middle;font-variant-numeric:tabular-nums}
+.ch-dot{fill:var(--surf);stroke:var(--cs-line);stroke-width:1.6}
+.ch-dot-on{fill:var(--cs-hot);stroke:var(--cs-hot-st);stroke-width:1}
+.ch-ground{fill:var(--cs-line2)}
+.hero .big-pct{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -532,7 +656,7 @@ const KEY='vocab.v2';
 /* ---------- interface language ---------- */
 const RU_DICT={"word":"слово","words2":"слова","words":"слов","question":"вопрос","questions":"вопросов","day2":"дня","Русский":"Русский","Lists":"Списки","Archive":"Архив","Tricky words":"Сложные слова","My students":"Мои ученики","Settings":"Настройки","Account":"Аккаунт","Search":"Поиск","Close":"Закрыть","Done":"Готово","Cancel":"Отмена","Create":"Создать","Add":"Добавить","Save":"Сохранить","Delete":"Удалить","Rename":"Переименовать","Again":"Ещё раз","Check":"Проверить","Answer":"Ответ","Name":"Имя","Email":"Почта","Password":"Пароль","Pace":"Темп","Streak":"Серия","Loading…":"Загрузка…","New list":"Новый список","New name":"Новое название","Your name":"Ваше имя","e.g. Unit 1":"например, Unit 1","you@example.com":"you@example.com","reliable":"reliable","a reliable friend":"a reliable friend","надёжный":"надёжный","Word (English)":"Слово (английский)","Translation":"Перевод","Example (optional)":"Пример (необязательно)","Import words":"Импорт слов","Reset progress":"Сбросить прогресс","Delete list":"Удалить список","Flashcards":"Карточки","Learn":"Учить","Test":"Тест","Match":"Пары","Review":"Повторение","Result":"Результат","Vocabulary":"Словарь","flip through":"листать","until mastered":"до усвоения","check yourself":"проверка","race the clock":"на время","review":"повторение","revise":"повторить","Select":"Выбрать","Select all":"Выбрать все","Clear selection":"Снять выделение","Learning":"Учу","Learned":"Выучено","Needs work":"Нужно подтянуть","learning":"учу","learned":"выучено","Your word lists will live here":"Здесь будут ваши списки слов","Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.":"Создайте список — например «Unit 1» — и добавляйте слова. Выученные собираются в общий Архив.","Add your first word":"Добавьте первое слово","Tap ＋ below to enter a word and its translation, or import a whole list from the ⋯ menu.":"Нажмите ＋ внизу, чтобы ввести слово и перевод, или импортируйте список целиком через меню ⋯.","Nothing found":"Ничего не найдено","Archive is empty":"Архив пуст","Learned words from all your lists collect here — automatically in Learn and Test, or when you move them here with Select.":"Сюда попадают выученные слова из всех списков — сами в режимах «Учить» и «Тест» либо вручную через «Выбрать».","Nothing tricky right now":"Пока всё даётся легко","Words you keep missing in tests and Learn will gather here, so you can drill exactly those.":"Слова, в которых вы часто ошибаетесь, будут собираться здесь — чтобы отрабатывать именно их.","Words where mistakes outnumber correct answers. They leave this list as soon as you get them right more often.":"Слова, где ошибок больше, чем верных ответов. Они уйдут отсюда, как только вы начнёте отвечать правильно чаще.","learned words from all lists":"выученные слова из всех списков","from all lists":"из всех списков","Add to Home Screen.":"Добавьте на экран «Домой».","In Safari: Share → “Add to Home Screen”. Then it's always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","Today":"Сегодня","day":"день","days":"дней","Daily goal":"Цель на день","A day counts towards your streak once you've studied this many different words.":"День засчитывается в серию, когда вы разобрали столько разных слов.","Current:":"Сейчас:","best:":"рекорд:","Review schedule":"График повторений","Words you've learned come back from the Archive at growing intervals, so they actually stick. Switch it off and the Archive just stores them.":"Выученные слова возвращаются из Архива через растущие промежутки — так они действительно запоминаются. Если выключить, Архив будет просто хранилищем.","Spaced review":"Интервальные повторения","Gentle":"Щадящий","Standard":"Обычный","Intense":"Интенсивный","Custom":"Свой","Easy-going — the default. Switch to Standard or Intense if words slip away between reviews.":"Спокойный режим, стоит по умолчанию. Переключитесь на «Обычный» или «Интенсивный», если слова успевают забыться.","Your intervals (days, comma separated)":"Свои промежутки (дни через запятую)","Most per session":"Не больше за подход","If you forget a word":"Если слово забыто","Ask again tomorrow":"Спросить завтра","Send back to the list":"Вернуть в список","The word leaves the Archive and goes back into your list to learn again.":"Слово уйдёт из Архива обратно в список — учить заново.","The word stays in the Archive and returns tomorrow.":"Слово останется в Архиве и вернётся завтра.","Enter days, e.g. 1, 3, 7, 14":"Введите дни, например 1, 3, 7, 14","Schedule saved ✓":"График сохранён ✓","Appearance":"Оформление","Auto":"Авто","Light by day, dark at night.":"Днём светлая, ночью тёмная.","Using your location for exact sunrise & sunset.":"Рассвет и закат вычисляются по вашему местоположению.","Use my location":"Использовать геопозицию","for exact sunrise & sunset.":"— для точного рассвета и заката.","Requesting location…":"Запрашиваю геопозицию…","Location denied":"Доступ к геопозиции запрещён","Location not available":"Геопозиция недоступна","Using your sunrise & sunset":"Считаю по вашему рассвету и закату","Language":"Язык","Pronunciation":"Произношение","British — academic":"Британское — академическое","American":"Американское","The voice comes from your device. For the most natural English on iPhone: Settings → Accessibility → Spoken Content → Voices → English → download an":"Голос берётся из вашего устройства. Для самой естественной речи на iPhone: Настройки → Универсальный доступ → Устный контент → Голоса → English → скачайте голос","voice.":"(Enhanced).","Auto-translate":"Автоперевод","Google (fallback: MyMemory)":"Google (запасной — MyMemory)","MyMemory only":"Только MyMemory","The translation fills in automatically as you type":"Перевод подставится сам, пока вы печатаете","Translating…":"Перевожу…","Options — tap to use:":"Варианты — нажмите, чтобы подставить:","Add the next word":"Добавьте следующее слово","Enter a word":"Введите слово","Enter a translation":"Введите перевод","Enter a name":"Введите название","Added ✓":"Добавлено ✓","Progress reset":"Прогресс сброшен","Moved to Archive ✓":"В Архив ✓","Moved back to learning":"Вернул в список","Nothing due right now":"Сейчас нечего повторять","No words":"Нет слов","No words to learn":"Нет слов для изучения","Need at least 3 words":"Нужно хотя бы 3 слова","Nothing to import":"Нечего импортировать","Imported ✓":"Импортировано ✓","No storage space left":"На устройстве кончилось место — сделайте резервную копию или войдите в аккаунт","Couldn’t read the file":"Не удалось прочитать файл","Exit this session?":"Выйти из занятия?","Move all words of this list back from Archive and reset progress?":"Вернуть все слова списка из Архива и обнулить прогресс?","Correct ✓":"Верно ✓","Wrong":"Неверно","Almost — mind the spelling":"Почти — следите за написанием","Correct spelling: ":"Правильное написание: ","Answer: ":"Ответ: ","the match is correct":"пара верна","the match is wrong":"пара неверна","Is this a correct match?":"Пара подобрана верно?","Type the translation":"Напишите перевод","Type in English":"Напишите по-английски","Choose the translation":"Выберите перевод","Choose the word":"Выберите слово","tap to flip":"нажмите, чтобы перевернуть","Don't know":"Не знаю","Deck complete":"Колода пройдена","Review tough ones":"Повторить трудные","Great job!":"Отлично!","Review complete":"Повторение завершено","You revised every word in this session.":"Вы повторили все слова этого подхода.","Every word this session is mastered and moved to the Archive.":"Все слова подхода усвоены и ушли в Архив.","Excellent!":"Превосходно!","Good effort":"Неплохо","Keep practising":"Нужно ещё поработать","How many questions":"Сколько вопросов","Question types":"Типы вопросов","Multiple choice":"Выбор из вариантов","Type the answer":"Ввод ответа","True / false":"Верно / неверно","Start test":"Начать тест","Pick at least one type":"Выберите хотя бы один тип","Finish test":"Завершить тест","Retry mistakes":"Повторить ошибки","Mistakes":"Ошибки","Spelling slips":"Описки","no answer":"нет ответа","Match each word with its translation":"Соедините слово с переводом","Preview will appear here":"Здесь появится предпросмотр","Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.":"Вставьте список из Quizlet, Excel или обычного текста. Переводы можно не писать — подставятся сами.","Between word and translation":"Между словом и переводом","Between cards":"Между карточками","Tab ⇥":"Табуляция ⇥","Dash –":"Тире –","Comma":"Запятая","New line":"Новая строка","; semicolon":"; точка с запятой","Blank line":"Пустая строка","Translate when the translation is missing":"Переводить, если перевода нет","Sign in":"Войти","Sign up":"Регистрация","Sign out":"Выйти","Create account":"Создать аккаунт","Please wait…":"Минутку…","An account syncs your words across devices. Using the app without one keeps everything on this device only.":"С аккаунтом слова синхронизируются между устройствами. Без него всё хранится только на этом устройстве.","Can't reach the sign-in service right now. Check your connection — the app keeps working offline on this device.":"Не получается связаться с сервисом входа. Проверьте интернет — на этом устройстве приложение работает и без него.","Enter email and password":"Введите почту и пароль","This email is already registered — sign in instead.":"Эта почта уже зарегистрирована — войдите.","Wrong email or password.":"Неверная почта или пароль.","Password must be at least 6 characters.":"Пароль должен быть не короче 6 символов.","Confirm your email first — check your inbox.":"Сначала подтвердите почту — проверьте входящие.","That email address doesn’t look right.":"Адрес почты выглядит неправильно.","No connection — try again when you’re online.":"Нет связи — попробуйте, когда появится интернет.","Something went wrong":"Что-то пошло не так","Account created ✓":"Аккаунт создан ✓","Check your email to confirm, then sign in":"Подтвердите почту по письму и войдите","Signed in ✓":"Вы вошли ✓","Signed out":"Вы вышли","Loading your profile…":"Загружаю профиль…","Teacher":"Учитель","Student":"Ученик","words sync automatically":"слова синхронизируются","Your code — give it to students":"Ваш код — дайте его ученикам","A student enters this in their Account to give you access to their lists.":"Ученик вводит его в разделе «Аккаунт», и вы получаете доступ к его спискам.","Link to a teacher":"Привязаться к учителю","Teacher's code":"Код учителя","Your teacher can then see and edit your lists.":"После этого учитель сможет видеть и править ваши списки.","Enter the code":"Введите код","No teacher found with that code":"Учитель с таким кодом не найден","Couldn’t link — try again":"Не удалось привязаться — попробуйте ещё раз","Not signed in":"Вы не вошли","Syncing…":"Синхронизирую…","Synced ✓":"Синхронизировано ✓","No students linked yet":"Пока нет привязанных учеников","Open Account and share your code. Once a student enters it, their lists appear here.":"Откройте «Аккаунт» и передайте свой код. Как только ученик его введёт, его списки появятся здесь.","No lists yet":"Пока нет списков","You can create the first list for this student below.":"Первый список для этого ученика можно создать ниже.","No words yet":"Пока нет слов","Tap ＋ to add the first word.":"Нажмите ＋, чтобы добавить первое слово.","Words this student has mastered will show up here.":"Здесь появятся слова, которые ученик уже усвоил.","New word":"Новое слово","Word":"Слово","Couldn’t save — check your connection":"Не удалось сохранить — проверьте связь","Couldn’t create — check your connection":"Не удалось создать — проверьте связь","Couldn’t delete":"Не удалось удалить","Couldn’t update":"Не удалось обновить","Saved ✓":"Сохранено ✓","Creating…":"Создаю…","Saving…":"Сохраняю…","Delete this word from the student’s list?":"Удалить это слово из списка ученика?","Deleted":"Удалено","active today":"занимался сегодня","active yesterday":"занимался вчера","no activity yet":"ещё не занимался","this week":"за неделю","Words are stored on this device only. Sign in to sync them across devices — or keep using the app locally and make a backup now and then.":"Слова хранятся только на этом устройстве. Войдите, чтобы они синхронизировались, — или пользуйтесь локально и время от времени делайте резервную копию.","Your words sync to your account and are available on any device you sign in on.":"Слова привязаны к аккаунту и доступны на любом устройстве, где вы вошли.","All words":"Все слова","mastered":"выучено","due for review":"к повторению","Repeats after":"Повторы через","Due now":"Сейчас к повторению","off":"выкл","At least 6 characters":"Не короче 6 символов","learned words":"выученные слова","This list will appear in the student’s app.":"Список появится в приложении ученика.","correct":"верно","moved to Archive":"ушло в Архив","Next review":"Следующее повторение","next review":"следующее повторение","Still blank":"Без ответа осталось","Finish anyway?":"Всё равно завершить?","Delete words?":"Удалить слова?","This can't be undone.":"Это нельзя отменить.","Added":"Добавлено","Found":"Найдено","without translation":"без перевода","Linked to":"Привязались к","Can’t reach the translator — enter the translation manually":"Переводчик недоступен — введите перевод вручную","Didn’t know":"Не знал","active":"занимался","ago":"назад","last seen":"был","today":"сегодня","tomorrow":"завтра","in":"через","week":"неделю","week2":"недели","weeks":"недель","month":"месяц","month2":"месяца","months":"месяцев","English":"English","In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.":"В Safari: «Поделиться» → «На экран «Домой»». Тогда приложение всегда под рукой и работает без интернета.","with mistakes":"с ошибками","Show all questions":"Показать все вопросы","Collapse":"Свернуть","Backup (all lists)":"Резервная копия (все списки)","Restore from file":"Восстановить из файла","Send to student (file)":"Отправить ученику (файл)","Sync now":"Синхронизировать","Export PDF":"Скачать PDF","Show":"Показывать","Words and translations":"Слова и переводы","Words only — translations hidden":"Только слова — переводы скрыты","Translations only — words hidden":"Только переводы — слова скрыты","Include examples":"С примерами","Create PDF":"Создать PDF","Couldn’t create the PDF":"Не удалось создать PDF","Whole list":"Весь список","Pick which words of this list to practise — for example from 5 to 15.":"Выберите, какие слова списка тренировать, например с 5 по 15.","Pick which words to practise — for example from 5 to 15.":"Выберите, какие слова тренировать, например с 5 по 15.","Your login expired — sign out and sign in again.":"Вход устарел — выйдите из аккаунта и войдите снова.","Take a test to move them to the Archive.":"Пройдите тест, чтобы перенести их в Архив.","Every word this session is mastered.":"Все слова подхода усвоены.","Resume test":"Продолжить тест","Discard":"Отменить","Student name":"Имя ученика","Run the rename SQL in Supabase first (see the instructions).":"Сначала выполните SQL для переименования в Supabase (см. инструкцию).","These words go straight to the Archive.":"Эти слова сразу попадут в Архив.","Learned words stay in the Archive.":"Выученные слова останутся в Архиве.","This word goes straight to the Archive.":"Слово сразу попадёт в Архив.","Added to the Archive ✓":"Добавлено в Архив ✓","Streak/settings not synced":"Серия и настройки не синхронизированы","Sign in / Sign up":"Войти / Зарегистрироваться","To learning":"В список","To Archive":"В Архив","Pronounce":"Произнести","Light":"Светлая","Dark":"Тёмная","The word is shown in Russian — recall and type (or choose) the English. You can move between questions and fix your answers before finishing.":"Слово показывается по-русски — вспомните и напишите (или выберите) английское. Между вопросами можно свободно ходить и править ответы до завершения.","New list for":"Новый список для","Back":"Назад","Next":"Дальше","Finish":"Завершить","Know":"Знаю","Study":"Заниматься","Practice anyway":"Позаниматься всё равно","Choose a mode":"Выбрать режим","to review":"повторить","new":"новых","tricky":"сложных","Session":"Занятие","reviewed":"повторено","returned to learning":"вернулось в список","Nothing due today":"На сегодня всё","Start with a few words":"Начните с нескольких слов","Add words to your dictionary and this screen will plan each day for you.":"Добавьте слова в словарь — и этот экран будет планировать занятия за вас.","Go to the dictionary":"Открыть словарь","Tricky":"Сложные","Scope":"Что учим","Me":"Я","Profile":"Профиль","Students":"Ученики","Dictionary":"Словарь","Interface":"Интерфейс","Learning plan":"План занятий","Data":"Данные","Words stay on this device":"Слова только на этом устройстве","for today":"на сегодня","My words":"Мои слова","Study this list":"Заниматься по списку","Show all":"Показать все","The words go straight into the student’s list.":"Слова попадут сразу в список ученика.","Tap ＋ to add the first word, or import a whole list from the ⋯ menu.":"Нажмите ＋, чтобы добавить первое слово, или импортируйте список целиком через меню ⋯.","The database refused this. Open Supabase → SQL Editor and run the access-rule fix.":"База отклонила запись: не хватает правила доступа. Откройте Supabase → SQL Editor и выполните исправление.","Forgot password?":"Забыли пароль?","Reset password":"Восстановление пароля","We’ll email you a link to set a new password.":"Мы отправим на почту ссылку, чтобы задать новый пароль.","Send link":"Отправить ссылку","Check your email — the link is on its way.":"Проверьте почту — ссылка уже в пути.","New password":"Новый пароль","Repeat password":"Повторите пароль","Save password":"Сохранить пароль","Passwords don’t match":"Пароли не совпадают","Password changed ✓":"Пароль изменён ✓","Set a new password":"Задайте новый пароль","Back to sign in":"Назад ко входу","Remove student":"Убрать ученика","Remove":"Убрать","Remove this student from your list? Their words stay with them — you just lose access to them.":"Убрать ученика из вашего списка? Его слова останутся у него — просто вы перестанете их видеть.","Student removed":"Ученик убран","Couldn’t remove — run the unlink SQL in Supabase first.":"Не удалось убрать — сначала выполните SQL в Supabase (см. инструкцию).","Edit":"Изменить","Color":"Цвет","No color":"Без цвета","Colors need a database update — run the SQL from the instructions.":"Для цветов нужен SQL в Supabase (см. инструкцию).","Duplicates":"Дубликаты","No duplicates":"Дубликатов нет","These words are in the Archive more than once. Delete the extra copies and keep one of each?":"Эти слова есть в Архиве больше одного раза. Удалить лишние копии и оставить по одной?","Delete copies":"Удалить копии","Keep both":"Оставить как есть","Copies removed":"Копии удалены","is already in the Archive":"уже есть в Архиве","copies":"копий","Marker":"Маркер","Tap a word or drag over several to highlight them.":"Нажмите на слово или проведите по нескольким, чтобы выделить."};
 function t(s){try{if((S.settings.lang||"ru")==="en")return s;}catch(e){}return RU_DICT[s]||s;}
-function plr(n,one,few,many){const a=n%10,b=n%100;return (S.settings.lang||"ru")==="en"?(n===1?one:few):(a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many));}
+function plr(n,one,few,many){const a=n%10,b=n%100;return (S.settings.lang||"ru")==="en"?(n===1?one:many):(a===1&&b!==11?one:(a>=2&&a<=4&&(b<10||b>=20)?few:many));}
 const nWords=n=>n+" "+plr(n,t("word"),t("words2"),t("words"));
 /* strings added with the multi-language support */
 Object.assign(RU_DICT,{"Night background":"Фон ночью","None":"Нет","Starry sky":"Звёздное небо","Shown only in the dark theme.":"Виден только в тёмной теме.","Drag to reorder":"Перетащите, чтобы изменить порядок","Deleted":"Удалено",
@@ -945,9 +1069,9 @@ function startSession(force){
     if(plan.due.length)bits.push(plan.due.length+' '+t('reviewed'));
     if(back)bits.push(back+' '+t('returned to learning'));
     app.innerHTML=hdr(t('Session'),"go('today')")+
-      scoreHero(pct,bits.length?bits.join(' · '):good+' / '+done+' '+t('correct'))+
+      celHero('session',{title:scoreTitle(pct),sub:bits.length?bits.join(' · '):good+' / '+done+' '+t('correct')})+
       '<div style="height:14px"></div><button class="btn pri" onclick="go(\'today\')">'+t('Done')+'</button>';
-    if(pct>=80)confetti(90);
+    celPlay();
   }
   next();
 }
@@ -1020,7 +1144,7 @@ function bumpStudy(id){
   rollDay();const st=S.stats;
   if(st.ids.indexOf(id)<0)st.ids.push(id);
   const goal=st.goal||10;
-  if(!st.met&&st.ids.length>=goal){st.met=true;st.streak=(st.streak||0)+1;if(st.streak>(st.best||0))st.best=st.streak;}
+  if(!st.met&&st.ids.length>=goal){st.met=true;st.streak=(st.streak||0)+1;if(st.streak>(st.best||0))st.best=st.streak;celMark();}
   st.upd=Date.now();
 }
 function todayCount(){rollDay();return S.stats.ids.length;}
@@ -1774,7 +1898,7 @@ let view={name:'home'};
 let selMode=false;const selIds=new Set();
 function clearSel(){selMode=false;selIds.clear();}
 function go(name,p={}){
-  rowCap=400;if(inl)inlineCommit();swClose();
+  todayPick=null;rowCap=400;if(inl)inlineCommit();swClose();
   /* older entry points still work: lists and the two smart lists are filters now */
   if(name==='home')name='today';
   clearSel();
@@ -1817,15 +1941,6 @@ const hdr=(title,back,right='')=>{
 const fold=x=>String(x==null?'':x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 let LQ='';
 const sbox=(fn,id)=>`<div class="search"${id?` id="${id}"`:''}><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" value="${esc(LQ)}" placeholder="${t('Search')}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="${fn}(this.value)"></div>`;
-function dayStrip(){
-  const total=S.sets.reduce((n,s)=>n+s.words.length,0);
-  if(!total)return '';
-  const goal=S.stats.goal||10,done=todayCount(),pct=Math.min(100,done/goal*100),st=S.stats.streak||0;
-  return `<div class="daycard" onclick="goalSheet()">
-    <div class="flame"><div class="n">${ic('flame',15)}<span>${st}</span></div><div class="c">${plr(st,t('day'),t('day2'),t('days'))}</div></div>
-    <div class="t"><div class="lbl"><span>${t('Today')}${done>=goal?' ✓':''}</span><b>${done} / ${goal}</b></div>
-      <div class="pbar"><i style="width:${pct}%"></i></div></div></div>`;
-}
 
 
 /* ---------- the three places you can be ---------- */
@@ -1903,8 +2018,9 @@ today(app){
    (standalone||S.settings.hideBanner||!total?'':
      `<div class="banner"><span class="ib">${ic('phone',19)}</span><div><b>${t('Add to Home Screen.')}</b> ${t("In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.")}</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
    hero+testBanner()+
-   (total?dayStrip()+`<button class="rowlink" onclick="modesSheet()"><span>${ic('grid',19)}${t('Choose a mode')}</span>${ic('right',18)}</button>`:'')+
+   (total?dayStrip()+wordsCard()+`<button class="rowlink" onclick="modesSheet()"><span>${ic('grid',19)}${t('Choose a mode')}</span>${ic('right',18)}</button>`:'')+
    tabBar();
+  celSoon(900);
 },
 
 vocab(app){
@@ -3481,7 +3597,7 @@ function goalSheet(){
      <div class="hint">${t('Current:')} <b>${S.stats.streak||0}</b> ${plr(S.stats.streak||0,t('day'),t('day2'),t('days'))} · ${t('best:')} <b>${S.stats.best||0}</b></div></div>
    <button class="btn ghost" onclick="closeSheet()">${t('Close')}</button>`);
 }
-function setGoal(v){S.stats.goal=v;rollDay();if(!S.stats.met&&S.stats.ids.length>=v){S.stats.met=true;S.stats.streak=(S.stats.streak||0)+1;if(S.stats.streak>(S.stats.best||0))S.stats.best=S.stats.streak;}S.stats.upd=Date.now();save();goalSheet();render();}
+function setGoal(v){S.stats.goal=v;rollDay();if(!S.stats.met&&S.stats.ids.length>=v){S.stats.met=true;S.stats.streak=(S.stats.streak||0)+1;if(S.stats.streak>(S.stats.best||0))S.stats.best=S.stats.streak;celMark();}S.stats.upd=Date.now();save();goalSheet();render();}
 
 /* ---------- review settings ---------- */
 function srSheet(){
@@ -3527,7 +3643,7 @@ function srCustom(){
 
 /* ---------- settings / backup ---------- */
 function settingsHtml(){
-  const th=S.settings.theme||'auto',ac=S.settings.accent||'uk',lg=S.settings.lang||'ru',bg=S.settings.bg||'stars';
+  const th=S.settings.theme||'auto',ac=S.settings.accent||'uk',lg=S.settings.lang||'ru',bg=S.settings.bg||'stars',fx=S.settings.fx||'on';
   return `<div class="field"><label>${t('Language')}</label>
      <div class="seg3">
        <button class="${lg==='ru'?'on':''}" onclick="setLang('ru')">Русский</button>
@@ -3543,6 +3659,11 @@ function settingsHtml(){
        <button class="${bg==='none'?'on':''}" onclick="setBg('none')">${t('None')}</button>
        <button class="${bg==='stars'?'on':''}" onclick="setBg('stars')">${ic('moon',17)}${t('Starry sky')}</button></div>
      <div class="hint">${t('Shown only in the dark theme.')}</div></div>
+   <div class="field"><label>${t('Animation sound')}</label>
+     <div class="seg3">
+       <button class="${fx==='off'?'on':''}" onclick="setFx('off')">${t('Off')}</button>
+       <button class="${fx!=='off'?'on':''}" onclick="setFx('on')">${ic('sound',17)}${t('On')}</button></div>
+     <div class="hint">${t('Sound plays when you finish a session or extend your streak.')}</div></div>
    ${(()=>{const ls=langsUsed();return (!ls.length||ls.indexOf('en')>=0)?
      `<div class="field"><label>${t('Pronunciation')}</label>
        <select class="inp" onchange="S.settings.accent=this.value;S.settings.upd=Date.now();save()">
@@ -3645,10 +3766,10 @@ function startCards(review){
   let deck=shuffle(pool),i=0,flip=false,dir='en',unknown=[],total=deck.length;const app=$('#app');
   function draw(){
     if(i>=deck.length){
-      app.innerHTML=hdr(t('Flashcards'),"render()")+`<div class="hero"><div class="hero-ic">${ic(unknown.length?'trend':'award',30,1.6)}</div></div>
-        <div class="empty" style="padding-top:0"><b>${t('Deck complete')}</b><p>${t('Didn’t know')}: ${unknown.length} / ${total}</p></div>
-        ${unknown.length?`<button class="btn pri" id="rep">${t('Review tough ones')} (${unknown.length})</button><div style="height:9px"></div>`:''}
+      app.innerHTML=hdr(t('Flashcards'),"render()")+celHero('cards',{title:t('Deck complete'),sub:t('Didn’t know')+': '+unknown.length+' / '+total})+`
+        <div style="height:14px"></div>${unknown.length?`<button class="btn pri" id="rep">${t('Review tough ones')} (${unknown.length})</button><div style="height:9px"></div>`:''}
         <button class="btn ghost" onclick="render()">${t('Done')}</button>`;
+      celPlay();
       if(unknown.length)$('#rep').onclick=()=>{deck=shuffle(unknown);unknown=[];i=0;total=deck.length;flip=false;draw();};return;
     }
     const w=deck[i];const front=dir==='en'?w.en:w.ru,back=dir==='en'?w.ru:w.en;
@@ -3702,10 +3823,10 @@ function startLearn(review){
   };
   function finish(){
     app.innerHTML=hdr(t('Learn'),"render()")+
-      `<div class="hero"><div class="hero-ic">${ic('award',30,1.6)}</div><div class="hero-title" style="margin-top:14px">${review?t('Review complete'):t('Great job!')}</div>
-       <div class="hero-sub">${N} / ${N} ${t('mastered')}<br>${review?t('You revised every word in this session.'):t('Every word this session is mastered.')}</div></div>
-      <div style="height:14px"></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;
-    confetti(90);
+      celHero('learn',{n:N,title:review?t('Review complete'):t('Great job!'),
+        sub:`${N} / ${N} ${t('mastered')}<br>${review?t('You revised every word in this session.'):t('Every word this session is mastered.')}`})+
+      `<div style="height:14px"></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;
+    celPlay();
   }
   function next(){
     if(doneN()>=N)return finish();
@@ -3865,7 +3986,7 @@ function runTest(words,kinds,review,resume){
     const slips=wrong.filter(r=>r.near),bad=wrong.filter(r=>!r.near);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
     app.innerHTML=hdr(t('Result'),"render()")+
-      scoreHero(pct,`${good} / ${res.length} ${t('correct')}${!review&&toArch?` · ${toArch} ${t('moved to Archive')}`:''}`)+
+      celHero('test',{pct,title:scoreTitle(pct),sub:`${good} / ${res.length} ${t('correct')}${!review&&toArch?` · ${toArch} ${t('moved to Archive')}`:''}`})+
       `<div style="height:8px"></div>`+
       (slips.length?`<div class="subhead"><span class="t">${t('Spelling slips')} — ${slips.length}</span></div>
         <div class="hint" style="margin:0 2px 8px">${t('A slip counts as a mistake — the spelling has to be exact.')}</div>`+
@@ -3889,7 +4010,7 @@ function runTest(words,kinds,review,resume){
       (wrong.length?`<button class="btn pri" id="rt">${t('Retry mistakes')}</button><div style="height:9px"></div>`:'')+
       `<button class="btn ghost" onclick="render()">${t('Close')}</button>`;
     if(wrong.length)$('#rt').onclick=()=>runTest(shuffle(wrong.map(r=>r.w)),kinds,review);
-    if(pct>=80)confetti(90);
+    celPlay();
   }
   draw();
 }
@@ -3910,15 +4031,550 @@ function startMatch(){
     if(!sel){sel=el;el.classList.add('sel');return;}
     const y=tiles[+sel.dataset.i];
     if(x.id===y.id){el.classList.add('done');sel.classList.add('done');sel=null;left--;
-      if(!left){clearInterval(iv);const t=((Date.now()-t0)/1000).toFixed(1);
+      if(!left){clearInterval(iv);const tt=((Date.now()-t0)/1000).toFixed(1);
         app.innerHTML=hdr(t('Match'),"render()")+
-          `<div class="hero"><div class="hero-ic">${ic('award',30,1.6)}</div><div class="big-pct" style="margin:6px 0 0">${t}s</div>
-           <div class="hero-sub">${t('Mistakes')}: ${miss}</div></div>
-          <div style="height:14px"></div><button class="btn pri" onclick="startMatch()">${t('Again')}</button><div style="height:9px"></div>
+          celHero('match',{n:ws.length,miss,time:tt,title:miss?t('All pairs matched'):t('Flawless!'),mid:`<div class="big-pct" style="margin:6px 0 0">0.0s</div>`,sub:t('Mistakes')+': '+miss})+
+          `<div style="height:14px"></div><button class="btn pri" onclick="startMatch()">${t('Again')}</button><div style="height:9px"></div>
           <button class="btn ghost" onclick="render()">${t('Close')}</button>`;
-        confetti(miss===0?90:0);}}
+        celPlay();}}
     else{miss++;const a=sel;sel=null;a.classList.remove('sel');a.classList.add('no');el.classList.add('no');
       setTimeout(()=>{a.classList.remove('no');el.classList.remove('no');},380);}
+  });
+}
+
+Object.assign(RU_DICT,{"in a row":"подряд","A new star lights up":"Зажглась новая звезда","A whole week in a row!":"Целая неделя подряд!","Two weeks in a row!":"Две недели подряд!","A month with no gaps!":"Месяц без пропусков!","One hundred days!":"Сотня дней!","A whole year!":"Целый год!","A new milestone!":"Новый рубеж!","Daily goal reached":"Дневная цель выполнена","Continue":"Продолжить","Today's star is lit":"Звезда дня горит","to light today's star":"до звезды дня","Words you are learning":"Слова, которые вы учите","Shuffle":"Другие","Animation sound":"Звук анимации","On":"Вкл","Off":"Выкл","Sound plays when you finish a session or extend your streak.":"Звук играет, когда вы завершаете занятие или продлеваете серию.","Flawless!":"Безупречно!","All pairs matched":"Все пары найдены"});
+/* ================= v69: celebrations — streak constellation, Today card, per-mode finales ================= */
+const celRM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
+const celDark=()=>document.documentElement.getAttribute('data-theme')==='dark';
+const fxOn=()=>S.settings.fx!=='off';
+const CE={out:'cubic-bezier(.16,1,.3,1)',spring:'cubic-bezier(.34,1.56,.64,1)',soft:'cubic-bezier(.4,0,.2,1)'};
+const CEL={open:false};
+let todayPick=null,celQ=null,celTimer=0;
+/* one WAAPI helper: with reduced motion everything lands at once and nothing loops */
+function wa(el,kf,o){
+  if(!el||!el.animate)return null;
+  o=Object.assign({fill:'both',easing:CE.out},o||{});
+  if(celRM){if(o.iterations===Infinity)return null;o.delay=0;o.duration=1;}
+  try{return el.animate(kf,o);}catch(e){return null;}
+}
+const cen=el=>{const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};};
+const cStarP=(x,y,s)=>(x=+x,y=+y,s=+s,`M${x} ${y-s}L${x+s*.26} ${y-s*.26}L${x+s} ${y}L${x+s*.26} ${y+s*.26}L${x} ${y+s}L${x-s*.26} ${y+s*.26}L${x-s} ${y}L${x-s*.26} ${y-s*.26}Z`);
+
+/* ---------- sound: everything is synthesised, nothing is downloaded ---------- */
+const CAU={ctx:null,out:null,nb:null,
+  ensure(){
+    if(this.ctx){if(this.ctx.state==='suspended')try{this.ctx.resume();}catch(e){}return true;}
+    const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
+    try{this.use(new AC());}catch(e){return false;}return true;
+  },
+  use(ctx){
+    this.ctx=ctx;this.nb=null;
+    const g=ctx.createGain();g.gain.value=.6;
+    const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9500;
+    const comp=ctx.createDynamicsCompressor();comp.threshold.value=-20;comp.knee.value=20;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.25;
+    g.connect(lp);lp.connect(comp);comp.connect(ctx.destination);this.out=g;
+  },
+  bell(f,t,g=.12,dur=1.9,bright=1){
+    const c=this.ctx;
+    [[1,1,1],[2.0,.3*bright,.7],[3.01,.13*bright,.5],[4.2,.05*bright,.35]].forEach(([r,a,d])=>{
+      const o=c.createOscillator(),e=c.createGain();o.type='sine';o.frequency.value=f*r;
+      e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g*a,t+.006);e.gain.exponentialRampToValueAtTime(.0001,t+dur*d);
+      o.connect(e);e.connect(this.out);o.start(t);o.stop(t+dur*d+.05);
+    });
+  },
+  pluck(f,t,g=.14,dur=.7){
+    const c=this.ctx,o=c.createOscillator(),o2=c.createOscillator(),e=c.createGain(),lp=c.createBiquadFilter();
+    o.type='triangle';o.frequency.value=f;o2.type='sine';o2.frequency.value=f*4;
+    lp.type='lowpass';lp.frequency.setValueAtTime(4200,t);lp.frequency.exponentialRampToValueAtTime(700,t+dur*.8);
+    e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g,t+.004);e.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    const e2=c.createGain();e2.gain.setValueAtTime(g*.25,t);e2.gain.exponentialRampToValueAtTime(.0001,t+.12);
+    o.connect(lp);lp.connect(e);e.connect(this.out);o2.connect(e2);e2.connect(this.out);
+    o.start(t);o2.start(t);o.stop(t+dur+.05);o2.stop(t+.2);
+  },
+  noise(t,dur,f0,f1,g=.1,q=1.1,type='bandpass',att=.08){
+    const c=this.ctx;
+    if(!this.nb){const n=c.sampleRate;const b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);let s=1;for(let i=0;i<n;i++){s=(s*16807)%2147483647;d[i]=(s/2147483647)*2-1;}this.nb=b;}
+    const src=c.createBufferSource();src.buffer=this.nb;src.loop=true;
+    const fl=c.createBiquadFilter();fl.type=type;fl.Q.value=q;fl.frequency.setValueAtTime(f0,t);fl.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    const e=c.createGain();e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g,t+att);e.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    src.connect(fl);fl.connect(e);e.connect(this.out);src.start(t);src.stop(t+dur+.05);
+  },
+  sweep(f0,f1,t,dur,g=.05,type='sine'){
+    const c=this.ctx,o=c.createOscillator(),e=c.createGain();o.type=type;
+    o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g,t+dur*.35);e.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(e);e.connect(this.out);o.start(t);o.stop(t+dur+.05);
+  },
+  thump(t,g=.3){
+    const c=this.ctx,o=c.createOscillator(),e=c.createGain();o.type='sine';
+    o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(46,t+.24);
+    e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g,t+.008);e.gain.exponentialRampToValueAtTime(.0001,t+.3);
+    o.connect(e);e.connect(this.out);o.start(t);o.stop(t+.35);
+  },
+  tick(t,g=.05,f=1500){
+    const c=this.ctx,o=c.createOscillator(),e=c.createGain();o.type='triangle';
+    o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.53,t+.03);
+    e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g,t+.002);e.gain.exponentialRampToValueAtTime(.0001,t+.05);
+    o.connect(e);e.connect(this.out);o.start(t);o.stop(t+.08);
+  },
+  pad(freqs,t,dur,g=.05,att=.5){
+    const c=this.ctx;
+    freqs.forEach(f=>{[-4,4].forEach(det=>{
+      const o=c.createOscillator(),e=c.createGain();o.type='sine';o.frequency.value=f;o.detune.value=det;
+      e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g/(freqs.length*1.4),t+att);e.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.connect(e);e.connect(this.out);o.start(t);o.stop(t+dur+.05);
+    });});
+  }
+};
+const CN={C4:261.63,E4:329.63,G4:392,A4:440,C5:523.25,D5:587.33,E5:659.25,G5:783.99,A5:880,B5:987.77,C6:1046.5,D6:1174.66,E6:1318.5,G6:1568,A6:1760,C7:2093,D7:2349.3,E7:2637,D3:146.83,A3:220};
+const PENT=[CN.C5,CN.D5,CN.E5,CN.G5,CN.A5,CN.C6,CN.D6,CN.E6,CN.G6];
+function celSound(fn){if(!fxOn())return;try{if(CAU.ensure())fn(CAU.ctx.currentTime+.06);}catch(e){}}
+/* browsers only let sound start after a tap: the first tap anywhere wakes the engine */
+addEventListener('pointerdown',()=>{if(fxOn())CAU.ensure();},{passive:true});
+function setFx(v){S.settings.fx=v;save();if(v==='on')celSound(t=>{CAU.bell(CN.E6,t,.08,1.3);CAU.bell(CN.A6,t+.09,.06,1.4);});if($('#scrim'))settingsSheet();}
+
+/* ---------- particles (one small engine per animation, drawn on a viewport-wide canvas) ---------- */
+const celPal=()=>celDark()
+  ?{spark:['#ffffff','#cfe0ff','#8fb4ff'],soft:['#ffffff','#bcd3ff'],gold:['#ffffff','#e6efff','#bcd3ff']}
+  :{spark:['#ffb400','#ffcf4a','#2f86f5','#1a56db'],soft:['#ffcf4a','#7db4ff'],gold:['#ffb400','#ff9a00','#ffd25a']};
+function mkFx(z){
+  const comp=celDark()?'lighter':'source-over',dpr=Math.min(2,window.devicePixelRatio||1);
+  let cv=null,cx=null,ps=[],raf=0,last=0,pend=0,W=0,H=0;const spr={};
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  function sprite(color,kind){
+    const k=color+kind;if(spr[k])return spr[k];
+    const s=64,c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d');
+    const h=color.replace('#',''),rgb=[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
+    const c0=`rgba(${rgb},1)`,c1=`rgba(${rgb},.35)`,cz=`rgba(${rgb},0)`;
+    if(kind==='glow'){const g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,c0);g.addColorStop(.2,c0);g.addColorStop(.55,c1);g.addColorStop(1,cz);x.fillStyle=g;x.fillRect(0,0,s,s);}
+    else{x.translate(s/2,s/2);const g=x.createRadialGradient(0,0,0,0,0,s/2);g.addColorStop(0,c0);g.addColorStop(1,cz);
+      x.fillStyle=g;x.beginPath();x.moveTo(0,-s/2);x.quadraticCurveTo(2,-2,s/2,0);x.quadraticCurveTo(2,2,0,s/2);x.quadraticCurveTo(-2,2,-s/2,0);x.quadraticCurveTo(-2,-2,0,-s/2);x.fill();}
+    return spr[k]=c;
+  }
+  function attach(){
+    if(cv)return;
+    cv=document.createElement('canvas');cv.className='cel-cv';cv.style.zIndex=z;document.body.appendChild(cv);
+    W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext('2d');
+  }
+  function tick(now){
+    const dt=Math.min(.05,(now-last)/1000);last=now;
+    if(!cv){raf=0;return;}
+    cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);cx.globalCompositeOperation=comp;
+    ps=ps.filter(p=>p.age<p.life);
+    for(const p of ps){
+      p.age+=dt;const k=p.age/p.life;
+      p.vy+=p.g*dt;const f=Math.pow(p.drag,dt*60);p.vx*=f;p.vy*=f;
+      p.x+=p.vx*dt+(p.sway?Math.sin(p.age*3+p.tw)*p.sway*dt:0);p.y+=p.vy*dt;
+      const tw=.65+.35*Math.sin(p.age*14+p.tw);
+      cx.globalAlpha=Math.max(0,(k<.15?k/.15:1-Math.pow((k-.15)/.85,1.6))*tw);
+      const s=p.size*(p.kind==='spark'?5:6)*(1-k*.35);
+      cx.drawImage(sprite(p.color,p.kind),p.x-s/2,p.y-s/2,s,s);
+    }
+    cx.globalAlpha=1;
+    if(ps.length||pend>0){raf=requestAnimationFrame(tick);}
+    else{raf=0;if(cv){cv.remove();cv=null;}}
+  }
+  const api={
+    burst(o){
+      if(celRM)return;attach();
+      for(let i=0;i<o.n;i++){
+        const a=(o.angle+rnd(-o.spread,o.spread))*Math.PI/180,sp=rnd(o.speed[0],o.speed[1]);
+        ps.push({x:o.x+rnd(-(o.jx||0),o.jx||0),y:o.y+rnd(-(o.jy||0),o.jy||0),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,age:0,life:rnd(o.life[0],o.life[1]),size:rnd(o.size[0],o.size[1]),
+          color:o.colors[(Math.random()*o.colors.length)|0],g:o.g||0,drag:o.drag==null?.97:o.drag,kind:o.kind||'spark',tw:Math.random()*6.28,sway:o.sway||0});
+      }
+      if(!raf){last=performance.now();raf=requestAnimationFrame(tick);}
+    },
+    later(ms,fn){if(celRM){return;}pend++;setTimeout(()=>{pend--;try{fn();}catch(e){}if(!raf&&!ps.length&&cv){cv.remove();cv=null;}},ms);},
+    trickle(o,ms,every){if(celRM)return;for(let i=1;i<=Math.floor(ms/every);i++)api.later(i*every,()=>api.burst(o));},
+    stop(){ps=[];pend=0;if(raf)cancelAnimationFrame(raf);raf=0;if(cv){cv.remove();cv=null;}}
+  };
+  return api;
+}
+/* a standard sparkle burst, coloured for the current theme */
+function sparkAt(fx,pt,n,big){
+  const P=celPal();
+  fx.burst({x:pt.x,y:pt.y,n:n,speed:[50,big?260:200],angle:0,spread:180,life:[.9,1.8],size:[1.6,3.4],colors:P.spark,drag:.965,kind:'spark'});
+  fx.burst({x:pt.x,y:pt.y,n:Math.round(n*.9),speed:[20,120],angle:0,spread:180,life:[1.2,2.2],size:[.9,1.8],colors:P.soft,g:6,drag:.98,kind:'glow'});
+}
+
+/* ---------- the week as a constellation ---------- */
+const CST_PTS=[[28,150],[74,98],[122,140],[170,70],[218,126],[266,84],[312,118]];
+function cstWeek(prevDone,todayLit){
+  const idx=(new Date().getDay()+6)%7;
+  return {idx,st:Array.from({length:7},(_,i)=>i<idx?((idx-i<=prevDone)?'done':'miss'):i===idx?(todayLit?'lit':'today'):'future')};
+}
+function cstLetters(){
+  const lg=(S.settings.lang||'ru')==='en'?'en':'ru';
+  return Array.from({length:7},(_,i)=>{try{return new Date(2024,0,1+i).toLocaleDateString(lg,{weekday:'narrow'}).toUpperCase();}catch(e){return 'MTWTFSS'[i];}});
+}
+/* o: id prefix, st (7 states), idx, view, ignite (today's star is drawn filled, ready to light), flare, goal/done (progress ring) */
+function cstSvg(o){
+  const P=CST_PTS,L=cstLetters(),pf=o.id,S7=o.st,on=i=>S7[i]==='done'||S7[i]==='lit';
+  const lines=P.slice(1).map((p,i)=>{const a=P[i];
+    return `<line id="${pf}ln${i+1}" class="cl${on(i)&&on(i+1)?' on':''}" x1="${a[0]}" y1="${a[1]}" x2="${p[0]}" y2="${p[1]}"/>`;}).join('');
+  const nodes=P.map(([x,y],i)=>{
+    const st=S7[i];let g='';
+    if(st==='done')g=`<circle cx="${x}" cy="${y}" r="24" fill="url(#${pf}h)"/><path class="cs-s" d="${cStarP(x,y,12)}"/>`;
+    else if(st==='lit')g=`<circle id="${pf}tgl" cx="${x}" cy="${y}" r="38" fill="url(#${pf}hh)"/><path class="cs-hot" d="${cStarP(x,y,19)}"/>`;
+    else if(st==='today'){
+      g=`<circle id="${pf}tgl" cx="${x}" cy="${y}" r="38" fill="url(#${pf}hh)" opacity="0"/>`+
+        (o.ignite?`<g id="${pf}tstar" class="fb"><path class="cs-hot" d="${cStarP(x,y,19)}"/></g>`
+          :`<path class="cs-ghost" d="${cStarP(x,y,15)}"/><circle class="cs-ping" cx="${x}" cy="${y}" r="20"/>`)+
+        (o.ignite?`<circle id="${pf}tring" class="cs-ping" cx="${x}" cy="${y}" r="8" opacity="0"/>`:'');
+      if(o.goal){const c=2*Math.PI*26,p=Math.max(0,Math.min(1,(o.done||0)/o.goal));
+        g+=`<circle class="cs-arc-t" cx="${x}" cy="${y}" r="26"/><circle class="cs-arc" cx="${x}" cy="${y}" r="26" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-p)).toFixed(1)}" transform="rotate(-90 ${x} ${y})"/>`;}
+    }
+    else if(st==='miss')g=`<circle class="cs-miss" cx="${x}" cy="${y}" r="3"/>`;
+    else g=`<circle class="cs-fut" cx="${x}" cy="${y}" r="3.4"/>`;
+    return `<g id="${pf}nd${i}" class="nd ${st}" style="--i:${i}">${g}</g><text class="cs-l${i===o.idx?' now':''}" x="${x}" y="${y+36}">${L[i]}</text>`;
+  }).join('');
+  const t=P[o.idx];
+  const flare=o.flare?`<g id="${pf}flare" class="fb"><rect x="${t[0]-72}" y="${t[1]-1}" width="144" height="2" fill="url(#${pf}spk)"/><rect x="${t[0]-1}" y="${t[1]-72}" width="2" height="144" fill="url(#${pf}spk2)"/></g>`:'';
+  return `<svg class="${o.cls||'cst-svg'}" viewBox="${o.view}" aria-hidden="true">
+    <defs>
+      <radialGradient id="${pf}h"><stop offset="0" style="stop-color:var(--cs-halo-c);stop-opacity:.5"/><stop offset="1" style="stop-color:var(--cs-halo-c);stop-opacity:0"/></radialGradient>
+      <radialGradient id="${pf}hh"><stop offset="0" style="stop-color:var(--cs-hot-c);stop-opacity:.75"/><stop offset="1" style="stop-color:var(--cs-hot-c);stop-opacity:0"/></radialGradient>
+      <linearGradient id="${pf}spk" x1="0" x2="1"><stop offset="0" style="stop-color:var(--cs-hot-c);stop-opacity:0"/><stop offset=".5" style="stop-color:var(--cs-hot-c)"/><stop offset="1" style="stop-color:var(--cs-hot-c);stop-opacity:0"/></linearGradient>
+      <linearGradient id="${pf}spk2" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--cs-hot-c);stop-opacity:0"/><stop offset=".5" style="stop-color:var(--cs-hot-c)"/><stop offset="1" style="stop-color:var(--cs-hot-c);stop-opacity:0"/></linearGradient>
+    </defs>${lines}${nodes}${flare}</svg>`;
+}
+
+/* ---------- Today: the streak card and the words ---------- */
+function dayStrip(){
+  const total=S.sets.reduce((n,s)=>n+s.words.length,0);
+  if(!total)return '';
+  const goal=S.stats.goal||10,done=todayCount(),st=S.stats.streak||0,met=!!S.stats.met;
+  const pct=Math.min(100,done/goal*100),w=cstWeek(met?Math.max(0,st-1):st,met);
+  const left=Math.max(0,goal-done);
+  return `<div class="cst-card${met?' met':''}">
+    <div class="cst-top"><div class="cst-n"><b>${st}</b><span>${plr(st,t('day'),t('day2'),t('days'))} ${t('in a row')}</span></div>
+      <button class="cst-goal" onclick="goalSheet()" aria-label="${t('Daily goal')}">${ic('target',15)}<b>${done}/${goal}</b></button></div>
+    ${cstSvg({id:'t',st:w.st,idx:w.idx,view:'0 40 340 164',goal:met?0:goal,done})}
+    <div class="cst-foot"><div class="pbar"><i style="width:${pct}%"></i></div>
+      <div class="cst-ft"><span>${met?t("Today's star is lit"):nWords(left)+' '+t("to light today's star")}</span><span>${t('best:')} ${S.stats.best||0}</span></div></div></div>`;
+}
+function learnPick(){
+  const all=S.sets.flatMap(s=>s.words);
+  const act=all.filter(w=>!w.arch);
+  return shuffle((act.length>=3?act:all).slice()).slice(0,3).map(w=>w.id);
+}
+function wordsCard(){
+  if(!S.sets.some(s=>s.words.length))return '';
+  if(!todayPick||todayPick.some(id=>!findWord(id)))todayPick=learnPick();
+  const ws=todayPick.map(findWord).filter(Boolean);
+  if(!ws.length)return '';
+  return `<div class="wsky" id="wsky"><div class="wsky-h"><span>${t('Words you are learning')}</span>
+    <button onclick="todayShuffle()">${ic('repeat',15)}${t('Shuffle')}</button></div>
+    ${ws.map(({w},i)=>{const lv=Math.min(3,w.box||0);
+      return `<button class="wsk" style="--i:${i}" onclick="speakWord('${w.id}')"><span class="wsk-s">${ic('sound',16)}</span>
+        <span class="wsk-t"><b>${esc(w.en)}</b><em>${esc(w.ru)}</em></span>
+        <span class="wsk-p">${[1,2,3].map(k=>`<i class="${k<=lv?'on':''}"></i>`).join('')}</span></button>`;}).join('')}</div>`;
+}
+function todayShuffle(){todayPick=learnPick();const e=$('#wsky');if(e)e.outerHTML=wordsCard();}
+
+/* ---------- when the streak animation is due ---------- */
+function celPending(){
+  try{const o=JSON.parse(localStorage.getItem('noeon_cel')||'null');return !!(o&&!o.shown&&o.day===S.stats.day&&S.stats.met);}catch(e){return false;}
+}
+function celMark(){try{localStorage.setItem('noeon_cel',JSON.stringify({day:S.stats.day,shown:false}));}catch(e){}}
+function celSoon(ms){
+  if(CEL.open||!celPending())return;
+  clearTimeout(celTimer);
+  celTimer=setTimeout(()=>{
+    if(CEL.open||!celPending())return;
+    if(!($('#chero')||(view.name==='today'&&!studyBusy)))return;
+    celShow();
+  },ms);
+}
+const celMil=n=>[7,14,21,30,50,75,100,150,200,365].indexOf(n)>=0||(n>365&&n%100===0);
+const celMilTitle=n=>n===7?t('A whole week in a row!'):n===14?t('Two weeks in a row!'):n===30?t('A month with no gaps!'):n===100?t('One hundred days!'):n===365?t('A whole year!'):t('A new milestone!');
+function celSky(){
+  const dark=celDark(),r=(()=>{let x=11;return()=>(x=(x*16807)%2147483647)/2147483647;})();let s='';
+  if(dark){for(let i=0;i<70;i++)s+=`<circle cx="${(r()*390).toFixed(1)}" cy="${(r()*780).toFixed(1)}" r="${(.4+r()*.9).toFixed(2)}" fill="#fff" opacity="${(.15+r()*.5).toFixed(2)}"/>`;}
+  else{for(let i=0;i<30;i++)s+=`<path d="${cStarP((r()*390).toFixed(1),(r()*780).toFixed(1),(2+r()*3.5).toFixed(1))}" fill="var(--cs-dot)" opacity="${(.06+r()*.16).toFixed(2)}"/>`;}
+  return `<svg class="cel-sky" viewBox="0 0 390 780" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${s}</svg>`+
+    (dark?'':`<div class="cel-cloud" style="left:-8%;top:8%;width:55%;height:11%"></div><div class="cel-cloud" style="right:-10%;top:58%;width:60%;height:12%;animation-delay:-9s"></div><div class="cel-cloud" style="left:12%;bottom:6%;width:46%;height:9%;animation-delay:-16s;opacity:.5"></div>`);
+}
+
+/* ---------- the streak overlay ---------- */
+function celShow(){
+  if(CEL.open)return;
+  const st=S.stats,n=Math.max(1,st.streak||1),mil=celMil(n),w=cstWeek(n-1,false),dark=celDark();
+  try{localStorage.setItem('noeon_cel',JSON.stringify({day:st.day,shown:true}));}catch(e){}
+  CEL.open=true;
+  const ov=document.createElement('div');ov.id='celeb';ov.className='celeb';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
+  const head=(mil?celMilTitle(n):t('A new star lights up')).split(' ').map(x=>`<i>${esc(x)}</i>`).join(' ');
+  ov.innerHTML=`<div class="cel-bg"></div>${celSky()}<div class="cel-glow" id="cglow"></div>
+    <div class="cel-col">
+      <div class="cel-hero" id="chero2">${cstSvg({id:'c',st:w.st,idx:w.idx,ignite:true,flare:true,view:'0 30 340 176',cls:'cel-svg'})}</div>
+      <div class="cel-num" id="cnum"><div class="tr"><span>${n-1}</span><span>${n}</span></div></div>
+      <div class="cel-lbl" id="clbl">${plr(n,t('day'),t('day2'),t('days'))} ${t('in a row')}</div>
+      <div class="cel-hl" id="chl">${head}</div>
+      <div class="cel-sub" id="csub">${t('Daily goal reached')} · ${nWords(st.goal||10)}</div>
+    </div>
+    <div class="cel-cta"><button type="button" id="cgo">${t('Continue')}</button></div>`;
+  document.body.appendChild(ov);
+  const prevOv=document.body.style.overflow;document.body.style.overflow='hidden';
+  const fx=mkFx(120),idx=w.idx,P=CST_PTS,tm=x=>celRM?0:x;
+  let closed=false;
+  function close(){
+    if(closed)return;closed=true;fx.stop();
+    document.removeEventListener('keydown',onKey);
+    const a=ov.animate?ov.animate([{opacity:1},{opacity:0}],{duration:celRM?1:260,easing:'ease-out',fill:'forwards'}):null;
+    const fin=()=>{ov.remove();document.body.style.overflow=prevOv;CEL.open=false;};
+    if(a)a.onfinish=fin;else fin();
+  }
+  function onKey(e){if(e.key==='Escape'){e.preventDefault();close();}}
+  document.addEventListener('keydown',onKey);
+  $('#cgo').onclick=close;
+  const q=s=>ov.querySelector(s),qa=s=>[...ov.querySelectorAll(s)];
+  const hot=dark?'#d2e4ff':'#1a56db';
+  /* the stars that are already lit arrive, then idle */
+  qa('.nd.done').forEach((g,i)=>{
+    wa(g,[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1)'}],{delay:tm(100+i*70),duration:600,easing:CE.spring});
+    wa(g,[{opacity:1},{opacity:.72}],{delay:tm(1200+i*230),duration:1700+i*180,iterations:Infinity,direction:'alternate',easing:'ease-in-out',composite:'replace'});
+  });
+  qa('.nd.future,.nd.miss').forEach((g,i)=>wa(g,[{opacity:0},{opacity:1}],{delay:tm(150+i*50),duration:600}));
+  /* the thread to today's star */
+  const ln=idx>0?q('#cln'+idx):null;
+  if(ln){const len=ln.getTotalLength?ln.getTotalLength():60;ln.style.strokeDasharray=len;
+    wa(ln,[{strokeDashoffset:len,stroke:hot,strokeWidth:2.2},{strokeDashoffset:0,stroke:hot,strokeWidth:2.2,offset:.6},{strokeDashoffset:0,stroke:hot,strokeWidth:1.4,strokeOpacity:.55}],{delay:tm(380),duration:1500,easing:CE.soft});}
+  /* ignition */
+  const ts=q('#ctstar'),tg=q('#ctgl'),tr=q('#ctring'),fl=q('#cflare'),tx=P[idx][0],ty=P[idx][1];
+  [ts,tg,tr].forEach(e=>{if(e){e.style.transformBox='fill-box';e.style.transformOrigin='center';}});
+  wa(ts,[{transform:'scale(0) rotate(-60deg)',opacity:0},{transform:'scale(1.5) rotate(8deg)',opacity:1,offset:.5},{transform:'scale(1) rotate(0)',opacity:1}],{delay:tm(900),duration:900,easing:CE.soft});
+  wa(tg,[{opacity:0,transform:'scale(.2)'},{opacity:.95,transform:'scale(1.6)',offset:.35},{opacity:.55,transform:'scale(1)'}],{delay:tm(900),duration:1300});
+  wa(tr,[{opacity:0,transform:'scale(.6)'},{opacity:.9,transform:'scale(.65)',offset:.02},{opacity:0,transform:'scale(4.2)'}],{delay:tm(920),duration:1100});
+  wa(fl,[{opacity:0,transform:'scale(.1) rotate(0)'},{opacity:1,transform:'scale(1) rotate(0)',offset:.3},{opacity:0,transform:'scale(1.25) rotate(14deg)'}],{delay:tm(930),duration:1300});
+  wa(ts,[{opacity:1},{opacity:.85}],{delay:tm(2300),duration:1600,iterations:Infinity,direction:'alternate',easing:'ease-in-out',composite:'replace'});
+  wa(q('#cglow'),[{opacity:0,transform:'scale(.5)'},{opacity:1,transform:'scale(1)'}],{delay:tm(900),duration:1600});
+  if(mil){
+    qa('.nd').forEach((g,i)=>wa(g,[{filter:'brightness(1)'},{filter:'brightness(1.8)',offset:.4},{filter:'brightness(1)'}],{delay:tm(2150+i*110),duration:900,easing:CE.soft}));
+    qa('.cl').forEach((l,i)=>wa(l,[{strokeWidth:1.4},{strokeWidth:2.6,stroke:hot,offset:.4},{strokeWidth:1.4}],{delay:tm(2150+i*110),duration:900,easing:CE.soft}));
+  }
+  /* number, label, headline */
+  wa(q('#cnum .tr'),[{transform:'translateY(0)',filter:'blur(0)'},{filter:'blur(3px)',offset:.45},{transform:'translateY(-50%)',filter:'blur(0)'}],{delay:tm(1250),duration:750,easing:'cubic-bezier(.5,0,.1,1)'});
+  wa(q('#cnum'),[{transform:'scale(1)'},{transform:'scale(1.14)',offset:.6},{transform:'scale(1)'}],{delay:tm(1350),duration:1100,easing:CE.soft});
+  wa(q('#clbl'),[{opacity:0,transform:'translateY(10px)'},{opacity:.92,transform:'none'}],{delay:tm(1600),duration:600});
+  qa('#chl i').forEach((e,i)=>wa(e,[{opacity:0,transform:'translateY(16px) scale(.96)'},{opacity:1,transform:'none'}],{delay:tm(1750+i*80),duration:650}));
+  wa(q('#csub'),[{opacity:0},{opacity:1}],{delay:tm(2300),duration:700});
+  wa(q('.cel-cta'),[{opacity:0,transform:'translateY(24px)'},{opacity:1,transform:'none'}],{delay:tm(2400),duration:600});
+  setTimeout(()=>{const b=$('#cgo');if(b&&!closed)b.focus({preventScroll:true});},celRM?50:3000);
+  /* sparks come from the star itself */
+  const at=()=>{const e=ts||q('#ctgl');return e?cen(e):{x:innerWidth/2,y:innerHeight/3};};
+  fx.later(tm(930),()=>{const p=at();sparkAt(fx,p,mil?46:30,true);});
+  if(!celRM){
+    for(let i=1;i<=Math.floor(1900/110);i++)fx.later(930+1200+i*110,()=>{const p=at();fx.burst({x:p.x,y:p.y,n:1,speed:[10,70],angle:0,spread:180,life:[1.2,2],size:[.9,1.8],colors:celPal().soft,drag:.98,kind:'spark',jx:26,jy:26});});
+    if(mil)fx.later(2150,()=>qa('.nd').forEach((g,i)=>fx.later(i*110,()=>{const p=cen(g);fx.burst({x:p.x,y:p.y,n:9,speed:[30,120],angle:0,spread:180,life:[.8,1.4],size:[1.2,2.4],colors:celPal().spark,drag:.97,kind:'spark'});})));
+  }
+  /* the score */
+  celSound(t0=>{
+    const A=CAU,t=x=>t0+x;
+    A.sweep(420,2100,t(.38),.52,.045);
+    A.bell(CN.D6,t(.92),.1,2.4,1.3);A.bell(CN.A6,t(.94),.07,2.6,1.3);A.bell(CN.E7,t(.97),.04,2.4,1.5);
+    [CN.A5,CN.C6,CN.D6,CN.E6,CN.G6,CN.A6,CN.D7].forEach((f,i)=>A.bell(f,t(1.0+i*.065),.045,1.0,1.5));
+    A.pad([CN.D3,CN.A3,CN.D5],t(.9),3.4,.08,.35);
+    A.tick(t(1.28),.05);
+    if(mil){[CN.D6,CN.A6,CN.D7,CN.E7].forEach((f,i)=>A.bell(f,t(2.1+i*.12),.06,2.4,1.4));A.noise(t(2.05),.9,3000,6500,.03,1.5,'bandpass',.3);}
+  });
+  try{if(navigator.vibrate&&!celRM)navigator.vibrate([12,40,14]);}catch(e){}
+}
+
+/* ================= the finales — one for each way of studying ================= */
+const scoreTitle=p=>p>=90?t('Excellent!'):p>=70?t('Great job!'):p>=50?t('Good effort'):t('Keep practising');
+const HDEFS=`<defs><radialGradient id="hhh"><stop offset="0" style="stop-color:var(--cs-hot-c);stop-opacity:.75"/><stop offset="1" style="stop-color:var(--cs-hot-c);stop-opacity:0"/></radialGradient>
+  <radialGradient id="hhb"><stop offset="0" style="stop-color:var(--cs-halo-c);stop-opacity:.5"/><stop offset="1" style="stop-color:var(--cs-halo-c);stop-opacity:0"/></radialGradient>
+  <linearGradient id="hsp" x1="0" x2="1"><stop offset="0" style="stop-color:var(--cs-hot-c);stop-opacity:0"/><stop offset=".5" style="stop-color:var(--cs-hot-c)"/><stop offset="1" style="stop-color:var(--cs-hot-c);stop-opacity:0"/></linearGradient>
+  <linearGradient id="hsp2" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--cs-hot-c);stop-opacity:0"/><stop offset=".5" style="stop-color:var(--cs-hot-c)"/><stop offset="1" style="stop-color:var(--cs-hot-c);stop-opacity:0"/></linearGradient>
+  <linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--cs-g1)"/><stop offset="1" style="stop-color:var(--cs-g2)"/></linearGradient></defs>`;
+/* a flash of light at (x,y): glow, ring, cross flare */
+function ignite(root,x,y,at){
+  const g=root.querySelector('#hglow'),r=root.querySelector('#hring'),f=root.querySelector('#hflare');
+  [g,r,f].forEach(e=>{if(e){e.style.transformBox='fill-box';e.style.transformOrigin='center';}});
+  wa(g,[{opacity:0,transform:'scale(.2)'},{opacity:.95,transform:'scale(1.5)',offset:.35},{opacity:.5,transform:'scale(1)'}],{delay:at,duration:1300});
+  wa(r,[{opacity:0,transform:'scale(.5)'},{opacity:.9,transform:'scale(.6)',offset:.02},{opacity:0,transform:'scale(4)'}],{delay:at+20,duration:1100});
+  wa(f,[{opacity:0,transform:'scale(.1) rotate(0)'},{opacity:1,transform:'scale(1) rotate(0)',offset:.3},{opacity:0,transform:'scale(1.25) rotate(14deg)'}],{delay:at+30,duration:1300});
+}
+const igniteSvg=(x,y,r)=>`<circle id="hglow" cx="${x}" cy="${y}" r="${r}" fill="url(#hhh)" opacity="0"/><circle id="hring" cx="${x}" cy="${y}" r="9" fill="none" class="cs-ping" opacity="0"/>
+  <g id="hflare" opacity="0"><rect x="${x-62}" y="${y-1}" width="124" height="2" fill="url(#hsp)"/><rect x="${x-1}" y="${y-62}" width="2" height="124" fill="url(#hsp2)"/></g>`;
+
+/* CARDS — the deck fans out, gathers into a stack, and the top card lights up */
+function heroCards(){
+  const cards=[0,1,2,3,4].map(i=>`<g class="fb" id="hk${i}"><rect x="83" y="42" width="74" height="104" rx="13" class="ch-card"/><rect x="95" y="58" width="28" height="5" rx="2.5" class="ch-ln"/><rect x="95" y="70" width="46" height="4" rx="2" class="ch-ln2"/><rect x="95" y="80" width="38" height="4" rx="2" class="ch-ln2"/></g>`).join('');
+  return {svg:`<svg viewBox="0 0 240 190" aria-hidden="true">${HDEFS}${igniteSvg(120,94,72)}${cards}<g id="hstar" class="fb"><path class="cs-hot" d="${cStarP(120,100,17)}"/></g></svg>`,
+  run(root){
+    const T=1900,fx=mkFx(60);
+    [0,1,2,3,4].forEach(i=>{
+      const fan=`translate(${(i-2)*34}px,${Math.abs(i-2)*7}px) rotate(${(i-2)*15}deg)`,stack=`translate(${(i-4)*-1.5}px,${(i-4)*2.4}px) rotate(${(i-2)*1.3}deg)`;
+      wa(root.querySelector('#hk'+i),[
+        {opacity:0,transform:'translateY(-50px) rotate(0deg)',offset:0},
+        {opacity:1,transform:'translateY(0) rotate(0deg)',offset:.2},
+        {opacity:1,transform:'translateY(0) rotate(0deg)',offset:.26},
+        {opacity:1,transform:fan,offset:.5},
+        {opacity:1,transform:fan,offset:.58},
+        {opacity:1,transform:stack,offset:.8},
+        {opacity:1,transform:stack,offset:1}],{delay:i*80,duration:T,easing:'cubic-bezier(.4,0,.2,1)'});
+    });
+    const hs=root.querySelector('#hstar');
+    wa(hs,[{transform:'scale(0) rotate(-60deg)',opacity:0},{transform:'scale(1.5) rotate(8deg)',opacity:1,offset:.5},{transform:'scale(1) rotate(0)',opacity:1}],{delay:1560,duration:850,easing:CE.soft});
+    ignite(root,120,100,1560);
+    fx.later(1580,()=>sparkAt(fx,cen(hs),30,false));
+    celSound(t0=>{const A=CAU,t=x=>t0+x;
+      for(let i=0;i<5;i++)A.noise(t(.04+i*.08),.07,3400,1300,.05,.8,'bandpass',.004);
+      A.noise(t(.5),.45,500,2600,.05,.9,'bandpass',.12);A.sweep(320,820,t(.55),.4,.03);
+      A.noise(t(1.4),.12,1800,500,.05,.8,'bandpass',.005);A.thump(t(1.43),.1);
+      A.bell(CN.E6,t(1.58),.09,2.2,1.3);A.bell(CN.A6,t(1.6),.06,2.2,1.3);
+      [CN.C6,CN.E6,CN.G6,CN.C7].forEach((f,i)=>A.bell(f,t(1.68+i*.07),.04,1.1,1.4));
+      A.pad([CN.A3,CN.E5],t(1.5),2.4,.05,.3);});
+  }};
+}
+
+/* LEARN — each mastered word becomes a star; they join into a ring and the centre ignites */
+function heroLearn(o){
+  const k=Math.max(3,Math.min(9,o.n||5)),cx=120,cy=100,R=66;
+  const pts=Array.from({length:k},(_,i)=>{const a=(-90+i*360/k)*Math.PI/180;return [cx+R*Math.cos(a),cy+R*Math.sin(a)];});
+  const lines=pts.map((p,i)=>{const b=pts[(i+1)%k];return `<line id="hl${i}" class="cl on" x1="${p[0].toFixed(1)}" y1="${p[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}"/>`;}).join('');
+  const stars=pts.map((p,i)=>`<g class="fb" id="hs${i}"><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="18" fill="url(#hhb)"/><path class="cs-s" d="${cStarP(p[0].toFixed(1),p[1].toFixed(1),10)}"/></g>`).join('');
+  return {svg:`<svg viewBox="0 0 240 200" aria-hidden="true">${HDEFS}${igniteSvg(cx,cy,78)}<g id="hrot" style="transform-origin:${cx}px ${cy}px">${lines}${stars}</g><g id="hstar" class="fb"><path class="cs-hot" d="${cStarP(cx,cy,24)}"/></g></svg>`,
+  run(root){
+    const fx=mkFx(60),step=.12,s0=.2,end=s0+k*step+.3;
+    pts.forEach((p,i)=>{
+      wa(root.querySelector('#hs'+i),[{opacity:0,transform:'scale(0) rotate(-40deg)'},{opacity:1,transform:'scale(1.5) rotate(6deg)',offset:.55},{opacity:1,transform:'scale(1) rotate(0)'}],{delay:(s0+i*step)*1000,duration:560,easing:CE.soft});
+      const ln=root.querySelector('#hl'+(i===0?k-1:i-1));
+      if(ln&&(i>0)){const len=ln.getTotalLength();ln.style.strokeDasharray=len;wa(ln,[{strokeDashoffset:len},{strokeDashoffset:0}],{delay:(s0+i*step+.05)*1000,duration:260,easing:CE.soft});}
+      else if(ln&&i===0){ln.style.opacity=0;}
+    });
+    /* the last line closes the ring */
+    const lst=root.querySelector('#hl'+(k-1));
+    if(lst){lst.style.opacity=1;const len=lst.getTotalLength();lst.style.strokeDasharray=len;wa(lst,[{strokeDashoffset:len},{strokeDashoffset:0}],{delay:(s0+(k-1)*step+.3)*1000,duration:320,easing:CE.soft});}
+    const hs=root.querySelector('#hstar');
+    wa(hs,[{transform:'scale(0) rotate(-80deg)',opacity:0},{transform:'scale(1.5) rotate(10deg)',opacity:1,offset:.5},{transform:'scale(1) rotate(0)',opacity:1}],{delay:end*1000,duration:900,easing:CE.soft});
+    ignite(root,cx,cy,end*1000);
+    wa(root.querySelector('#hrot'),[{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],{delay:(end+.6)*1000,duration:70000,iterations:Infinity,easing:'linear'});
+    pts.forEach((p,i)=>fx.later((s0+i*step)*1000+120,()=>{const e=root.querySelector('#hs'+i);if(e)sparkAt(fx,cen(e),5,false);}));
+    fx.later(end*1000+60,()=>sparkAt(fx,cen(hs),36,true));
+    celSound(t0=>{const A=CAU,t=x=>t0+x;
+      for(let i=0;i<k;i++)A.pluck(PENT[i%PENT.length],t(s0+i*step),.12,.8);
+      A.bell(CN.C6,t(end),.1,2.2);A.bell(CN.G6,t(end+.02),.07,2.2);A.bell(CN.E7,t(end+.04),.04,2.2,1.5);
+      A.pad([CN.C4,CN.G4,CN.E5],t(end-.1),3,.07,.4);});
+  }};
+}
+
+/* TEST — the ring fills with a comet at its tip; stars light as the score passes them */
+const TEST_TH=[50,70,90];
+function heroTest(o){
+  const pct=Math.max(0,Math.min(100,o.pct|0)),r=82,c=2*Math.PI*r;
+  const stars=TEST_TH.map((th,k)=>{const x=64+k*36,y=226;
+    return `<g class="fb" id="hst${k}"><path class="cs-ghost" d="${cStarP(x,y,13)}"/><g class="fb" id="hsl${k}" opacity="0"><path class="cs-hot" d="${cStarP(x,y,13)}"/></g></g>`;}).join('');
+  return {svg:`<svg viewBox="0 0 200 250" aria-hidden="true">${HDEFS}<circle class="ch-track" cx="100" cy="100" r="${r}" stroke-width="11"/>
+    <circle id="hfill" cx="100" cy="100" r="${r}" fill="none" stroke="url(#hg)" stroke-width="11" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${c.toFixed(1)}" transform="rotate(-90 100 100)"/>
+    <g id="hcomet" style="transform-origin:100px 100px;${pct?'':'opacity:0'}"><circle cx="100" cy="18" r="13" fill="url(#hhh)"/><circle cx="100" cy="18" r="3.8" style="fill:var(--cs-hot)"/></g>
+    <text id="hnum" class="ch-num" x="100" y="116">0%</text>${stars}</svg>`,
+  run(root){
+    const fx=mkFx(60),DUR=celRM?1:1500,fill=root.querySelector('#hfill'),comet=root.querySelector('#hcomet'),num=root.querySelector('#hnum');
+    const lit=[false,false,false];
+    const light=k=>{
+      lit[k]=true;const g=root.querySelector('#hsl'+k);
+      wa(g,[{opacity:0,transform:'scale(.2) rotate(-50deg)'},{opacity:1,transform:'scale(1.6) rotate(8deg)',offset:.55},{opacity:1,transform:'scale(1) rotate(0)'}],{duration:620,easing:CE.soft});
+      sparkAt(fx,cen(g),10,false);
+    };
+    const t0=performance.now();
+    (function f(now){
+      if(!fill.isConnected)return;
+      const x=Math.min(1,(now-t0)/DUR),p=1-Math.pow(1-x,4),v=pct*p;
+      fill.setAttribute('stroke-dashoffset',(c*(1-v/100)).toFixed(2));
+      comet.style.transform=`rotate(${(v*3.6).toFixed(2)}deg)`;
+      num.textContent=Math.round(v)+'%';
+      TEST_TH.forEach((th,k)=>{if(!lit[k]&&pct>=th&&v>=th-.001)light(k);});
+      if(x<1)requestAnimationFrame(f);
+      else{
+        num.textContent=pct+'%';
+        if(pct>=80){const cc=cen(comet.querySelector('circle:last-child'));sparkAt(fx,{x:cc.x,y:cc.y},34,true);}
+        wa(comet,[{opacity:1},{opacity:0}],{delay:200,duration:600});
+      }
+    })(t0);
+    celSound(t0s=>{const A=CAU,t=x=>t0s+x,d=DUR/1000;
+      for(let i=0;i<8;i++)A.tick(t(.08+i*.17),.035+i*.003,1100+i*90);
+      const notes=[CN.E6,CN.G6,CN.C7];
+      TEST_TH.forEach((th,k)=>{if(pct>=th){const x=th>=pct?1:1-Math.pow(1-th/pct,.25);A.bell(notes[k],t(x*d),.08,1.8,1.3);}});
+      if(pct>=80){A.bell(CN.D6,t(d+.05),.08,2.4,1.3);A.bell(CN.A6,t(d+.07),.06,2.4,1.3);A.pad([CN.D3,CN.A3,CN.D5],t(d),3,.06,.3);}
+      else if(pct>=50)A.bell(CN.A5,t(d+.05),.06,1.6);});
+  }};
+}
+
+/* MATCH — pairs are joined by threads of light; the hub star ignites when all are linked */
+function heroMatch(o){
+  const n=Math.max(3,Math.min(6,o.n||6)),ys=Array.from({length:n},(_,i)=>24+i*(132/(n-1))),sh=Math.ceil(n/2);
+  const links=ys.map((yl,i)=>{const yr=ys[(i+sh)%n];return {yl,yr};});
+  const paths=links.map((l,i)=>`<path id="hp${i}" class="cl on" d="M40 ${l.yl.toFixed(1)}C112 ${l.yl.toFixed(1)} 128 ${l.yr.toFixed(1)} 200 ${l.yr.toFixed(1)}"/>`).join('');
+  const dots=links.map((l,i)=>`<circle class="ch-dot" cx="40" cy="${l.yl.toFixed(1)}" r="7"/><circle class="ch-dot" cx="200" cy="${l.yr.toFixed(1)}" r="7"/>
+    <circle class="ch-dot-on fb" id="hd${i}a" cx="40" cy="${l.yl.toFixed(1)}" r="7" opacity="0"/><circle class="ch-dot-on fb" id="hd${i}b" cx="200" cy="${l.yr.toFixed(1)}" r="7" opacity="0"/>`).join('');
+  return {svg:`<svg viewBox="0 0 240 180" aria-hidden="true">${HDEFS}${igniteSvg(120,90,76)}${paths}${dots}<g id="hstar" class="fb"><path class="cs-hot" d="${cStarP(120,90,20)}"/></g></svg>`,
+  run(root){
+    const fx=mkFx(60),s0=.25,step=.26,end=s0+n*step+.1,flawless=!o.miss;
+    links.forEach((l,i)=>{
+      const p=root.querySelector('#hp'+i),len=p.getTotalLength();p.style.strokeDasharray=len;
+      wa(p,[{strokeDashoffset:len},{strokeDashoffset:0}],{delay:(s0+i*step)*1000,duration:420,easing:CE.soft});
+      ['a','b'].forEach((s,j)=>{const d=root.querySelector(`#hd${i}${s}`);
+        wa(d,[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1.6)',offset:.5},{opacity:1,transform:'scale(1)'}],{delay:(s0+i*step+j*.4)*1000,duration:480,easing:CE.soft});
+        fx.later((s0+i*step+j*.4)*1000+100,()=>sparkAt(fx,cen(d),4,false));});
+    });
+    const hs=root.querySelector('#hstar');
+    wa(hs,[{transform:'scale(0) rotate(-80deg)',opacity:0},{transform:'scale(1.55) rotate(10deg)',opacity:1,offset:.5},{transform:'scale(1) rotate(0)',opacity:1}],{delay:end*1000,duration:900,easing:CE.soft});
+    ignite(root,120,90,end*1000);
+    fx.later(end*1000+60,()=>sparkAt(fx,cen(hs),flawless?50:30,true));
+    /* the stopwatch figure counts up beside it */
+    const el=root.parentNode.querySelector('.big-pct'),to=parseFloat(o.time)||0,t0=performance.now(),DUR=celRM?1:1400;
+    if(el)(function f(now){if(!el.isConnected)return;const x=Math.min(1,(now-t0)/DUR),p=1-Math.pow(1-x,3);el.textContent=(to*p).toFixed(1)+'s';if(x<1)requestAnimationFrame(f);})(t0);
+    celSound(t0s=>{const A=CAU,t=x=>t0s+x;
+      for(let i=0;i<n;i++)A.pluck(PENT[i%PENT.length],t(s0+i*step+.2),.12,.8);
+      A.bell(CN.C6,t(end),.1,2.2);A.bell(CN.G6,t(end+.02),.07,2.2);A.pad([CN.C4,CN.G4,CN.E5],t(end-.1),3,.06,.4);
+      if(flawless)[CN.E6,CN.G6,CN.C7,CN.E7].forEach((f,i)=>A.bell(f,t(end+.25+i*.09),.06,1.8,1.4));});
+  }};
+}
+
+/* SESSION — a sun rises over the horizon: the day's work is done */
+function heroSession(){
+  const rays=Array.from({length:16},(_,i)=>{const a=i*22.5*Math.PI/180,r0=44,r1=i%2?54:64;
+    return `<line class="cl on fb" x1="${(120+r0*Math.cos(a)).toFixed(1)}" y1="${(104+r0*Math.sin(a)).toFixed(1)}" x2="${(120+r1*Math.cos(a)).toFixed(1)}" y2="${(104+r1*Math.sin(a)).toFixed(1)}" style="stroke-width:2.4"/>`;}).join('');
+  const tw=[[28,30],[204,24],[52,70],[190,64],[16,96],[222,92]].map(([x,y],i)=>`<path class="cs-s fb" id="hq${i}" d="${cStarP(x,y,4+(i%3))}" opacity="0"/>`).join('');
+  return {svg:`<svg viewBox="0 0 240 170" aria-hidden="true">${HDEFS}<clipPath id="hcp"><rect x="-20" y="-20" width="280" height="148"/></clipPath>
+    ${igniteSvg(120,104,80)}${tw}
+    <g clip-path="url(#hcp)"><g id="hsun" class="fb"><circle cx="120" cy="104" r="70" fill="url(#hhh)"/><g id="hrays" style="transform-origin:120px 104px">${rays}</g><circle cx="120" cy="104" r="33" style="fill:var(--cs-hot);stroke:var(--cs-hot-st)" stroke-width="1.4"/></g></g>
+    <line class="cl on" x1="18" y1="128" x2="222" y2="128" style="stroke-width:1.8"/>
+    <line class="cl" x1="60" y1="140" x2="180" y2="140"/><line class="cl" x1="90" y1="150" x2="150" y2="150"/></svg>`,
+  run(root){
+    const fx=mkFx(60),sun=root.querySelector('#hsun'),rise=1300;
+    wa(sun,[{transform:'translateY(76px)'},{transform:'translateY(0)'}],{delay:150,duration:rise,easing:'cubic-bezier(.22,.9,.3,1)'});
+    root.querySelectorAll('#hrays line').forEach((l,i)=>wa(l,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{delay:rise+i*30,duration:500,easing:CE.spring}));
+    wa(root.querySelector('#hrays'),[{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],{delay:rise+500,duration:90000,iterations:Infinity,easing:'linear'});
+    ignite(root,120,104,rise);
+    for(let i=0;i<6;i++){const q=root.querySelector('#hq'+i);
+      wa(q,[{opacity:0,transform:'scale(0)'},{opacity:.9,transform:'scale(1.4)',offset:.5},{opacity:.8,transform:'scale(1)'}],{delay:rise+200+i*110,duration:600,easing:CE.spring});
+      wa(q,[{opacity:.8},{opacity:.35}],{delay:rise+1200+i*200,duration:1500,iterations:Infinity,direction:'alternate',easing:'ease-in-out',composite:'replace'});}
+    fx.later(rise,()=>{const c=cen(sun);sparkAt(fx,{x:c.x,y:c.y-10},38,true);});
+    celSound(t0=>{const A=CAU,t=x=>t0+x;
+      A.pad([CN.C4,CN.G4,CN.E5],t(.1),3.6,.08,.9);A.sweep(300,1250,t(.2),1.0,.04);
+      A.noise(t(.3),1.0,600,3200,.025,.9,'bandpass',.5);
+      A.bell(CN.G5,t(1.35),.09,2.4);A.bell(CN.C6,t(1.38),.08,2.4);A.bell(CN.E6,t(1.41),.06,2.4,1.3);
+      [CN.G5,CN.C6,CN.E6,CN.G6].forEach((f,i)=>A.pluck(f,t(1.7+i*.09),.07,1));});
+  }};
+}
+
+/* the hero block shared by every finale: picture, title, line of text */
+function celHero(kind,o){
+  const h={cards:heroCards,learn:heroLearn,test:heroTest,match:heroMatch,session:heroSession}[kind](o);
+  celQ={run:h.run};
+  return `<div class="hero k-${kind}"><div class="chero" id="chero">${h.svg}</div>${o.mid||''}
+    <div class="hero-title" style="margin-top:${o.mid?'4px':'14px'}">${o.title}</div><div class="hero-sub">${o.sub||''}</div></div>`;
+}
+/* call right after the finale markup is in the page */
+function celPlay(){
+  const q=celQ;celQ=null;if(!q)return;
+  requestAnimationFrame(()=>{
+    const root=$('#chero');if(!root)return;
+    try{q.run(root);}catch(e){console.warn('finale',e);}
+    celSoon(celRM?400:3000);
   });
 }
 
