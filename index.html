@@ -476,7 +476,6 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .dgrip{display:none;position:absolute;left:0;top:0;bottom:0;width:26px;align-items:center;justify-content:center;color:var(--fade);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .dgrip svg{width:15px;height:15px}
 .dgrip:hover{color:var(--pri)}
-.lnk.editbtn{display:none}
 .item.editing{background:var(--surf2);cursor:default}
 .inl{display:block;width:100%;border:1px solid var(--line2);background:var(--surf);color:var(--tx);border-radius:9px;padding:6px 10px;font:inherit;outline:none;min-width:0}
 .inl.en{font-family:var(--ff-serif);font-weight:700;font-size:17px;margin-bottom:5px}
@@ -492,12 +491,16 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   .item:hover .dgrip{display:flex}
   .wlist .item[data-m]:hover .racts{background:linear-gradient(to right,transparent,var(--surf) 20px)}
 }
+.swact{display:none}
 @media (hover:none),(pointer:coarse){
-  .lnk.editbtn{display:inline-flex}
-  .editmode .racts{display:flex}
-  .editmode .dgrip{display:flex}
-  .editmode .wlist .item{padding-left:30px}
-  .editmode .item:active{background:none}
+  .item[data-id]{touch-action:pan-y}
+  .item[data-dr]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .swact{display:flex;position:absolute;left:100%;top:0;bottom:0;width:160px}
+  .swact button{flex:1;border:0;padding:0;font:inherit;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#fff}
+  .swact .e{background:var(--pri);color:var(--on-pri)}
+  .swact .d{background:var(--bad);color:var(--on-pri)}
+  .item.swiped{transform:translateX(-160px)}
+  .wlist .item.swiped:active{transform:translateX(-160px)}
 }
 </style>
 </head>
@@ -1751,7 +1754,7 @@ let view={name:'home'};
 let selMode=false;const selIds=new Set();
 function clearSel(){selMode=false;selIds.clear();}
 function go(name,p={}){
-  rowCap=400;if(inl)inlineCommit();editOff();
+  rowCap=400;if(inl)inlineCommit();swClose();
   /* older entry points still work: lists and the two smart lists are filters now */
   if(name==='home')name='today';
   clearSel();
@@ -1914,7 +1917,7 @@ set(app){
   const pool=active(s),items=setSliceOf(s);
   const tbar=selMode
    ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
-   :(pool.length?`<div class="tbar"><span class="t">${t('Learning')} · ${items.length}</span><button class="lnk editbtn" onclick="toggleEditMode()">${ic(editOn?'check':'grip',15,2)}${editOn?t('Done'):t('Edit')}</button><button class="lnk" onclick="toggleMarkMode()">${ic('pen',15,2)}${t('Marker')}</button><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
+   :(pool.length?`<div class="tbar"><span class="t">${t('Learning')} · ${items.length}</span><button class="lnk" onclick="toggleMarkMode()">${ic('pen',15,2)}${t('Marker')}</button><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   app.innerHTML=hdr(s.name,"go('vocab')",`<button class="ic" aria-label="Menu" onclick="setMenu()">${ic('more')}</button>`)+
    (pool.length&&!selMode?rangeBarHtml(rctx()):'')+
    (pool.length&&!selMode?modesTop('set',s.id):'')+
@@ -1986,31 +1989,28 @@ me(app){
 
 /* one row renderer for every word list */
 let rowCap=400;
-let inl=null,dnd=null,editOn=false;   /* inline edit in progress / row being dragged / touch edit mode */
+let inl=null,dnd=null;   /* inline edit in progress / row being dragged */
 function showAllRows(){rowCap=1e9;render();}
 /* highlighter: pick a colour, then tap words — or press and drag across several */
 
 /* ---------- edit a word right in the list, delete it, drag it to another place ---------- */
-function editOff(){if(!editOn)return;editOn=false;document.body.classList.remove('editmode');}
-function toggleEditMode(){
-  if(inl)inlineCommit();
-  editOn=!editOn;
-  if(editOn){selMode=false;selIds.clear();if(markMode){markMode=false;document.body.classList.remove('markmode');}}
-  document.body.classList.toggle('editmode',editOn);
-  render();
-}
+const rowActsHtml=()=>`<span class="racts"><button class="ra" data-act="edit" aria-label="${t('Edit')}">${ic('pen',16)}</button><button class="ra del" data-act="del" aria-label="${t('Delete')}">${ic('trash',16)}</button></span>`+
+  `<span class="swact"><button class="e" data-sw="edit">${ic('pen',19)}<span>${t('Edit')}</span></button><button class="d" data-sw="del">${ic('trash',19)}<span>${t('Delete')}</span></button></span>`;
+const isTeacherList=()=>view.name==='twords';
 const rowEl=id=>document.querySelector('.item[data-id="'+String(id).replace(/"/g,'')+'"]');
 function inlineStart(id){
   if(inl&&inl.id===id)return;
   if(inl)inlineCommit();
-  const row=rowEl(id),f=findWord(id);if(!row||!f)return;
+  const tv=isTeacherList();
+  const f=tv?null:findWord(id),tw=tv?TV.words.find(x=>x.id===id):null;
+  const row=rowEl(id);if(!row||(!f&&!tw))return;
+  const wd=f?f.w:tw,lg=f?setLangOf(f.s):tSetLang(tw.set_id);
   const box=row.querySelector('.t');if(!box)return;
   const src=box.querySelector('.ru .src');
-  inl={id,row,box,html:box.innerHTML,src:src?src.outerHTML:'',en:f.w.en,ru:f.w.ru||''};
+  inl={id,row,box,html:box.innerHTML,src:src?src.outerHTML:'',en:wd.en,ru:wd.ru||''};
   row.classList.add('editing');
-  const lg=setLangOf(f.s);
-  box.innerHTML=`<input class="inl en" value="${esc(f.w.en)}" lang="${lg}" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="${t('Word')}">`+
-    `<input class="inl ru" value="${esc(f.w.ru||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="${t('Translation')}">`;
+  box.innerHTML=`<input class="inl en" value="${esc(wd.en)}" lang="${lg}" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="${t('Word')}">`+
+    `<input class="inl ru" value="${esc(wd.ru||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="${t('Translation')}">`;
   const a=box.querySelector('.en');a.focus();a.select();
 }
 function inlineClose(txt){
@@ -2024,13 +2024,25 @@ function inlineCommit(){
   if(!inl)return;
   const en=inl.box.querySelector('.en').value.trim(),ru=inl.box.querySelector('.ru').value.trim();
   if(!en||!ru){toast(t(!en?'Enter a word':'Enter a translation'));inlineCancel();return;}
+  if(isTeacherList()){
+    const w=TV.words.find(x=>x.id===inl.id);
+    if(w&&(w.en!==en||(w.ru||'')!==ru)){
+      const old={en:w.en,ru:w.ru};w.en=en;w.ru=ru;
+      (async()=>{
+        try{const {error}=await sb.from('words').update({en,ru,updated_at:new Date().toISOString()}).eq('id',w.id);if(error)throw error;}
+        catch(e){w.en=old.en;w.ru=old.ru;toast(srvMsg(e,t('Couldn’t save — check your connection')));const l=$('#tl');if(l)l._h='';tDrawWords(false);}
+      })();
+    }
+    inlineClose({en:w?w.en:en,ru:w?(w.ru||''):ru});
+    return;
+  }
   const f=findWord(inl.id);
   if(f&&(f.w.en!==en||f.w.ru!==ru)){f.w.en=en;f.w.ru=ru;touch(f.w);save();}
   inlineClose({en:f?f.w.en:en,ru:f?f.w.ru:ru});
 }
 let delTimer=0;
-function rowDel(btn,id){
-  if(!btn.classList.contains('sure')){
+function rowDel(btn,id,now){
+  if(!now&&!btn.classList.contains('sure')){
     document.querySelectorAll('.ra.del.sure').forEach(b=>{b.classList.remove('sure');b.innerHTML=ic('trash',16);});
     btn.classList.add('sure');btn.textContent=t('Delete')+'?';
     clearTimeout(delTimer);delTimer=setTimeout(()=>{btn.classList.remove('sure');btn.innerHTML=ic('trash',16);},3000);
@@ -2038,14 +2050,36 @@ function rowDel(btn,id){
   }
   clearTimeout(delTimer);
   if(inl)inlineClose();
+  if(isTeacherList()){
+    const i=TV.words.findIndex(x=>x.id===id);if(i<0)return;
+    const w=TV.words[i];TV.words.splice(i,1);
+    const r=rowEl(id);if(r)r.remove();
+    tDrawWords(false);toast(t('Deleted'));
+    (async()=>{
+      try{const {error}=await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;}
+      catch(e){TV.words.push(w);const l=$('#tl');if(l)l._h='';toast(srvMsg(e,t('Couldn’t delete')));tDrawWords(false);}
+    })();
+    return;
+  }
   const f=findWord(id);if(!f)return;
   cloudDeleteWord(f.w);f.s.words=f.s.words.filter(w=>w.id!==id);save();
   const row=rowEl(id);if(row)row.remove();
   if(view.name==='set'||view.name==='archive'||view.name==='hard')softRender();
   toast(t('Deleted'));
 }
+let noClickUntil=0;
 document.addEventListener('click',e=>{
   const tg=e.target;if(!tg||!tg.closest)return;
+  if(Date.now()<noClickUntil){e.stopPropagation();e.preventDefault();return;}   /* the tap that ends a swipe or a drag */
+  const sb=tg.closest('.swact button');
+  if(sb){
+    e.stopPropagation();
+    const row=sb.closest('.item[data-id]');if(!row)return;
+    const id=row.dataset.id;swClose();
+    if(sb.dataset.sw==='edit')inlineStart(id);else rowDel(sb,id,true);
+    return;
+  }
+  if(tg.closest('.item.swiped')){e.stopPropagation();swClose();return;}   /* tapping an opened row just closes it */
   const b=tg.closest('.racts .ra');
   if(b){
     e.stopPropagation();
@@ -2077,24 +2111,49 @@ document.addEventListener('focusout',e=>{
 
 /* put the dragged words into their new order: the new order takes the places the words held before,
    so only the words that actually moved are changed (and synced) */
-function reorderSet(ids){
-  const s=curSet();if(!s)return;
-  const byId=new Map(s.words.map(w=>[w.id,w])),set=new Set(ids);
+function slotOrder(words,ids,getP,setP){
+  const byId=new Map(words.map(w=>[w.id,w])),set=new Set(ids);
   const ws=ids.map(i=>byId.get(i)).filter(Boolean);
-  const idx=[];s.words.forEach((w,i)=>{if(set.has(w.id))idx.push(i);});
-  if(!idx.length||idx.length!==ws.length)return;
-  const oldPos=idx.map(i=>s.words[i].pos||0);
-  const arr=s.words.slice();idx.forEach((i,k)=>{arr[i]=ws[k];});
+  const idx=[];words.forEach((w,i)=>{if(set.has(w.id))idx.push(i);});
+  if(!idx.length||idx.length!==ws.length)return null;
+  const oldPos=idx.map(i=>getP(words[i])||0);
+  const arr=words.slice();idx.forEach((i,k)=>{arr[i]=ws[k];});
   let tie=false;
   for(let k=1;k<oldPos.length;k++)if(oldPos[k]<=oldPos[k-1])tie=true;
-  const nx=s.words[idx[idx.length-1]+1];
-  if(nx&&(nx.pos||0)<=oldPos[oldPos.length-1])tie=true;
-  if(!tie){idx.forEach((i,k)=>{if((arr[i].pos||0)!==oldPos[k]){arr[i].pos=oldPos[k];touch(arr[i]);}});}
+  const nx=words[idx[idx.length-1]+1];
+  if(nx&&(getP(nx)||0)<=oldPos[oldPos.length-1])tie=true;
+  const changed=[];
+  if(!tie){idx.forEach((i,k)=>{if((getP(arr[i])||0)!==oldPos[k]){setP(arr[i],oldPos[k]);changed.push(arr[i]);}});}
   else{   /* equal positions can't express an order: number the rest of the list afresh */
     const from=idx[0],base=oldPos[0];
-    for(let i=from;i<arr.length;i++){if((arr[i].pos||0)!==base+(i-from)){arr[i].pos=base+(i-from);touch(arr[i]);}}
+    for(let i=from;i<arr.length;i++){if((getP(arr[i])||0)!==base+(i-from)){setP(arr[i],base+(i-from));changed.push(arr[i]);}}
   }
-  s.words=arr;save();
+  return {arr,changed};
+}
+function reorderSet(ids){
+  const s=curSet();if(!s)return;
+  const r=slotOrder(s.words,ids,w=>w.pos,(w,p)=>{w.pos=p;touch(w);});
+  if(!r)return;
+  s.words=r.arr;save();
+}
+/* the teacher moves words in a student's list: the new positions go straight to the database */
+async function tReorder(ids){
+  const base=TV.base||[],old=new Map(base.map(w=>[w.id,w.position]));
+  const r=slotOrder(base,ids,w=>w.position,(w,p)=>{w.position=p;});
+  if(!r||!r.changed.length)return;
+  const now=new Date().toISOString();
+  try{
+    for(let i=0;i<r.changed.length;i+=8){
+      await Promise.all(r.changed.slice(i,i+8).map(async w=>{
+        const {error}=await sb.from('words').update({position:w.position,updated_at:now}).eq('id',w.id);
+        if(error)throw error;
+      }));
+    }
+  }catch(e){
+    r.changed.forEach(w=>{w.position=old.get(w.id);});
+    toast(srvMsg(e,t('Couldn’t save — check your connection')));
+    const l=$('#tl');if(l)l._h='';tDrawWords(false);
+  }
 }
 function dragUpdate(){
   if(!dnd)return;
@@ -2120,25 +2179,91 @@ function dragEnd(commit){
   if(!dnd)return;
   const d=dnd;dnd=null;cancelAnimationFrame(d.raf);
   try{d.grip.releasePointerCapture(d.pid);}catch(x){}
-  d.row.classList.remove('dragging');d.row.style.transform='';document.body.classList.remove('dnding');
+  d.row.classList.remove('dragging');d.row.style.transform='';document.body.classList.remove('dnding');noClickUntil=Date.now()+400;swReset();
   const ids=[...d.list.children].filter(r=>r.classList&&r.classList.contains('item')).map(r=>r.dataset.id);
-  if(commit&&ids.join()!==d.ids.join())reorderSet(ids);
-  softMode=true;try{render();}finally{softMode=false;}
+  const moved=ids.join()!==d.ids.join();
+  if(commit&&moved){if(isTeacherList())tReorder(ids);else reorderSet(ids);}
+  else if(moved){   /* cancelled: put the rows back where they were */
+    const m=new Map([...d.list.children].map(r=>[r.dataset&&r.dataset.id,r]));
+    d.ids.forEach(id=>{const r=m.get(id);if(r)d.list.appendChild(r);});
+  }
+  if(isTeacherList())tDrawWords(false);
+  else{softMode=true;try{render();}finally{softMode=false;}}
+
 }
+function dragBegin(row,cap,e,y){
+  if(inl)inlineCommit();
+  const list=row.parentElement;
+  dnd={row,list,grip:cap,pid:e.pointerId,y:y,startY:y+window.scrollY,top0:row.offsetTop,raf:0,
+       ids:[...list.children].filter(r=>r.classList&&r.classList.contains('item')).map(r=>r.dataset.id)};
+  try{cap.setPointerCapture(e.pointerId);}catch(x){}
+  row.classList.add('dragging');document.body.classList.add('dnding');
+  try{navigator.vibrate&&navigator.vibrate(10);}catch(x){}
+  dnd.raf=requestAnimationFrame(dragLoop);
+}
+/* swipe a word sideways to reveal Edit / Delete; hold it still for a moment to pick it up and move it */
+const SWW=160;
+let SW=null,swOpen=null;
+function swClose(){
+  if(swOpen){swOpen.classList.remove('swiped');swOpen=null;}
+}
+function swReset(){if(SW){clearTimeout(SW.timer);SW=null;}}
 document.addEventListener('pointerdown',e=>{
   const g=e.target.closest&&e.target.closest('.dgrip');
-  if(!g||dnd||(e.pointerType==='mouse'&&e.button!==0))return;
-  const row=g.closest('.item');if(!row)return;
-  if(inl)inlineCommit();
-  e.preventDefault();
-  const list=row.parentElement;
-  dnd={row,list,grip:g,pid:e.pointerId,y:e.clientY,startY:e.clientY+window.scrollY,top0:row.offsetTop,raf:0,
-       ids:[...list.children].filter(r=>r.classList&&r.classList.contains('item')).map(r=>r.dataset.id)};
-  try{g.setPointerCapture(e.pointerId);}catch(x){}
-  row.classList.add('dragging');document.body.classList.add('dnding');
-  try{navigator.vibrate&&navigator.vibrate(8);}catch(x){}
-  dnd.raf=requestAnimationFrame(dragLoop);
-});
+  if(g){
+    if(dnd||(e.pointerType==='mouse'&&e.button!==0))return;
+    const row=g.closest('.item');if(!row)return;
+    e.preventDefault();dragBegin(row,g,e,e.clientY);return;
+  }
+  if(e.pointerType==='mouse'||dnd||markMode||selMode||(typeof tSelMode!=='undefined'&&tSelMode))return;
+  const row=e.target.closest&&e.target.closest('.item[data-id]');
+  if(swOpen&&(!row||row!==swOpen)&&!(e.target.closest&&e.target.closest('.swact')))swClose();
+  if(!row||inl||e.target.closest('.swact,.spk,.inl'))return;
+  swReset();
+  SW={row,pid:e.pointerId,x:e.clientX,y:e.clientY,cy:e.clientY,mode:'',base:row===swOpen?-SWW:0,dx:0,timer:0};
+  if(row.dataset.dr&&row!==swOpen){
+    SW.timer=setTimeout(()=>{
+      if(!SW||SW.mode||dnd)return;
+      SW.mode='drag';
+      dragBegin(row,row,e,SW.cy);
+    },420);
+  }
+},{passive:true});
+document.addEventListener('pointermove',e=>{
+  if(!SW||dnd||e.pointerId!==SW.pid)return;
+  SW.cy=e.clientY;
+  const dx=e.clientX-SW.x,dy=e.clientY-SW.y;
+  if(!SW.mode){
+    if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.2){
+      clearTimeout(SW.timer);SW.mode='swipe';SW.row.style.transition='none';
+      try{SW.row.setPointerCapture(SW.pid);}catch(x){}
+    }
+    else if(Math.abs(dy)>8){swReset();return;}   /* the page is scrolling */
+    else return;
+  }
+  if(SW.mode==='swipe'){
+    SW.dx=Math.max(-SWW,Math.min(0,SW.base+dx));
+    SW.row.style.transform='translateX('+SW.dx+'px)';
+  }
+},{passive:true});
+function swEnd(cancel){
+  if(!SW)return;
+  const w=SW;swReset();
+  if(w.mode==='swipe'){
+    w.row.style.transition='';w.row.style.transform='';
+    noClickUntil=Date.now()+350;
+    const open=!cancel&&w.dx<-SWW/2;
+    if(swOpen&&swOpen!==w.row)swClose();
+    w.row.classList.toggle('swiped',open);
+    swOpen=open?w.row:null;
+  }
+}
+document.addEventListener('pointerup',e=>{if(SW&&e.pointerId===SW.pid)swEnd(false);},{passive:true});
+document.addEventListener('pointercancel',e=>{if(SW&&e.pointerId===SW.pid)swEnd(true);},{passive:true});
+document.addEventListener('contextmenu',e=>{if(dnd||(SW&&SW.mode==='drag'))e.preventDefault();});
+/* once a word is picked up the finger must move the word, not the page */
+document.addEventListener('touchmove',e=>{if(dnd&&e.cancelable)e.preventDefault();},{passive:false});
+window.addEventListener('scroll',()=>{if(swOpen&&!SW)swClose();},{passive:true});
 document.addEventListener('pointermove',e=>{if(dnd&&e.pointerId===dnd.pid){dnd.y=e.clientY;e.preventDefault();}});
 document.addEventListener('pointerup',e=>{if(dnd&&e.pointerId===dnd.pid)dragEnd(true);});
 document.addEventListener('pointercancel',e=>{if(dnd&&e.pointerId===dnd.pid)dragEnd(false);});
@@ -2147,7 +2272,7 @@ document.addEventListener('keydown',e=>{if(dnd&&e.key==='Escape')dragEnd(false);
 let markMode=false,markColor=1;
 const PS={drag:false,ids:new Set(),target:0,timer:null,sx:0,sy:0,touch:false,active:false};
 function toggleMarkMode(){
-  editOff();markMode=!markMode;
+  markMode=!markMode;
   if(markMode){selMode=false;selIds.clear();try{tSelMode=false;tSelIds.clear();}catch(e){}}
   document.body.classList.toggle('markmode',markMode);
   if(view.name==='twords')tDrawWords(false);else render();
@@ -2266,13 +2391,14 @@ function wordRows(items,qs,showSrc){
         :tricky?`<span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>`
         :`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`);
     const meta=[showSrc?esc(sn):'',w.arch&&w.due?esc(whenTxt(w.due)):''].filter(Boolean).join(' · ');
-    return `<div class="item ${picked&&selMode?'pick':''}" data-id="${w.id}"${(!w.arch&&w.mark)?` data-m="${w.mark}"`:''} onclick="${markMode?'':selMode?`togglePick('${w.id}')`:(editOn?`inlineStart('${w.id}')`:`wordForm('${w.id}')`)}">
+    return `<div class="item ${picked&&selMode?'pick':''}" data-id="${w.id}"${canDrag?' data-dr="1"':''}${(!w.arch&&w.mark)?` data-m="${w.mark}"`:''} onclick="${markMode?'':selMode?`togglePick('${w.id}')`:`wordForm('${w.id}')`}">
       ${canDrag?`<span class="dgrip" aria-label="${t('Drag to reorder')}">${ic('grip',16)}</span>`:''}
       ${left}
       <div class="t"><div class="en">${esc(w.en)}</div>
       <div class="ru">${esc(w.ru)}${meta?`<span class="src"> · ${meta}</span>`:''}</div></div>
       ${(n&&!w.arch&&!selMode)?`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`:''}
       ${(selMode||markMode)?'':`<span class="racts"><button class="ra" data-act="edit" aria-label="${t('Edit')}">${ic('pen',16)}</button><button class="ra del" data-act="del" aria-label="${t('Delete')}">${ic('trash',16)}</button></span>`}
+      ${(selMode||markMode)?'':`<span class="swact"><button class="e" data-sw="edit">${ic('pen',19)}<span>${t('Edit')}</span></button><button class="d" data-sw="del">${ic('trash',19)}<span>${t('Delete')}</span></button></span>`}
       ${selMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speakWord('${w.id}')">${ic('sound',17)}</button>`}</div>`;
   }).join('')+'</div>'+(hidden?`<button class="btn ghost" style="margin-top:4px" onclick="showAllRows()">${t('Show all')} · ${hidden}</button>`:'');
 }
@@ -2509,6 +2635,7 @@ VIEWS.twords=async function(app){
 /* redraw the word list from what we already hold, without going back to the cloud */
 function twSearch(v){LQ=v;tDrawWords(false);}
 function tDrawWords(anim){
+  if(dnd)return;if(inl)inlineCommit();
   const el=$('#tl');if(!el)return;
   const {setId,words,sets}=TV;
   const inArch=setId==='archive';
@@ -2530,12 +2657,14 @@ function tDrawWords(anim){
     ?tbar+markHint()+
      (shown.length?'<div class="wlist">':'<div class="empty"><p>'+t('Nothing found')+'</p></div><div class="wlist">')+shown.map(w=>{
        const picked=tSelIds.has(w.id);
-       return `<div class="item ${picked&&tSelMode?'pick':''}" data-id="${w.id}"${(!inArch&&w.mark)?` data-m="${w.mark}"`:''} onclick="${markMode?'':tSelMode?`tPick('${w.id}')`:`tWordForm('${w.id}')`}">
+       return `<div class="item ${picked&&tSelMode?'pick':''}" data-id="${w.id}"${(!inArch&&!fq&&!tSelMode&&!markMode)?' data-dr="1"':''}${(!inArch&&w.mark)?` data-m="${w.mark}"`:''} onclick="${markMode?'':tSelMode?`tPick('${w.id}')`:`tWordForm('${w.id}')`}">
+       ${(!inArch&&!fq&&!tSelMode&&!markMode)?`<span class="dgrip" aria-label="${t('Drag to reorder')}">${ic('grip',16)}</span>`:''}
        ${tSelMode
          ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
          :`<span class="numx">${numOf.get(w.id)}</span>`}
        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}${inArch&&setName2(w.set_id)?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
        ${(!tSelMode&&!inArch)?`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`:''}
+       ${(tSelMode||markMode)?'':rowActsHtml()}
        ${tSelMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button>`}</div>`;}).join('')+'</div>'
     :`<div class="empty"><div class="big">${inArch?ic('archive',26):ic('pen',26)}</div><b>${inArch?t('Archive is empty'):t('No words yet')}</b><p>${inArch?t('Words this student has mastered will show up here.'):t('Tap ＋ to add the first word, or import a whole list from the ⋯ menu.')}</p></div>`)+
    (tSelMode?tSelBar(inArch):(markMode&&!inArch?markbarHtml():`<button class="fab" aria-label="Add word" onclick="tWordForm()">${ic('plus',24,2)}</button>`)),anim);
@@ -2861,7 +2990,7 @@ function selBar(inArch){
     <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">${ic('trash')}${t('Delete')}${n?` (${n})`:''}</button>
   </div></div>`;
 }
-function toggleSelMode(){editOff();selMode=!selMode;selIds.clear();if(selMode&&markMode){markMode=false;document.body.classList.remove('markmode');}render();}
+function toggleSelMode(){selMode=!selMode;selIds.clear();if(selMode&&markMode){markMode=false;document.body.classList.remove('markmode');}render();}
 function togglePick(id){if(selIds.has(id))selIds.delete(id);else selIds.add(id);render();}
 function selAll(){const p=viewPool();if(selIds.size>=p.length)selIds.clear();else p.forEach(w=>selIds.add(w.id));render();}
 function bulkArch(toArch){
