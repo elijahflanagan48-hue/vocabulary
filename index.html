@@ -1656,6 +1656,7 @@ async function authInit(){
     const {data}=await sb.auth.getSession();
     if(data&&data.session)await onSignedIn(data.session.user);
   }catch(e){}
+  restorePending();
   try{
     sb.auth.onAuthStateChange((ev,sess)=>{
       if(ev==='SIGNED_IN'&&sess&&(!AUTH.user||AUTH.user.id!==sess.user.id))onSignedIn(sess.user);
@@ -1674,6 +1675,7 @@ async function onSignedIn(user){
       if(mergePrefsFrom(data))save();}
   }catch(e){}
   if(AUTH.profile&&AUTH.profile.role==='teacher')await loadStudents();
+  restorePending();liveStart();
   softRender();
   await cloudPull();
   await cloudPush();
@@ -1761,6 +1763,7 @@ async function loadStudents(){
   }catch(e){return false;}
 }
 async function doSignOut(){
+  liveStop();
   try{await sb.auth.signOut();}catch(e){}
   try{localStorage.removeItem(PKEY);}catch(e){}
   AUTH={user:null,profile:null,ready:true,students:[]};TC.students=null;TC.owner={};
@@ -1910,7 +1913,7 @@ let view={name:'home'};
 let selMode=false;const selIds=new Set();
 function clearSel(){selMode=false;selIds.clear();}
 function go(name,p={}){
-  todayPick=null;rowCap=400;if(inl)inlineCommit();swClose();
+  PENDV=null;todayPick=null;rowCap=400;if(inl)inlineCommit();swClose();
   /* older entry points still work: lists and the two smart lists are filters now */
   if(name==='home')name='today';
   clearSel();
@@ -1921,7 +1924,7 @@ function go(name,p={}){
   if(markMode){markMode=false;document.body.classList.remove('markmode');}
   LQ='';
   if(scope.kind==='prac'){setScope('all');PRACTICE=null;}
-  view=Object.assign({name},p);render();scrollTo(0,0);
+  view=Object.assign({name},p);viewSave();render();scrollTo(0,0);
   const a=$('#app');if(a){a.classList.remove('viewin','stag');void a.offsetWidth;a.classList.add('viewin','stag');
     clearTimeout(go._t);go._t=setTimeout(()=>a.classList.remove('stag'),700);}}
 /* true while a study screen (learn / cards / test / match / daily session) is on screen */
@@ -4641,6 +4644,125 @@ function celPlay(){
   });
 }
 
+/* ================= v71: live updates + remembering where you were ================= */
+/* ---- stay in the same section after a refresh ---- */
+const VKEY='vocab.view';
+let PENDV=null,VSCROLL=0,_vsy=0;
+const TEACH_VIEWS=['students','tsets','twords'];
+function viewSave(){try{localStorage.setItem(VKEY,JSON.stringify({v:view,at:Date.now(),y:0}));}catch(e){}}
+function viewLoad(){
+  try{
+    const o=JSON.parse(localStorage.getItem(VKEY)||'null');
+    if(!o||!o.v||!o.v.name||Date.now()-(o.at||0)>12*36e5)return null;
+    const n=o.v.name;
+    const known=['today','vocab','me','archive','hard'].indexOf(n)>=0||TEACH_VIEWS.indexOf(n)>=0||(n==='set'&&S.sets.some(s=>s.id===o.v.id));
+    if(!known)return null;
+    if(TEACH_VIEWS.indexOf(n)>=0){const c=JSON.parse(localStorage.getItem(PKEY)||'null');if(!c||c.role!=='teacher')return null;}
+    return o;
+  }catch(e){return null;}
+}
+/* teacher screens need the signed-in session first, so they wait for it instead of flashing Today */
+function bootView(){
+  const o=viewLoad();if(!o)return false;
+  if(TEACH_VIEWS.indexOf(o.v.name)>=0){
+    if(!sb)return false;
+    PENDV=o;setTimeout(restorePending,7000);return 'wait';
+  }
+  view=Object.assign({},o.v);VSCROLL=o.y||0;return true;
+}
+function restorePending(){
+  if(!PENDV)return;
+  const o=PENDV;PENDV=null;VSCROLL=o.y||0;
+  const p=Object.assign({},o.v);delete p.name;
+  go(o.v.name,p);keepScroll();
+}
+function keepScroll(){
+  const y=VSCROLL;VSCROLL=0;if(!y)return;
+  [60,350,900].forEach(ms=>setTimeout(()=>{if(Math.abs(scrollY-y)>2&&document.body.scrollHeight>=y)scrollTo(0,y);},ms));
+}
+addEventListener('scroll',()=>{
+  clearTimeout(_vsy);
+  _vsy=setTimeout(()=>{try{const o=JSON.parse(localStorage.getItem(VKEY)||'null');if(o){o.y=Math.round(scrollY);o.at=Date.now();localStorage.setItem(VKEY,JSON.stringify(o));}}catch(e){}},300);
+},{passive:true});
+
+/* ---- live updates: what changes in the cloud shows up here without a refresh ---- */
+const LIVE={ch:null,key:'',seen:'',deb:0,pull:0};
+function liveIds(){
+  const me=AUTH.user&&AUTH.user.id;if(!me)return [];
+  const ids=[me];
+  if(AUTH.profile&&AUTH.profile.role==='teacher')(AUTH.students||[]).forEach(s=>{if(s&&s.id&&ids.indexOf(s.id)<0)ids.push(s.id);});
+  return ids.slice(0,100);
+}
+function liveStart(){
+  if(!cloudEnabled()||!sb.channel){return;}
+  const ids=liveIds();if(!ids.length)return;
+  const key=ids.join(',');
+  if(LIVE.ch&&LIVE.key===key)return;
+  liveStop();LIVE.key=key;
+  const f=ids.length===1?'owner_id=eq.'+ids[0]:'owner_id=in.('+ids.join(',')+')';
+  try{
+    LIVE.ch=sb.channel('live-'+ids[0].slice(0,8))
+      .on('postgres_changes',{event:'*',schema:'public',table:'words',filter:f},p=>liveRow('words',p))
+      .on('postgres_changes',{event:'*',schema:'public',table:'sets',filter:f},p=>liveRow('sets',p))
+      .subscribe();
+  }catch(e){LIVE.ch=null;LIVE.key='';}
+}
+function liveStop(){try{if(LIVE.ch&&sb)sb.removeChannel(LIVE.ch);}catch(e){}LIVE.ch=null;LIVE.key='';}
+function liveDrop(table,id){
+  if(!id)return false;let hit=false;
+  if(table==='sets'){const n=S.sets.length;S.sets=S.sets.filter(s=>s.id!==id);hit=S.sets.length!==n;}
+  else S.sets.forEach(s=>{const n=s.words.length;s.words=s.words.filter(w=>w.id!==id);if(s.words.length!==n)hit=true;});
+  return hit;
+}
+function liveRow(table,p){
+  try{
+    const me=AUTH.user&&AUTH.user.id,r=p&&p.new&&p.new.id?p.new:null,old=(p&&p.old)||{};
+    const owner=(r&&r.owner_id)||old.owner_id||null;
+    let mine=!owner||owner===me,touched=false;
+    if(mine){
+      if(p.eventType==='DELETE'||(r&&r.deleted)){touched=liveDrop(table,(r||old).id);}
+      else if(r){
+        if(table==='sets')mergeCloud([r],[],false);
+        else if(S.sets.some(s=>s.id===r.set_id))mergeCloud([],[r],false);
+        else{liveCatchUp();return;}                    /* a word for a list we don't have yet */
+        touched=true;
+      }
+      if(touched){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+    }
+    liveRefresh(owner&&owner!==me?owner:null,touched||!mine);
+  }catch(e){}
+}
+/* many rows can arrive at once (an import): redraw once */
+function liveRefresh(otherOwner,doIt){
+  if(!doIt)return;
+  clearTimeout(LIVE.deb);
+  LIVE.deb=setTimeout(()=>{
+    if(otherOwner){
+      if(TEACH_VIEWS.indexOf(view.name)<0)return;
+      if(view.name!=='students'&&view.sid!==otherOwner)return;
+    }
+    softRender();
+  },260);
+}
+function liveCatchUp(){clearTimeout(LIVE.pull);LIVE.pull=setTimeout(()=>{if(cloudEnabled())cloudPull().then(softRender);},500);}
+/* safety net for when the instant channel is not available: one tiny request every 20 s */
+async function liveCheck(){
+  if(!cloudEnabled()||document.visibilityState!=='visible'||syncing)return;
+  liveStart();
+  const ids=liveIds();if(!ids.length)return;
+  try{
+    const q=tb=>sb.from(tb).select('updated_at').in('owner_id',ids).order('updated_at',{ascending:false}).limit(1);
+    const [a,b]=await Promise.all([q('words'),q('sets')]);
+    if(a.error||b.error)return;
+    const k=((a.data&&a.data[0]&&a.data[0].updated_at)||'')+'|'+((b.data&&b.data[0]&&b.data[0].updated_at)||'');
+    const was=LIVE.seen;LIVE.seen=k;
+    if(was&&was!==k){await cloudPull();softRender();}
+  }catch(e){}
+}
+/* our own writes move the "latest change" too: forget it, so we don't pull our own changes back */
+(function(){const o=cloudPush;cloudPush=async function(){const r=await o.apply(this,arguments);LIVE.seen='';return r;};})();
+setInterval(liveCheck,20000);
+
 /* mark the study screens, so background work leaves them alone */
 ['startSession','startCards','startLearn','runTest','startMatch'].forEach(n=>{
   const o=window[n];if(typeof o!=='function')return;
@@ -4650,7 +4772,9 @@ function celPlay(){
 loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
 applyTheme();
 try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.addEventListener&&mq.addEventListener('change',()=>{if((S.settings.theme||'auto')==='auto')applyTheme();});}}catch(e){}
-render();
+{const bv=bootView();
+  if(bv==='wait'){const a=$('#app');a.innerHTML=skel(5);}else render();
+  if(bv===true)keepScroll();}
 authInit();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled())cloudPull().then(softRender);});
 setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(softRender);},150000);
