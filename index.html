@@ -1451,6 +1451,7 @@ function missingLangCol(e){
 const withLang=(rows,sets)=>noLangCol?rows:rows.map((r,i)=>Object.assign({},r,{lang:setLangOf(sets[i])}));
 
 /* ---- cross-device sync of streak, daily goal and settings (jsonb on profiles) ---- */
+let pushErr='',PULLAGAIN=false;
 let noPrefsSync=false,noSettingsCol=false,statsSyncedUpd=-1,settingsSyncedUpd=-1,prefsErr='';
 function errText(e){return ((e&&(e.message||e.details||e.hint||e.code||''))+'').toLowerCase();}
 function colMissing(e){const m=errText(e);return m.indexOf('column')>=0||m.indexOf('schema')>=0||m.indexOf('does not exist')>=0||m.indexOf('not found')>=0;}
@@ -1568,7 +1569,7 @@ async function cloudPush(){
   S.sets.forEach(s=>s.words.forEach((w,i)=>{if(!w.synced)dirtyWords.push({w,s,i});}));
   const prefsDirty=!noPrefsSync&&(((S.stats.upd||0)>0&&(S.stats.upd||0)!==statsSyncedUpd)||(!noSettingsCol&&(S.settings.upd||0)>0&&(S.settings.upd||0)!==settingsSyncedUpd));
   if(!dirtySets.length&&!dirtyWords.length&&!prefsDirty)return;
-  syncing=true;
+  syncing=true;pushErr='';
   try{
     const me=AUTH.user.id;
     if(dirtySets.length){
@@ -1582,19 +1583,35 @@ async function cloudPush(){
         if(!r2.error)dirtySets.forEach(s=>s.synced=true);
       }
       else if(!error)dirtySets.forEach(s=>s.synced=true);
+      else pushErr=errText(error).slice(0,140)||'error';
     }
     for(let i=0;i<dirtyWords.length;i+=200){
-      const slice=dirtyWords.slice(i,i+200);
+      let slice=dirtyWords.slice(i,i+200);
+      try{
+        const {data:rem,error:re}=await sb.from('words').select('id,en,ru,ex,ipa,deleted').in('id',slice.map(x=>x.w.id));
+        if(!re&&rem){
+          const gone=new Set();
+          rem.forEach(r=>{
+            const x=slice.find(y=>y.w.id===r.id);if(!x)return;const w=x.w;
+            if(r.deleted){gone.add(w.id);return;}                         /* removed by the other side */
+            if(w.sv!==undefined&&th(w)===w.sv&&thRow(r)!==w.sv){w.en=r.en;w.ru=r.ru||'';w.ex=r.ex||'';w.ipa=r.ipa||'';}   /* we only studied it: keep their wording */
+          });
+          if(gone.size){S.sets.forEach(st=>{st.words=st.words.filter(w=>!gone.has(w.id));});slice=slice.filter(x=>!gone.has(x.w.id));}
+        }
+      }catch(e){}
+      if(!slice.length)continue;
       const mkRows=()=>slice.map(({w,s,i:pos})=>withAat({id:w.id,set_id:s.id,owner_id:me,en:w.en,ru:w.ru||'',ex:w.ex||'',
         ipa:w.ipa||'',due:w.due||0,rep:w.rep||0,box:w.box||0,arch:!!w.arch,aat:w.aat||0,mark:w.arch?0:(w.mark||0),ok:w.ok||0,bad:w.bad||0,position:(w.pos!=null?w.pos:pos),
         deleted:false,updated_at:new Date(w.upd||Date.now()).toISOString()}));
       const {error}=await aatRetry(()=>sb.from('words').upsert(mkRows()));
-      if(!error)slice.forEach(({w})=>{w.synced=true;});
+      if(!error)slice.forEach(({w})=>{w.synced=true;w.sv=th(w);});
+      else pushErr=errText(error).slice(0,140)||'error';
     }
     if(prefsDirty)await pushPrefs(me);
     try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   }catch(e){}
   syncing=false;
+  if(PULLAGAIN){PULLAGAIN=false;setTimeout(()=>cloudPull().then(softRender),250);}
 }
 /* the server caps how many rows one reply may carry, so ask page by page */
 async function fetchPaged(table,ownerId){
@@ -1611,7 +1628,7 @@ async function fetchPaged(table,ownerId){
 async function cloudPull(){
   if(!cloudEnabled())return;
   await ensureAuth();
-  if(syncing)return;
+  if(syncing){PULLAGAIN=true;return;}
   syncing=true;
   try{
     const me=AUTH.user.id;
@@ -1624,7 +1641,10 @@ async function cloudPull(){
     await pullPrefs(me);
   }catch(e){}
   syncing=false;
+  if(PULLAGAIN){PULLAGAIN=false;setTimeout(()=>cloudPull().then(softRender),250);}
 }
+const th=w=>[w.en,w.ru||'',w.ex||'',w.ipa||''].join('\u0001');
+const thRow=r=>[r.en,r.ru||'',r.ex||'',r.ipa||''].join('\u0001');
 function mergeCloud(cs,cw,authoritative){
   try{
     const setIds=new Set(cs.map(x=>x.id)),wordIds=new Set(cw.map(x=>x.id));
@@ -1633,7 +1653,7 @@ function mergeCloud(cs,cw,authoritative){
       /* a row from a database without the column keeps whatever language we already had */
       const cl=LANG_MAP[c.lang]?c.lang:null;
       if(!l)S.sets.push({id:c.id,name:c.name,lang:cl||DEF_LANG,words:[],upd:u,synced:true});
-      else if(u>(l.upd||0)){l.name=c.name;if(cl)l.lang=cl;l.upd=u;l.synced=true;}
+      else if(l.synced?u!==(l.upd||0):u>(l.upd||0)){l.name=c.name;if(cl)l.lang=cl;l.upd=u;l.synced=true;}
     });
     if(authoritative)S.sets=S.sets.filter(s=>setIds.has(s.id)||!s.synced);
     cw.forEach(c=>{
@@ -1647,8 +1667,9 @@ function mergeCloud(cs,cw,authoritative){
       }
       const l=s.words.find(x=>x.id===c.id);
       if(!l)s.words.push({id:c.id,en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,mark:c.arch?0:(c.mark||0),pos:Number.isFinite(c.position)?c.position:0,ok:c.ok||0,bad:c.bad||0,added:u,upd:u,synced:true});
-      else if(u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,mark:c.arch?0:(c.mark||0),pos:Number.isFinite(c.position)?c.position:(l.pos||0),ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
+      else if(l.synced?u!==(l.upd||0):u>(l.upd||0))Object.assign(l,{en:c.en,ru:c.ru||'',ex:c.ex||'',ipa:c.ipa||'',due:c.due||0,rep:c.rep||0,box:c.box||0,arch:!!c.arch,aat:c.aat||0,mark:c.arch?0:(c.mark||0),pos:Number.isFinite(c.position)?c.position:(l.pos||0),ok:c.ok||0,bad:c.bad||0,upd:u,synced:true});
     });
+    cw.forEach(c=>{const f=findWord(c.id);if(f&&f.w.synced)f.w.sv=thRow(c);});   /* the text as the server last had it */
     if(authoritative)S.sets.forEach(s=>{s.words=s.words.filter(w=>wordIds.has(w.id)||!w.synced);});
     S.sets.forEach(sortPos);
     _lgIdx=null;
@@ -1912,14 +1933,16 @@ function acctSheet(){
       <div class="hint">${t('Your teacher can then see and edit your lists.')}</div></div>`}
    <div class="stack" style="margin-top:6px">
      ${isT?`<button class="btn" onclick="closeSheet();go('students')">${ic('users')}${t('My students')}${AUTH.students.length?` · ${AUTH.students.length}`:''}</button>`:''}
+     ${unsentN()||pushErr?`<div class="err" style="margin:0 0 6px">${t('Not sent to the cloud')}: ${unsentN()}${pushErr?' — '+esc(pushErr):''}</div>`:''}
      ${prefsErr?`<div class="err" style="margin:0 0 6px">${t('Streak/settings not synced')}: ${esc(prefsErr)}</div>`:''}
      <button class="btn" onclick="manualSync()">${ic('cloud')}${t('Sync now')}</button>
      <button class="btn ghost" onclick="doSignOut()">${ic('exit',18)}${t('Sign out')}</button></div>`);
 }
+function unsentN(){let n=S.sets.filter(x=>!x.synced).length;S.sets.forEach(x=>x.words.forEach(w=>{if(!w.synced)n++;}));return n;}
 async function manualSync(){
   if(!cloudEnabled())return toast(t('Not signed in'));
   topLoad(true);noPrefsSync=false;prefsErr='';statsSyncedUpd=-1;settingsSyncedUpd=-1;try{await cloudPull();await cloudPush();}finally{topLoad(false);}softRender();
-  if(prefsErr){toast(t('Streak/settings not synced')+': '+prefsErr);}else toast(t('Synced ✓'));
+  if(prefsErr){toast(t('Streak/settings not synced')+': '+prefsErr);}else if(unsentN()){toast(t('Not sent to the cloud')+': '+unsentN());}else toast(t('Synced ✓'));
 }
 async function linkTeacher(){
   const code=(($('#tCode')||{}).value||'').trim();
@@ -4219,7 +4242,7 @@ function startMatch(){
   });
 }
 
-Object.assign(RU_DICT,{"online now":"в сети","min":"минуту","min2":"минуты","mins":"минут","today at":"сегодня в","yesterday at":"вчера в","Last visit":"Последний вход"});
+Object.assign(RU_DICT,{"Not sent to the cloud":"Не отправлено в облако","online now":"в сети","min":"минуту","min2":"минуты","mins":"минут","today at":"сегодня в","yesterday at":"вчера в","Last visit":"Последний вход"});
 Object.assign(RU_DICT,{"Matching":"Подбор","in a row":"подряд","A new star lights up":"Зажглась новая звезда","A whole week in a row!":"Целая неделя подряд!","Two weeks in a row!":"Две недели подряд!","A month with no gaps!":"Месяц без пропусков!","One hundred days!":"Сотня дней!","A whole year!":"Целый год!","A new milestone!":"Новый рубеж!","Daily goal reached":"Дневная цель выполнена","Continue":"Продолжить","Today's star is lit":"Звезда дня горит","to light today's star":"до звезды дня","Words you are learning":"Слова, которые вы учите","Shuffle":"Другие","Animation sound":"Звук анимации","On":"Вкл","Off":"Выкл","Sound plays when you finish a session or extend your streak.":"Звук играет, когда вы завершаете занятие или продлеваете серию.","Flawless!":"Безупречно!","All pairs matched":"Все пары найдены"});
 /* ================= v69: celebrations — streak constellation, Today card, per-mode finales ================= */
 const celRM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
