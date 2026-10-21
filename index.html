@@ -1031,17 +1031,35 @@ function poolNow(){
 /* ---------- what to study right now ---------- */
 function buildSession(force){
   const goal=S.stats.goal||10, target=Math.max(6,goal);
-  const due=dueWords();                       /* archived words that came back */
-  const seen=new Set(due.map(w=>w.id));
-  const tricky=hardWords().filter(w=>!w.arch&&!seen.has(w.id)).slice(0,5);
-  tricky.forEach(w=>seen.add(w.id));
-  const fresh=S.sets.flatMap(s=>active(s))
-    .filter(w=>!seen.has(w.id))
-    .sort((a,b)=>(a.box||0)-(b.box||0)||(a.upd||0)-(b.upd||0))
-    .slice(0,Math.max(0,target-due.length-tricky.length));
-  let words=[...due,...tricky,...fresh];
-  if(!words.length&&force)words=shuffle(S.sets.flatMap(s=>s.words)).slice(0,target);
-  return {due,tricky,fresh,words:shuffle(words)};
+  const dueAll=dueWords(),hardAll=hardWords();
+  const langs=[...new Set(S.sets.flatMap(x=>x.words).map(langOf))];
+  /* never mix languages: plan every language on its own, then take the one that needs attention most */
+  const mk=lg=>{
+    const only=w=>lg==null||langOf(w)===lg;
+    const due=dueAll.filter(only);
+    const seen=new Set(due.map(w=>w.id));
+    const tricky=hardAll.filter(w=>!w.arch&&!seen.has(w.id)&&only(w)).slice(0,5);
+    tricky.forEach(w=>seen.add(w.id));
+    const pool=S.sets.flatMap(x=>active(x)).filter(w=>!seen.has(w.id)&&only(w))
+      .sort((a,b)=>(a.box||0)-(b.box||0)||(a.upd||0)-(b.upd||0));
+    const fresh=pool.slice(0,Math.max(0,target-due.length-tricky.length));
+    const old=fresh.length?fresh.reduce((m,w)=>Math.min(m,w.upd||0),Infinity):Infinity;
+    return {due,tricky,fresh,lg,old,words:[...due,...tricky,...fresh]};
+  };
+  let plan;
+  if(langs.length<=1)plan=mk(langs[0]||null);
+  else{
+    const all=langs.map(mk);
+    /* most due + tricky first; then the language practised longest ago */
+    all.sort((a,b)=>(b.due.length+b.tricky.length)-(a.due.length+a.tricky.length)||(a.old-b.old));
+    plan=all.find(x=>x.words.length)||all[0];
+  }
+  let words=plan.words;
+  if(!words.length&&force){
+    const lg=langs.length>1?langs[Math.floor(Math.random()*langs.length)]:null;
+    words=shuffle(S.sets.flatMap(x=>x.words).filter(w=>lg==null||langOf(w)===lg)).slice(0,target);
+  }
+  return {due:plan.due,tricky:plan.tricky,fresh:plan.fresh,lg:plan.lg,words:shuffle(words)};
 }
 
 /* ---------- one adaptive session: the question fits the word ---------- */
@@ -2080,7 +2098,7 @@ today(app){
       <div class="sess-n">${plan.words.length}</div>
       <div class="sess-t">${t('for today')}</div>
       <button class="btn pri" onclick="startSession()">${t('Study')}${ic('arrowRight',19)}</button>
-      <div class="sess-m">${bits.join(' · ')}</div></div>`;
+      <div class="sess-m">${(langsUsed().length>1&&plan.lg?langNameLc(plan.lg)+' · ':'')+bits.join(' · ')}</div></div>`;
   }
   app.innerHTML=hdr(t('Today'),'',themeBtn())+
    (standalone||S.settings.hideBanner||!total?'':
@@ -4457,7 +4475,15 @@ function dayStrip(){
 function learnPick(){
   const all=S.sets.flatMap(s=>s.words);
   const act=all.filter(w=>!w.arch);
-  return shuffle((act.length>=3?act:all).slice()).slice(0,3).map(w=>w.id);
+  const base=act.length?act:all;
+  /* the three words always share one language */
+  const by={};base.forEach(w=>{(by[langOf(w)]=by[langOf(w)]||[]).push(w);});
+  const ks=Object.keys(by),big=ks.filter(k=>by[k].length>=3),pickFrom=big.length?big:ks;
+  if(!pickFrom.length)return [];
+  /* follow the language of today's session, so the whole home page speaks one language */
+  let lg0=null;try{lg0=ks.length>1?buildSession(false).lg:null;}catch(e){}
+  const k=(lg0&&by[lg0]&&by[lg0].length)?lg0:pickFrom[Math.floor(Math.random()*pickFrom.length)];
+  return shuffle(by[k].slice()).slice(0,3).map(w=>w.id);
 }
 function wordsCard(){
   if(!S.sets.some(s=>s.words.length))return '';
