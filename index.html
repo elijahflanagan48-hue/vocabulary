@@ -182,6 +182,12 @@ header h1{flex:1;min-width:0;margin:0;font-family:var(--ff-serif);font-size:25px
 .qdot{transition:transform .2s cubic-bezier(.22,1,.36,1),background-color .18s ease,border-color .18s ease,color .18s ease}
 .qdot:active{transform:scale(.95);transition-duration:.12s}
 .qdot.cur{background:var(--pri);color:var(--on-pri);border-color:transparent}
+.tq{scroll-margin-top:calc(70px + env(safe-area-inset-top));margin:0 0 30px;opacity:.6;transition:opacity .35s ease}
+.tq.done{opacity:.82}.tq.cur,.tq:focus-within{opacity:1}
+.tqfin{scroll-margin-top:calc(70px + env(safe-area-inset-top))}
+.qn{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:8px;background:var(--pri-soft);color:var(--pri-d);font-size:12.5px;font-weight:800;margin-right:8px;letter-spacing:0;vertical-align:middle}
+.tq.done .qn{background:var(--pri);color:var(--on-pri)}
+.mqhead .qn{margin-right:8px}
 .opt.pick{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
 .btn.selp{border-color:var(--pri);background:var(--pri-soft);color:var(--pri-d)}
 .btn.tfy{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
@@ -1252,7 +1258,8 @@ function applyTheme(){
   if(((S.settings.theme)||'auto')==='auto')_themeTimer=setTimeout(applyTheme,60000);
 }
 function themeIcon(){return ic(document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');}
-function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();render();}
+function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();themeSync();}
+function themeSync(){try{document.querySelectorAll('button[aria-label="Theme"]').forEach(b=>{b.innerHTML=themeIcon();});}catch(e){}}
 function setLang(l){S.settings.lang=l;S.settings.upd=Date.now();save();settingsSheet();render();}
 function setBg(v){S.settings.bg=v;save();applyTheme();if($('#scrim'))settingsSheet();}
 function setTheme(m){S.settings.theme=m;save();applyTheme();if($('#scrim'))settingsSheet();render();}
@@ -1949,7 +1956,7 @@ function softRender(){if(studyBusy||inl||dnd)return;softMode=true;try{render();}
 const pulse=el=>{if(!el)return;el.classList.remove('viewin');void el.offsetWidth;el.classList.add('viewin');};
 const hdr=(title,back,right='')=>{
   try{document.title=(title&&title!=='Vocabulary')?title+' · Vocabulary':'Vocabulary';}catch(e){}
-  return `<header>${back?`<button class="ic back" aria-label="Back" onclick="${back}">${ic('left',22)}</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}</header>`;};
+  return `<header>${back?`<button class="ic back" aria-label="Back" onclick="${back}">${ic('left',22)}</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}${String(right).indexOf('aria-label="Theme"')<0?themeBtn():''}</header>`;};
 
 /* ---------- views ---------- */
 /* search ignores case and accents (kenyer finds kenyér) */
@@ -3954,42 +3961,82 @@ function runTest(words,kinds,review,resume){
   const persist=()=>{if(PRACTICE)return;try{localStorage.setItem(TKEY,JSON.stringify({at:Date.now(),kinds,review,i,ans,qs:qs.map(q=>Object.assign({},q,{w:q.w.id},q.ws?{ws:q.ws.map(x=>x.id)}:{}))}));}catch(e){}};
   const answered=ix=>{const q=qs[ix];return q.type==='match'?(ans[ix]||[]).length===q.ws.length&&ans[ix].every(v=>v!=null):q.type==='type'?(ans[ix]||'').trim()!=='':ans[ix]!==null;};
   const countAns=()=>{let n=0;for(let k=0;k<total;k++)if(answered(k))n++;return n;};
-  function go2(nx){if(nx<0||nx>=total)return;i=nx;sel=null;draw();}
+  const sels={};let advT=0,palFit=()=>{};
+  const feed=()=>$('#tfeed');
+  function secInner(ix){
+    const q=qs[ix],prompt=q.dir==='en2ru'?q.w.en:q.w.ru;
+    const n=`<b class="qn">${ix+1}</b>`;
+    let h=q.type==='match'?`<div class="mqhead">${n}${t('Match each word with its translation')}</div>`
+      :`<div class="card" style="min-height:min(24vh,150px)"><div class="lbl">${n}${qLabel(q)}</div><div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word sub">= ${esc(q.shown)}</div>`:''}</div>`;
+    if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[ix]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
+    if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn tfy ${ans[ix]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn tfn ${ans[ix]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
+    if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp ta" data-ix="${ix}" placeholder="${t('Answer')}" value="${esc(ans[ix]||'')}" ${NOASSIST}></div>`;
+    if(q.type==='match')h+=mqHtml(q,ans[ix],sels[ix]||null);
+    return h;
+  }
+  function updateTop(){
+    const ca=countAns(),pb=$('.pbar i'),st=$('.topbar .stat');
+    if(pb)pb.style.width=(ca/total*100)+'%';
+    if(st)st.textContent=ca+'/'+total;
+    $$('.qdot').forEach((b,ix)=>{b.classList.toggle('on',answered(ix));b.classList.toggle('cur',ix===i);});
+    $$('.tq[data-ix]').forEach((s,ix)=>{s.classList.toggle('done',answered(ix));s.classList.toggle('cur',ix===i);});
+    palFit();
+  }
+  function setCur(ix){if(ix===i)return;i=ix;persist();updateTop();}
+  function scrollQ(ix,smooth){
+    const el=$('#tq'+ix)||$('#tfin');if(!el)return;
+    try{el.scrollIntoView({behavior:smooth?'smooth':'auto',block:'start'});}catch(e){el.scrollIntoView();}
+  }
+  /* after an answer the next question slides up by itself */
+  function advance(ix,delay,focus){
+    clearTimeout(advT);
+    advT=setTimeout(()=>{
+      if(!feed())return;
+      const nx=ix+1;
+      if(nx>=total){scrollQ(total,true);return;}
+      setCur(nx);scrollQ(nx,true);
+      if(focus&&qs[nx].type==='type')setTimeout(()=>{const ta=$('#tq'+nx+' .ta');if(ta&&ta.isConnected)try{ta.focus({preventScroll:true});}catch(e){ta.focus();}},420);
+    },delay);
+  }
+  function afterAns(ix,first){persist();drawSec(ix);updateTop();if(first)advance(ix,380);}
   /* tap a word, then its translation (either order); tap a paired item to undo the pair */
-  function mqTap(side,k){
-    const a=ans[i];
+  function mqTap(ix,side,k){
+    const a=ans[ix],was=answered(ix);let sel=sels[ix]||null;
     if(sel&&sel.s!==side){
       const tk=side==='t'?k:sel.k,dk=side==='d'?k:sel.k;
       for(let x=0;x<a.length;x++)if(a[x]===dk)a[x]=null;
-      a[tk]=dk;sel=null;persist();
+      a[tk]=dk;sel=null;
     }else if(sel&&sel.s===side&&sel.k===k){sel=null;}
     else if(!sel&&(side==='t'?a[k]!=null:a.indexOf(k)>=0)){
-      if(side==='t')a[k]=null;else a[a.indexOf(k)]=null;persist();
+      if(side==='t')a[k]=null;else a[a.indexOf(k)]=null;
     }else sel={s:side,k};
-    draw();
+    sels[ix]=sel;persist();drawSec(ix);updateTop();
+    if(!was&&answered(ix))advance(ix,520);
   }
-  function finishTest(){const blanks=total-countAns();if(blanks&&!confirm(t('Still blank')+': '+blanks+'. '+t('Finish anyway?')))return;result();}
+  function finishTest(){const blanks=total-countAns();if(blanks&&!confirm(t('Still blank')+': '+blanks+'. '+t('Finish anyway?')))return;clearTimeout(advT);result();}
+  function bindSec(ix){
+    const el=$('#tq'+ix),q=qs[ix];if(!el)return;
+    if(q.type==='mc')el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const f=!answered(ix);ans[ix]=+b.dataset.k;afterAns(ix,f);});
+    if(q.type==='tf')el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{const f=!answered(ix);ans[ix]=(b.dataset.tf==='1');afterAns(ix,f);});
+    if(q.type==='type'){const ta=el.querySelector('.ta');hardenInput(ta);if(ta){
+      ta.oninput=()=>{ans[ix]=ta.value;persist();updateTop();};
+      ta.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();advance(ix,0,true);}});}}
+    el.querySelectorAll('.mqi').forEach(b=>b.onclick=()=>mqTap(ix,b.dataset.s,+b.dataset.k));
+  }
+  function drawSec(ix){const el=$('#tq'+ix);if(!el)return;el.innerHTML=secInner(ix);bindSec(ix);}
   function draw(){
     persist();
-    const q=qs[i],en2ru=q.dir==='en2ru',prompt=en2ru?q.w.en:q.w.ru;
-    const lbl=qLabel(q);
     const ca=countAns();
     const dots=qs.map((_,ix)=>`<button class="qdot ${answered(ix)?'on':''} ${ix===i?'cur':''}" data-ix="${ix}">${ix+1}</button>`).join('');
-    let h=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()")+
+    app.innerHTML=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()")+
       `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div><span class="stat">${ca}/${total}</span></div>`+
       `<div class="qpalbox"><div class="qpal${palOpen?' open':''}" id="qpal">${dots}</div><button class="qmore" id="qmore" aria-label="${palOpen?t('Collapse'):t('Show all questions')}">${palOpen?ic('up',18):ic('down',18)}</button></div>`+
-      (q.type==='match'?`<div class="mqhead">${t('Match each word with its translation')}</div>`:`<div class="card" style="min-height:min(30vh,180px)"><div class="lbl">${lbl}</div>
-        <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word sub">= ${esc(q.shown)}</div>`:''}</div>`);
-    if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[i]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
-    if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn tfy ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn tfn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
-    if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" value="${esc(ans[i]||'')}" ${NOASSIST}></div>`;
-    if(q.type==='match')h+=mqHtml(q,ans[i],sel);
-    h+=`<div style="height:14px"></div><div class="row2">
-      <button class="btn ghost" id="tback" ${i===0?'disabled':''}>${ic('arrowLeft',18)}${t('Back')}</button>
-      ${i<total-1?`<button class="btn pri" id="tnext">${t('Next')}${ic('arrowRight',18)}</button>`:`<button class="btn pri tfinbtn">${ic('check',18,2)}${t('Finish')}</button>`}</div>
-      ${i<total-1?`<div style="height:9px"></div><button class="btn ghost tfinbtn" style="color:var(--mut)">${t('Finish test')}</button>`:''}`;
-    app.innerHTML=h;
-    if(shown!==i){pulse(app.querySelector('.card'));shown=i;}
+      `<div id="tfeed">${qs.map((_,ix)=>`<section class="tq${answered(ix)?' done':''}${ix===i?' cur':''}" id="tq${ix}" data-ix="${ix}">${secInner(ix)}</section>`).join('')}</div>`+
+      `<div id="tfin" class="tqfin"><button class="btn pri tfinbtn">${ic('check',18,2)}${t('Finish')}</button></div>`;
+    qs.forEach((_,ix)=>bindSec(ix));
+    const fd=feed();
+    const act=e=>{const s=e.target.closest&&e.target.closest('.tq[data-ix]');if(s)setCur(+s.dataset.ix);};
+    fd.addEventListener('pointerdown',act);fd.addEventListener('focusin',act);
     const pal=$('#qpal'),more=$('#qmore');
     if(pal&&more){
       const base=pal.getBoundingClientRect().top;
@@ -3998,24 +4045,17 @@ function runTest(words,kinds,review,resume){
       if(rows<=2&&!palOpen){more.style.display='none';}
       else{
         more.style.display='';
-        /* stays folded until the user opens it; the folded strip just scrolls to the current question's row */
-        const cur=pal.querySelector('.qdot.cur');
-        const fit=()=>{if(cur)pal.scrollTop=palOpen?Math.max(0,top(cur)-pal.clientHeight/2+18):Math.max(0,top(cur)-4);};
-        fit();
+        palFit=()=>{const cur=pal.querySelector('.qdot.cur');if(cur)pal.scrollTop=palOpen?Math.max(0,top(cur)-pal.clientHeight/2+18):Math.max(0,top(cur)-4);};
+        palFit();
         more.onclick=()=>{palOpen=!palOpen;pal.classList.toggle('open',palOpen);
           more.innerHTML=palOpen?ic('up',18):ic('down',18);
           more.setAttribute('aria-label',palOpen?t('Collapse'):t('Show all questions'));
-          requestAnimationFrame(fit);};
+          requestAnimationFrame(palFit);};
       }
     }
-    $$('.qdot').forEach(b=>b.onclick=()=>go2(+b.dataset.ix));
-    if(q.type==='mc')$$('.opt').forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.k;draw();});
-    if(q.type==='tf')$$('[data-tf]').forEach(b=>b.onclick=()=>{ans[i]=(b.dataset.tf==='1');draw();});
-    if(q.type==='type'){const ta=$('#ta');hardenInput(ta);if(ta){ta.oninput=()=>{ans[i]=ta.value;persist();};ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&i<total-1)go2(i+1);});setTimeout(()=>ta.isConnected&&ta.focus(),40);}}
-    $$('.mqi').forEach(b=>b.onclick=()=>mqTap(b.dataset.s,+b.dataset.k));
-    const bk=$('#tback');if(bk)bk.onclick=()=>go2(i-1);
-    const nx=$('#tnext');if(nx)nx.onclick=()=>go2(i+1);
+    $$('.qdot').forEach(b=>b.onclick=()=>{const ix=+b.dataset.ix;clearTimeout(advT);setCur(ix);scrollQ(ix,true);});
     $$('.tfinbtn').forEach(b=>b.onclick=finishTest);
+    if(i>0)requestAnimationFrame(()=>scrollQ(i,false));
   }
   function result(){
     shown=-1;testClear();
