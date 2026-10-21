@@ -1457,10 +1457,22 @@ function colMissing(e){const m=errText(e);return m.indexOf('column')>=0||m.index
 function permBlocked(e){const m=errText(e);return m.indexOf('row-level')>=0||m.indexOf('42501')>=0||m.indexOf('permission')>=0;}
 const dayNum=k=>{if(!k)return 0;const p=String(k).split('-');return (+p[0]||0)*10000+(+p[1]||0)*100+(+p[2]||0);};
 
-function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0};}
+let SEEN=0,_seenT=0;
+function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,seen:SEEN||0};}
+/* a student's device tells the teacher it was opened: at most once every ~2 minutes while visible */
+function pingSeen(){
+  try{
+    if(!cloudEnabled()||document.visibilityState!=='visible'||noPrefsSync)return;
+    if(AUTH.profile&&AUTH.profile.role==='teacher')return;
+    if(Date.now()-_seenT<100000)return;
+    _seenT=Date.now();SEEN=_seenT;
+    pushPrefs(AUTH.user.id).catch(()=>{});
+  }catch(e){}
+}
 /* combine another device's stats into ours without ever losing a streak */
 function mergeStats(r){
   if(!r||typeof r!=='object')return false;
+  if((+r.seen||0)>SEEN)SEEN=+r.seen;
   const l=S.stats;let ch=false;
   const best=Math.max(l.best||0,r.best||0);
   if(best!==(l.best||0)){l.best=best;ch=true;}
@@ -1500,7 +1512,7 @@ async function pushPrefs(me){
   await pullPrefs(me,true);
   if(noPrefsSync)return;
   const patch={};
-  if((S.stats.upd||0)>0)patch.stats=statsBlob();
+  if((S.stats.upd||0)>0||SEEN>0)patch.stats=statsBlob();
   if(!noSettingsCol&&(S.settings.upd||0)>0)patch.settings=settingsBlob();
   if(!Object.keys(patch).length)return;
   const run=()=>sb.from('profiles').update(patch).eq('id',me).select('id');
@@ -1681,12 +1693,19 @@ async function onSignedIn(user){
     if(data){AUTH.profile=data;try{localStorage.setItem(PKEY,JSON.stringify(data));}catch(e){}
       if(mergePrefsFrom(data))save();}
   }catch(e){}
-  if(AUTH.profile&&AUTH.profile.role==='teacher')await loadStudents();
-  restorePending();liveStart();
+  let stP=null;
+  if(AUTH.profile&&AUTH.profile.role==='teacher'){
+    const c=stCacheLoad();
+    if(c&&c.uid===user.id&&c.students&&!(AUTH.students&&AUTH.students.length))AUTH.students=c.students;
+    stP=loadStudents();
+  }
+  restorePending();
   softRender();
+  if(stP)stP.then(()=>{liveStart();softRender();});else liveStart();
   await cloudPull();
   await cloudPush();
   softRender();
+  pingSeen();
 }
 /* ---------- changing a name ---------- */
 function nameSheet(){
@@ -1757,6 +1776,8 @@ async function tSaveName(){
     btn.disabled=false;
   }
 }
+function stCacheLoad(){try{return JSON.parse(localStorage.getItem('vocab.stc')||'null');}catch(e){return null;}}
+function stCacheSave(uid,students,info){try{localStorage.setItem('vocab.stc',JSON.stringify({uid,students,info}));}catch(e){}}
 async function loadStudents(){
   try{
     const {data:links,error:e1}=await sb.from('links').select('student_id').eq('teacher_id',AUTH.user.id);
@@ -1766,13 +1787,15 @@ async function loadStudents(){
     let {data:profs,error:e2}=await sb.from('profiles').select('id,display_name,stats').in('id',ids);
     if(e2)({data:profs,error:e2}=await sb.from('profiles').select('id,display_name').in('id',ids));
     if(e2)return false;
-    AUTH.students=profs||[];return true;
+    AUTH.students=profs||[];
+    {const c=stCacheLoad();stCacheSave(AUTH.user.id,AUTH.students,(c&&c.uid===AUTH.user.id&&c.info)||{});}
+    return true;
   }catch(e){return false;}
 }
 async function doSignOut(){
   liveStop();
   try{await sb.auth.signOut();}catch(e){}
-  try{localStorage.removeItem(PKEY);}catch(e){}
+  try{localStorage.removeItem(PKEY);localStorage.removeItem('vocab.stc');}catch(e){}
   AUTH={user:null,profile:null,ready:true,students:[]};TC.students=null;TC.owner={};
   closeSheet();go('home');toast(t('Signed out'));
 }
@@ -2631,6 +2654,26 @@ function agoTxt(ts){
   if(d<30){const w=Math.round(d/7);return t('last seen')+' '+w+' '+plr(w,t('week'),t('week2'),t('weeks'))+' '+t('ago');}
   const mo=Math.round(d/30);return t('last seen')+' '+mo+' '+plr(mo,t('month'),t('month2'),t('months'))+' '+t('ago');
 }
+/* precise presence text: 'online now', '12 min ago', 'today at 14:32', 'yesterday at 09:05', … */
+function seenTxt(ts){
+  if(!ts)return t('no activity yet');
+  const now=Date.now(),diff=now-ts,mn=Math.floor(diff/60000);
+  const dt=new Date(ts),hm=dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+  if(mn<5)return t('online now');
+  if(mn<60)return t('last seen')+' '+mn+' '+plr(mn,t('min'),t('min2'),t('mins'))+' '+t('ago');
+  const day0=x=>{const d=new Date(x);d.setHours(0,0,0,0);return +d;};
+  const dd=Math.round((day0(now)-day0(ts))/DAY);
+  if(dd<=0)return t('last seen')+' '+t('today at')+' '+hm;
+  if(dd===1)return t('last seen')+' '+t('yesterday at')+' '+hm;
+  if(dd<7)return t('last seen')+' '+dd+' '+plr(dd,t('day'),t('day2'),t('days'))+' '+t('ago')+', '+hm;
+  return agoTxt(ts);
+}
+function fmtDT(ts){
+  if(!ts)return '—';
+  const d=new Date(ts),same=d.getFullYear()===new Date().getFullYear();
+  try{return d.toLocaleString((S.settings.lang||'ru')==='en'?'en-GB':'ru-RU',Object.assign({day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',hour12:false},same?{}:{year:'numeric'}));}catch(e){return d.toLocaleString();}
+}
+const stuSeen=s=>{const st=(s&&s.stats)||{};return Math.max(+st.seen||0,+st.upd||0);};
 /* teacher screens keep what they last showed and refresh it quietly */
 const TC={students:null,owner:{}};
 let _tl=0;
@@ -2654,68 +2697,78 @@ VIEWS.students=async function(app){
   app.innerHTML=hdr(t('My students'),'',AUTH.students&&AUTH.students.length?`<button class="ic" aria-label="Edit" onclick="toggleStEdit()">${ic(stEdit?'check':'pen')}</button>`:'')+(stN>0?sbox('stSearch'):'')+`<div id="rl"></div>`+tabBar();
   const draw=d=>{
     if(!d.students.length)return `<div class="empty"><div class="big">${ic('users',26)}</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`;
-    const week=Date.now()-7*DAY;
     const fq=fold(LQ),shown=fq?d.students.filter(s=>fold(s.display_name||'Student').includes(fq)):d.students;
     if(!shown.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
     return shown.map(s=>{
-      const nm=s.display_name||'Student',mine=d.words.filter(w=>w.owner_id===s.id);
-      /* last activity: the newest word change, or the day the student last practised (streak data) */
-      const stT=s.stats&&s.stats.upd?+s.stats.upd:0;
-      const last=Math.max(mine.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0),stT);
-      const weekN=mine.filter(w=>+new Date(w.updated_at)>week).length;
-      const learned=mine.filter(w=>w.arch).length;
-      const stale=last&&(Date.now()-last)>7*DAY;
+      const nm=s.display_name||'Student',inf=d.info&&d.info[s.id];
+      /* last visit: the app's own heartbeat, or the newest word change / practice day */
+      const last=Math.max(inf?inf.last:0,stuSeen(s));
+      const weekN=inf?inf.week:0,learned=inf?inf.learned:0;
+      const online=last&&(Date.now()-last)<5*60000;
+      const stale=last&&!online&&(Date.now()-last)>7*DAY;
       return `<div class="roster" onclick="${stEdit?'':`go('tsets',{sid:'${s.id}',sname:'${q1(nm)}'})`}">
       <div class="av"${stale?' style="background:var(--line2);color:var(--mut)"':''}>${esc(nm.trim().charAt(0).toUpperCase()||'?')}</div>
       <div class="t"><div class="nm">${esc(nm)}</div>
-        <div class="meta">${nWords(mine.length)} · ${learned} ${t('learned')}</div>
-        <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${agoTxt(last)}${weekN?` · ${weekN} ${t('this week')}`:''}</div></div>
+        <div class="meta">${inf?nWords(inf.n)+' · '+learned+' '+t('learned'):'…'}</div>
+        <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${seenTxt(last)}${weekN?` · ${weekN} ${t('this week')}`:''}</div></div>
       ${stEdit?`<button class="ic" style="color:var(--bad)" aria-label="Remove student" onclick="event.stopPropagation();unlinkStudent('${s.id}','${q1(nm)}')">${ic('trash',20)}</button>`:ic('right',18)}</div>`;
     }).join('');
   };
   window._stDraw=draw;
+  if(!TC.students){const c=stCacheLoad();if(c&&c.uid===AUTH.user.id&&c.students)TC.students={students:c.students,info:c.info||{}};}
   const had=!!TC.students;
   if(had)paint($('#rl'),draw(TC.students),false);else $('#rl').innerHTML=skel(4);
   topLoad(true);
   let fresh=null;
+  const old=(TC.students&&TC.students.info)||{};
+  const studInfo=async sid=>{
+    /* only the two columns the list needs, newest page first; students load in parallel */
+    const wk=Date.now()-7*DAY;let n=0,learned=0,week=0,last=0;
+    for(let from=0;from<100000;from+=1000){
+      const {data,error}=await sb.from('words').select('arch,updated_at').eq('owner_id',sid).eq('deleted',false).range(from,from+999);
+      if(error)return null;
+      for(const w of data||[]){n++;if(w.arch)learned++;const u=+new Date(w.updated_at);if(u>wk)week++;if(u>last)last=u;}
+      if(!data||data.length<1000)break;
+    }
+    return {n,learned,week,last};
+  };
   try{
-    const ok=await loadStudents();
-    if(ok){
-      let words=[];
-      if(AUTH.students.length){
-        /* one student at a time, page by page: a single combined query is cut off at 1000 rows,
-           which silently dropped every student after the biggest ones */
-        let failed=false;
-        const per=await Promise.all(AUTH.students.map(async st=>{
-          let rows=[];
-          for(let from=0;from<100000;from+=1000){
-            const {data,error}=await sb.from('words').select('owner_id,arch,ok,bad,updated_at').eq('owner_id',st.id).eq('deleted',false).range(from,from+999);
-            if(error){failed=true;return rows;}
-            rows=rows.concat(data||[]);
-            if(!data||data.length<1000)break;
-          }
-          return rows;
-        }));
-        words=[].concat(...per);
-        if(failed&&had)words=TC.students.words;
+    const lk=await sb.from('links').select('student_id').eq('teacher_id',AUTH.user.id);
+    if(!lk.error){
+      const ids=(lk.data||[]).map(l=>l.student_id);
+      if(!ids.length){AUTH.students=[];fresh={students:[],info:{}};}
+      else{
+        /* profiles and every student's words are requested at the same moment */
+        const infoP=Promise.all(ids.map(studInfo));
+        let pr=await sb.from('profiles').select('id,display_name,stats').in('id',ids);
+        if(pr.error)pr=await sb.from('profiles').select('id,display_name').in('id',ids);
+        if(!pr.error){
+          AUTH.students=pr.data||[];
+          if(!had&&view.name==='students')paint($('#rl'),draw({students:AUTH.students,info:{}}),true);
+          const infos=await infoP,info={};
+          AUTH.students.forEach(st=>{const k=ids.indexOf(st.id);const v=k>=0?infos[k]:null;if(v)info[st.id]=v;else if(old[st.id])info[st.id]=old[st.id];});
+          fresh={students:AUTH.students.slice(),info};
+          stCacheSave(AUTH.user.id,fresh.students,info);
+        }
       }
-      fresh={students:AUTH.students.slice(),words};
     }
   }catch(e){}
   topLoad(false);
   if(view.name!=='students')return;
   if(fresh){TC.students=fresh;paint($('#rl'),draw(fresh),!had);}
-  else if(!had)paint($('#rl'),draw({students:[],words:[]}),true);
+  else if(!had)paint($('#rl'),draw({students:[],info:{}}),true);
 };
 function tsetsHtml(){
   const {sid,sname,words,sets}=TV;
   const archN=words.filter(w=>w.arch).length;
-  const last=words.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0);
+  const stu=(AUTH.students||[]).find(x=>x.id===sid);
+  const last=Math.max(words.reduce((m,w)=>Math.max(m,+new Date(w.updated_at)),0),stuSeen(stu));
   const weekN=words.filter(w=>+new Date(w.updated_at)>Date.now()-7*DAY).length;
   const dueN=words.filter(w=>w.arch&&w.due&&w.due<=Date.now()).length;
   const tricky=words.filter(w=>(w.bad||0)>=2&&(w.bad||0)>(w.ok||0)).sort((a,b)=>((b.bad||0)-(b.ok||0))-((a.bad||0)-(a.ok||0))).slice(0,6);
   return `<div class="daycard" style="align-items:flex-start">
-      <div class="t"><div class="lbl"><span>${esc(agoTxt(last))}</span><b>${nWords(words.length)}</b></div>
+      <div class="t"><div class="lbl"><span id="seenTx">${esc(seenTxt(last))}</span><b>${nWords(words.length)}</b></div>
+      <div class="meta" id="seenLn" style="color:var(--mut);font-size:13.5px;margin-top:5px">${t('Last visit')}: <b style="color:var(--tx)">${esc(fmtDT(last))}</b></div>
       <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:5px">
         ${archN} ${t('learned')} · ${weekN} ${t('this week')}${dueN?` · ${dueN} ${t('due for review')}`:''}</div></div></div>`+
    (tricky.length?`<div class="subhead"><span class="t">${t('Needs work')}</span></div>`+
@@ -2752,6 +2805,21 @@ function tsSearch(v){
     <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'
     :`<div class="empty"><p>${t('Nothing found')}</p></div>`;
 }
+/* the student's own latest heartbeat, fetched fresh each time the card opens */
+async function tSeenRefresh(sid){
+  try{
+    const {data}=await sb.from('profiles').select('stats').eq('id',sid).maybeSingle();
+    if(!data||!data.stats)return;
+    const stu=(AUTH.students||[]).find(x=>x.id===sid);if(!stu)return;
+    stu.stats=data.stats;
+    if(view.name!=='tsets'||view.sid!==sid)return;
+    const w=(TV&&TV.sid===sid?TV.words:[])||[];
+    const last=Math.max(w.reduce((m,x)=>Math.max(m,+new Date(x.updated_at)),0),stuSeen(stu));
+    const a=$('#seenTx'),b=$('#seenLn');
+    if(a)a.textContent=seenTxt(last);
+    if(b)b.innerHTML=t('Last visit')+': <b style="color:var(--tx)">'+esc(fmtDT(last))+'</b>';
+  }catch(e){}
+}
 VIEWS.tsets=async function(app){
   const sid=view.sid,sname=view.sname||'Student';
   app.innerHTML=hdr(sname,"go('students')",`<button class="ic" aria-label="Rename" onclick="tRenameSheet()">${ic('pen')}</button><button class="ic" aria-label="Remove student" onclick="unlinkStudent('${sid}','${q1(sname)}')">${ic('trash')}</button>`)+sbox('tsSearch')+`<div id="tsres"></div><div id="tl"></div>`;
@@ -2759,6 +2827,7 @@ VIEWS.tsets=async function(app){
   if(c){TV={sid,sname,setId:null,setName:'',words:c.words,sets:c.sets};paint($('#tl'),tsetsHtml(),false);}
   else $('#tl').innerHTML=skel(3);
   topLoad(true);
+  tSeenRefresh(sid);
   const r=await fetchOwner(sid);
   topLoad(false);
   if(view.name!=='tsets'||view.sid!==sid)return;
@@ -3037,11 +3106,11 @@ function tWordForm(id){
      <div class="field"><label>${t('List language')}</label><select class="inp" id="tArL" onchange="tArchLangChange(this.value)">${langOptions(lg)}</select></div>`:''}
    <div class="field"><label id="tWl">${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
    <div class="field"><label>${t('Translation')}</label>
-     <div class="row"><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="${ph?t('надёжный'):''}" oninput="ruTouched=true" style="flex:1">
+     <div class="row"><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true" style="flex:1">
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="tTrSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="tChips"></div>
-   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none"></div>
+   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
    <div class="err" id="tErr"></div>
    <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
@@ -3345,12 +3414,12 @@ function wordForm(id,opts){
    <div class="field"><label>${t('Word')} (${esc(langNameLc(formLang))})</label>
      <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
    <div class="field"><label>${t('Translation')}</label>
-     <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="${ph?t('надёжный'):''}" oninput="ruTouched=true" style="flex:1">
+     <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true" style="flex:1">
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="trSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="chips"></div>
    <div class="field"><label>${t('Example (optional)')}</label>
-     <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none"></div>
+     <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
    <button class="btn pri" onclick="saveWord()">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
      ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('reset')}${t('To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('archive')}${t('To Archive')}</button>`}
@@ -3360,6 +3429,7 @@ function wordForm(id,opts){
 /* which fields the translator writes into — the student form and the teacher form share it */
 let TR={en:'fEn',ru:'fRu',st:'trSt',chips:'chips',lang:DEF_LANG};
 function trSetup(cfg){TR=Object.assign({en:'fEn',ru:'fRu',st:'trSt',chips:'chips',lang:DEF_LANG},cfg||{});}
+const lcFirst=(a,en)=>{a=String(a==null?'':a);if(!a||!en||en.charAt(0)!==en.charAt(0).toLowerCase())return a;const c=a.charAt(0);return(c!==c.toLowerCase()&&(a.length<2||a.charAt(1)===a.charAt(1).toLowerCase()))?c.toLowerCase()+a.slice(1):a;};
 function autoTr(){clearTimeout(trTimer);trTimer=setTimeout(()=>doTr(false),650);}
 async function doTr(force){
   const enEl=$('#'+TR.en);if(!enEl)return;const en=enEl.value.trim();if(!en)return;
@@ -3370,6 +3440,7 @@ async function doTr(force){
   const ruEl=$('#'+TR.ru);if(!ruEl)return;
   const stEl=$('#'+TR.st);
   if(!r){if(stEl)stEl.textContent='⚠ '+t('Can’t reach the translator — enter the translation manually');return;}
+  r.main=lcFirst(r.main,en);r.alts=(r.alts||[]).map(a=>lcFirst(a,en));
   if(force||(!ruTouched&&!ruEl.value)){ruEl.value=r.main;ruTouched=false;}
   if(stEl)stEl.textContent=t('Options — tap to use:');
   const ch=$('#'+TR.chips);
@@ -3513,7 +3584,7 @@ function importSheet(toStudent,opts){
    <div class="hint">${impArch?t('These words go straight to the Archive.'):impTo?t('The words go straight into the student’s list.'):t("Paste a list from Quizlet, Excel or plain text. Translations are optional — they'll be filled in automatically.")}
      ${impArch?'':`<br><b>${esc(langName(impTo?tSetLang(impTo.setId):targetLang()))} → ${uiEn()?'Russian':'Русский'}</b>`}</div>
    ${impArch?`<div class="field"><label>${t('List language')}</label><select class="inp" id="impLg">${langOptions(archLg)}</select></div>`:''}
-   <div class="field"><textarea class="inp" id="imp" placeholder="apple&#9;яблоко&#10;reliable&#9;надёжный&#10;to give up&#10;book	книга" oninput="impPrev()"></textarea></div>
+   <div class="field"><textarea class="inp" id="imp" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="apple&#9;яблоко&#10;reliable&#9;надёжный&#10;to give up&#10;book	книга" oninput="impPrev()"></textarea></div>
    <div class="field"><label>${t('Between word and translation')}</label><div class="sel-opt" id="selT">
      ${[['auto',t('Auto')],['tab',t('Tab ⇥')],['dash',t('Dash –')],['comma',t('Comma')],['eq','= ']].map(o=>`<button data-v="${o[0]}" class="${o[0]==='auto'?'on':''}" onclick="impTerm='${o[0]}';syncSel();impPrev()">${o[1]}</button>`).join('')}</div></div>
    <div class="field"><label>${t('Between cards')}</label><div class="sel-opt" id="selC">
@@ -4148,6 +4219,7 @@ function startMatch(){
   });
 }
 
+Object.assign(RU_DICT,{"online now":"в сети","min":"минуту","min2":"минуты","mins":"минут","today at":"сегодня в","yesterday at":"вчера в","Last visit":"Последний вход"});
 Object.assign(RU_DICT,{"Matching":"Подбор","in a row":"подряд","A new star lights up":"Зажглась новая звезда","A whole week in a row!":"Целая неделя подряд!","Two weeks in a row!":"Две недели подряд!","A month with no gaps!":"Месяц без пропусков!","One hundred days!":"Сотня дней!","A whole year!":"Целый год!","A new milestone!":"Новый рубеж!","Daily goal reached":"Дневная цель выполнена","Continue":"Продолжить","Today's star is lit":"Звезда дня горит","to light today's star":"до звезды дня","Words you are learning":"Слова, которые вы учите","Shuffle":"Другие","Animation sound":"Звук анимации","On":"Вкл","Off":"Выкл","Sound plays when you finish a session or extend your streak.":"Звук играет, когда вы завершаете занятие или продлеваете серию.","Flawless!":"Безупречно!","All pairs matched":"Все пары найдены"});
 /* ================= v69: celebrations — streak constellation, Today card, per-mode finales ================= */
 const celRM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
@@ -4816,7 +4888,8 @@ try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.
   if(bv==='wait'){const a=$('#app');a.innerHTML=skel(5);}else render();
   if(bv===true)keepScroll();}
 authInit();
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled())cloudPull().then(softRender);});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled()){cloudPull().then(softRender);setTimeout(pingSeen,1500);}});
+setInterval(pingSeen,120000);
 setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(softRender);},150000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
