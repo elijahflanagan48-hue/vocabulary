@@ -644,6 +644,18 @@ html[data-bg="stars"] body::after{
 .ch-dot-on{fill:var(--cs-hot);stroke:var(--cs-hot-st);stroke-width:1}
 .ch-ground{fill:var(--cs-line2)}
 .hero .big-pct{font-variant-numeric:tabular-nums}
+
+/* ---------- test: matching question ---------- */
+.mqhead{text-align:center;color:var(--mut);font-weight:600;font-size:14.5px;margin:6px 0 12px}
+.mq{display:grid;grid-template-columns:1fr 1fr;gap:9px 10px}
+.mqi{display:flex;align-items:center;gap:7px;text-align:left;min-height:58px;padding:9px 8px;border-radius:14px;background:var(--surf);border:1.5px solid var(--line2);font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,background-color .15s,transform .12s}
+.mqi:active{transform:scale(.985)}
+.mqi .bd{flex:none;min-width:24px;height:24px;padding:0 5px;border-radius:8px;display:grid;place-items:center;font-size:12.5px;font-weight:800;background:var(--surf2);color:var(--mut)}
+.mqi .tx{flex:1;min-width:0;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto;font-family:var(--ff-serif);font-weight:650;font-size:15px;line-height:1.2}
+.mqi .chip{flex:none;min-width:22px;height:22px;padding:0 5px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--pc);color:#fff}
+.mqi.sel{border-color:var(--pri);background:var(--pri-soft);box-shadow:0 0 0 3px color-mix(in srgb,var(--pri) 22%,transparent)}
+.mqi.pair{border-color:var(--pc);background:color-mix(in srgb,var(--pc) 13%,var(--surf))}
+.mqi.pair .bd{background:var(--pc);color:#fff}
 </style>
 </head>
 <body>
@@ -3697,6 +3709,37 @@ function importFile(f){
   r.readAsText(f);
 }
 
+
+/* ---------- matching question (as in Quizlet): pair several words with their translations ---------- */
+const MQC=['#2f86f5','#e0902a','#2fa36b','#a05bd6','#d6547a','#1fa3b5'];
+function mkMatchQ(ws){
+  let order=ws.map((_,i)=>i);
+  for(let a=0;a<8;a++){order=shuffle(order);if(order.some((v,i)=>v!==i))break;}
+  return {w:ws[0],ws,lg:langOf(ws[0]),type:'match',dir:'ru2en',order};
+}
+/* words picked for "Matching" are grouped (3–6 per question, same language); too few left over → ordinary questions */
+function buildQs(words,kinds,pool){
+  const other=kinds.filter(k=>k!=='match'),out=[],mw={};
+  words.forEach(w=>{
+    const k=kinds[Math.random()*kinds.length|0];
+    if(k==='match'){const l=langOf(w);(mw[l]=mw[l]||[]).push(w);}
+    else out.push(mkQ(pool,w,k,'ru2en'));
+  });
+  Object.values(mw).forEach(arr=>{
+    if(arr.length<3){arr.forEach(w=>out.push(mkQ(pool,w,other.length?other[Math.random()*other.length|0]:'mc','ru2en')));return;}
+    const g=Math.ceil(arr.length/6),base=Math.floor(arr.length/g),extra=arr.length%g;let at=0;
+    for(let x=0;x<g;x++){const n=base+(x<extra?1:0);out.push(mkMatchQ(arr.slice(at,at+n)));at+=n;}
+  });
+  return shuffle(out);
+}
+function mqHtml(q,a,sel){
+  const L='ABCDEFGH';
+  return '<div class="mq">'+q.ws.map((_,r)=>{
+    const tj=a[r],ow=a.indexOf(r);
+    return `<button class="mqi${sel&&sel.s==='t'&&sel.k===r?' sel':''}${tj!=null?' pair':''}" data-s="t" data-k="${r}" style="--pc:${MQC[r%6]}"><span class="bd">${r+1}</span><span class="tx">${esc(q.ws[r].ru)}</span>${tj!=null?`<span class="chip">${L[tj]}</span>`:''}</button>`+
+      `<button class="mqi${sel&&sel.s==='d'&&sel.k===r?' sel':''}${ow>=0?' pair':''}" data-s="d" data-k="${r}" style="--pc:${MQC[(ow>=0?ow:0)%6]}"><span class="bd">${L[r]}</span><span class="tx">${esc(q.ws[q.order[r]].en)}</span>${ow>=0?`<span class="chip">${ow+1}</span>`:''}</button>`;
+  }).join('')+'</div>';
+}
 /* ---------- questions engine ---------- */
 function mkQ(pool,w,kind,forceDir){
   const lg=langOf(w);
@@ -3857,7 +3900,7 @@ function testSetup(review){
    <div class="field"><label>${t('How many questions')}</label>
      <select class="inp" id="tn">${opts.map(v=>`<option value="${v}">${v===n?t('All words')+' ('+n+')':v}</option>`).join('')}</select></div>
    <div class="field"><label>${t('Question types')}</label><div class="stack">
-     ${[['k1',t('Multiple choice')],['k2',t('Type the answer')],['k3',t('True / false')]].map(o=>
+     ${[['k1',t('Multiple choice')],['k2',t('Type the answer')],['k3',t('True / false')],['k4',t('Matching')]].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
    <div class="hint">${(()=>{
        const ls=[...new Set(pool.map(langOf))];
@@ -3871,7 +3914,7 @@ function testSetup(review){
    <button class="btn pri" onclick="beginTest(${!!review})">${t('Start test')}</button>`);
 }
 function beginTest(review){
-  const kinds=[$('#k1').classList.contains('on')&&'mc',$('#k2').classList.contains('on')&&'type',$('#k3').classList.contains('on')&&'tf'].filter(Boolean);
+  const kinds=[$('#k1').classList.contains('on')&&'mc',$('#k2').classList.contains('on')&&'type',$('#k3').classList.contains('on')&&'tf',$('#k4').classList.contains('on')&&'match'].filter(Boolean);
   if(!kinds.length)return toast(t('Pick at least one type'));
   const n=+$('#tn').value;closeSheet();runTest(shuffle(poolNow()).slice(0,n),kinds,review);
 }
@@ -3883,14 +3926,17 @@ function testSaved(){
     const x=JSON.parse(localStorage.getItem(TKEY)||'null');
     if(!x||!Array.isArray(x.qs)||Date.now()-(x.at||0)>3*DAY)return null;
     const qs=[],ans=[];
-    x.qs.forEach((q,k)=>{const f=findWord(q.w);if(f){qs.push(Object.assign({},q,{w:f.w}));ans.push(x.ans[k]===undefined?null:x.ans[k]);}});
+    x.qs.forEach((q,k)=>{const f=findWord(q.w);if(!f)return;
+      if(q.type==='match'){const ws=(q.ws||[]).map(id=>{const g=findWord(id);return g&&g.w;});if(!ws.length||ws.some(v=>!v))return;
+        qs.push(Object.assign({},q,{w:ws[0],ws}));ans.push(Array.isArray(x.ans[k])?x.ans[k]:ws.map(()=>null));return;}
+      qs.push(Object.assign({},q,{w:f.w}));ans.push(x.ans[k]===undefined?null:x.ans[k]);});
     if(!qs.length)return null;
     return {qs,ans,i:Math.min(x.i||0,qs.length-1),kinds:x.kinds||['mc','type','tf'],review:!!x.review};
   }catch(e){return null;}
 }
 function testBanner(){
   const s=testSaved();if(!s)return '';
-  const n=s.qs.reduce((c,q,k)=>c+((q.type==='type'?String(s.ans[k]||'').trim()!=='':s.ans[k]!==null)?1:0),0);
+  const n=s.qs.reduce((c,q,k)=>c+((q.type==='match'?(s.ans[k]||[]).every(v=>v!=null):q.type==='type'?String(s.ans[k]||'').trim()!=='':s.ans[k]!==null)?1:0),0);
   return `<div class="resumebar"><button class="rowlink" onclick="resumeTest()"><span>${ic('repeat',19)}${t('Resume test')}</span><em>${n}/${s.qs.length}</em></button>
     <button class="ic" aria-label="${t('Discard')}" onclick="discardTest()">✕</button></div>`;
 }
@@ -3898,14 +3944,27 @@ function resumeTest(){const s=testSaved();if(!s){render();return;}runTest(null,s
 function discardTest(){testClear();render();}
 function runTest(words,kinds,review,resume){
   const pool=resume?null:poolNow(),app=$('#app');
-  const qs=resume?resume.qs:words.map(w=>mkQ(pool,w,kinds[Math.random()*kinds.length|0],'ru2en'));
+  const qs=resume?resume.qs:buildQs(words,kinds,pool);
   const total=qs.length;
-  const ans=resume?resume.ans:qs.map(q=>q.type==='type'?'':null);
-  let i=resume?resume.i:0,shown=-1,palOpen=false;
-  const persist=()=>{if(PRACTICE)return;try{localStorage.setItem(TKEY,JSON.stringify({at:Date.now(),kinds,review,i,ans,qs:qs.map(q=>Object.assign({},q,{w:q.w.id}))}));}catch(e){}};
-  const answered=ix=>{const q=qs[ix];return q.type==='type'?(ans[ix]||'').trim()!=='':ans[ix]!==null;};
+  const ans=resume?resume.ans:qs.map(q=>q.type==='match'?q.ws.map(()=>null):q.type==='type'?'':null);
+  let i=resume?resume.i:0,shown=-1,palOpen=false,sel=null;
+  const persist=()=>{if(PRACTICE)return;try{localStorage.setItem(TKEY,JSON.stringify({at:Date.now(),kinds,review,i,ans,qs:qs.map(q=>Object.assign({},q,{w:q.w.id},q.ws?{ws:q.ws.map(x=>x.id)}:{}))}));}catch(e){}};
+  const answered=ix=>{const q=qs[ix];return q.type==='match'?(ans[ix]||[]).length===q.ws.length&&ans[ix].every(v=>v!=null):q.type==='type'?(ans[ix]||'').trim()!=='':ans[ix]!==null;};
   const countAns=()=>{let n=0;for(let k=0;k<total;k++)if(answered(k))n++;return n;};
-  function go2(nx){if(nx<0||nx>=total)return;i=nx;draw();}
+  function go2(nx){if(nx<0||nx>=total)return;i=nx;sel=null;draw();}
+  /* tap a word, then its translation (either order); tap a paired item to undo the pair */
+  function mqTap(side,k){
+    const a=ans[i];
+    if(sel&&sel.s!==side){
+      const tk=side==='t'?k:sel.k,dk=side==='d'?k:sel.k;
+      for(let x=0;x<a.length;x++)if(a[x]===dk)a[x]=null;
+      a[tk]=dk;sel=null;persist();
+    }else if(sel&&sel.s===side&&sel.k===k){sel=null;}
+    else if(!sel&&(side==='t'?a[k]!=null:a.indexOf(k)>=0)){
+      if(side==='t')a[k]=null;else a[a.indexOf(k)]=null;persist();
+    }else sel={s:side,k};
+    draw();
+  }
   function finishTest(){const blanks=total-countAns();if(blanks&&!confirm(t('Still blank')+': '+blanks+'. '+t('Finish anyway?')))return;result();}
   function draw(){
     persist();
@@ -3916,11 +3975,12 @@ function runTest(words,kinds,review,resume){
     let h=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()")+
       `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div><span class="stat">${ca}/${total}</span></div>`+
       `<div class="qpalbox"><div class="qpal${palOpen?' open':''}" id="qpal">${dots}</div><button class="qmore" id="qmore" aria-label="${palOpen?t('Collapse'):t('Show all questions')}">${palOpen?ic('up',18):ic('down',18)}</button></div>`+
-      `<div class="card" style="min-height:min(30vh,180px)"><div class="lbl">${lbl}</div>
-        <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word sub">= ${esc(q.shown)}</div>`:''}</div>`;
+      (q.type==='match'?`<div class="mqhead">${t('Match each word with its translation')}</div>`:`<div class="card" style="min-height:min(30vh,180px)"><div class="lbl">${lbl}</div>
+        <div class="word">${esc(prompt)}</div>${q.type==='tf'?`<div class="word sub">= ${esc(q.shown)}</div>`:''}</div>`);
     if(q.type==='mc')h+=`<div style="margin-top:14px">${q.opts.map((x,k)=>`<button class="opt ${ans[i]===k?'pick':''}" data-k="${k}">${esc(x.t)}</button>`).join('')}</div>`;
     if(q.type==='tf')h+=`<div class="row2" style="margin-top:14px"><button class="btn tfy ${ans[i]===true?'selp':''}" data-tf="1">✓ True</button><button class="btn tfn ${ans[i]===false?'selp':''}" data-tf="0">✗ False</button></div>`;
     if(q.type==='type')h+=`<div style="margin-top:14px"><input class="inp" id="ta" placeholder="${t('Answer')}" value="${esc(ans[i]||'')}" ${NOASSIST}></div>`;
+    if(q.type==='match')h+=mqHtml(q,ans[i],sel);
     h+=`<div style="height:14px"></div><div class="row2">
       <button class="btn ghost" id="tback" ${i===0?'disabled':''}>${ic('arrowLeft',18)}${t('Back')}</button>
       ${i<total-1?`<button class="btn pri" id="tnext">${t('Next')}${ic('arrowRight',18)}</button>`:`<button class="btn pri tfinbtn">${ic('check',18,2)}${t('Finish')}</button>`}</div>
@@ -3949,6 +4009,7 @@ function runTest(words,kinds,review,resume){
     if(q.type==='mc')$$('.opt').forEach(b=>b.onclick=()=>{ans[i]=+b.dataset.k;draw();});
     if(q.type==='tf')$$('[data-tf]').forEach(b=>b.onclick=()=>{ans[i]=(b.dataset.tf==='1');draw();});
     if(q.type==='type'){const ta=$('#ta');hardenInput(ta);if(ta){ta.oninput=()=>{ans[i]=ta.value;persist();};ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&i<total-1)go2(i+1);});setTimeout(()=>ta.isConnected&&ta.focus(),40);}}
+    $$('.mqi').forEach(b=>b.onclick=()=>mqTap(b.dataset.s,+b.dataset.k));
     const bk=$('#tback');if(bk)bk.onclick=()=>go2(i-1);
     const nx=$('#tnext');if(nx)nx.onclick=()=>go2(i+1);
     $$('.tfinbtn').forEach(b=>b.onclick=finishTest);
@@ -3959,6 +4020,7 @@ function runTest(words,kinds,review,resume){
     if(!review){
       const ready=[];
       qs.forEach((q,ix)=>{
+        if(q.type==='match'){q.ws.forEach((w,k)=>{const j=ans[ix][k];if(award(w,j!=null&&q.order[j]===k)==='ready')ready.push(w);});return;}
         const en2ru=q.dir==='en2ru',answer=en2ru?q.w.ru:q.w.en;let ok;
         if(q.type==='mc'){const k=ans[ix];ok=k!=null&&q.opts[k].c;}
         else if(q.type==='tf'){ok=ans[ix]!=null&&ans[ix]===q.isTrue;}
@@ -3971,13 +4033,14 @@ function runTest(words,kinds,review,resume){
     draw2();
   }
   function draw2(){
-    const res=qs.map((q,ix)=>{
+    const res=qs.flatMap((q,ix)=>{
+      if(q.type==='match')return q.ws.map((w,k)=>{const j=ans[ix][k],ok=j!=null&&q.order[j]===k;return {w,ok,given:j!=null?q.ws[q.order[j]].en:'',correct:w.en,near:false};});
       const en2ru=q.dir==='en2ru',answer=en2ru?q.w.ru:q.w.en;let ok,given,near=false;
       if(q.type==='mc'){const k=ans[ix];ok=k!=null&&q.opts[k].c;given=k!=null?q.opts[k].t:'';}
       else if(q.type==='tf'){ok=ans[ix]!=null&&ans[ix]===q.isTrue;given=ans[ix]==null?'':(ans[ix]?'True':'False');}
       else{const v=(ans[ix]||'').trim();const r=v?checkAns(v,answer,en2ru):'no';ok=r==='ok';near=r==='near';given=v;}
       const correct=q.type==='tf'?(q.isTrue?'True':'False'):answer;
-      return {w:q.w,ok,given,correct,near};
+      return [{w:q.w,ok,given,correct,near}];
     });
     /* grading already happened in result() */
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100);
@@ -4042,7 +4105,7 @@ function startMatch(){
   });
 }
 
-Object.assign(RU_DICT,{"in a row":"подряд","A new star lights up":"Зажглась новая звезда","A whole week in a row!":"Целая неделя подряд!","Two weeks in a row!":"Две недели подряд!","A month with no gaps!":"Месяц без пропусков!","One hundred days!":"Сотня дней!","A whole year!":"Целый год!","A new milestone!":"Новый рубеж!","Daily goal reached":"Дневная цель выполнена","Continue":"Продолжить","Today's star is lit":"Звезда дня горит","to light today's star":"до звезды дня","Words you are learning":"Слова, которые вы учите","Shuffle":"Другие","Animation sound":"Звук анимации","On":"Вкл","Off":"Выкл","Sound plays when you finish a session or extend your streak.":"Звук играет, когда вы завершаете занятие или продлеваете серию.","Flawless!":"Безупречно!","All pairs matched":"Все пары найдены"});
+Object.assign(RU_DICT,{"Matching":"Подбор","in a row":"подряд","A new star lights up":"Зажглась новая звезда","A whole week in a row!":"Целая неделя подряд!","Two weeks in a row!":"Две недели подряд!","A month with no gaps!":"Месяц без пропусков!","One hundred days!":"Сотня дней!","A whole year!":"Целый год!","A new milestone!":"Новый рубеж!","Daily goal reached":"Дневная цель выполнена","Continue":"Продолжить","Today's star is lit":"Звезда дня горит","to light today's star":"до звезды дня","Words you are learning":"Слова, которые вы учите","Shuffle":"Другие","Animation sound":"Звук анимации","On":"Вкл","Off":"Выкл","Sound plays when you finish a session or extend your streak.":"Звук играет, когда вы завершаете занятие или продлеваете серию.","Flawless!":"Безупречно!","All pairs matched":"Все пары найдены"});
 /* ================= v69: celebrations — streak constellation, Today card, per-mode finales ================= */
 const celRM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
 const celDark=()=>document.documentElement.getAttribute('data-theme')==='dark';
