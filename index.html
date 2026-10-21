@@ -3850,12 +3850,11 @@ function settingsHtml(){
        <button class="${th==='light'?'on':''}" onclick="setTheme('light')">${ic('sun',17)}${t('Light')}</button>
        <button class="${th==='dark'?'on':''}" onclick="setTheme('dark')">${ic('moon',17)}${t('Dark')}</button></div>
      ${th==='auto'?`<div class="hint">${t('Light by day, dark at night.')}${S.settings.geo?' '+t('Using your location for exact sunrise & sunset.'):` <span onclick="useLocation()" style="color:var(--pri);font-weight:700">${t('Use my location')}</span> ${t('for exact sunrise & sunset.')}`}</div>`:''}</div>
-   <div class="field"><label>${t('Night background')}</label>
+   ${resolveDark()?`<div class="field"><label>${t('Night background')}</label>
      <div class="bgsw">${NBGS.map(x=>`<button class="sw-${x[0]==='none'?'nnone':x[0]==='stars'?'nstars':x[0]} ${bg===x[0]?'on':''}" onclick="setBg('${x[0]}')"><i></i>${t(x[1])}</button>`).join('')}</div>
-     <div class="hint">${t('Shown only in the dark theme.')}</div></div>
-   <div class="field"><label>${t('Day background')}</label>
+     </div>`:`<div class="field"><label>${t('Day background')}</label>
      <div class="bgsw">${DBGS.map(x=>`<button class="sw-${x[0]} ${((S.settings.dbg||'none')===x[0])?'on':''}" onclick="setDbg('${x[0]}')"><i></i>${t(x[1])}</button>`).join('')}</div>
-     <div class="hint">${t('Shown only in the light theme.')}</div></div>
+     </div>`}
    <div class="field"><label>${t('Animation sound')}</label>
      <div class="seg3">
        <button class="${fx==='off'?'on':''}" onclick="setFx('off')">${t('Off')}</button>
