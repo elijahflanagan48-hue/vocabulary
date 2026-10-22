@@ -3207,13 +3207,13 @@ function tWordForm(id){
   sheet(`<h2>${w?t('Word'):t('New word')}</h2>
    ${toArch?`<div class="hint">${t('This word goes straight to the Archive.')}</div>
      <div class="field"><label>${t('List language')}</label><select class="inp" id="tArL" onchange="tArchLangChange(this.value)">${langOptions(lg)}</select></div>`:''}
-   <div class="field"><label id="tWl">${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" value="${esc(w?w.en:'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
+   <div class="field"><label id="tWl">${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?w.en:'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
    <div class="field"><label>${t('Translation')}</label>
-     <div class="row"><input class="inp" id="tRu" value="${esc(w?(w.ru||''):'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true" style="flex:1">
+     <div class="row"><input class="inp" id="tRu" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?(w.ru||''):'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true" style="flex:1">
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="tTrSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="tChips"></div>
-   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" value="${esc(w?(w.ex||''):'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?(w.ex||''):'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
    <div class="err" id="tErr"></div>
    <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
@@ -3515,14 +3515,14 @@ function wordForm(id,opts){
   sheet(`<h2>${w?t('Word'):t('New word')}</h2>
    ${formArch?`<div class="hint">${t('This word goes straight to the Archive.')}</div>`:''}
    <div class="field"><label>${t('Word')} (${esc(langNameLc(formLang))})</label>
-     <input class="inp" id="fEn" value="${esc(w?.en||'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
+     <input class="inp" id="fEn" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="${esc(w?.en||'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
    <div class="field"><label>${t('Translation')}</label>
-     <div class="row"><input class="inp" id="fRu" value="${esc(w?.ru||'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true" style="flex:1">
+     <div class="row"><input class="inp" id="fRu" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="${esc(w?.ru||'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true" style="flex:1">
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="trSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="chips"></div>
    <div class="field"><label>${t('Example (optional)')}</label>
-     <input class="inp" id="fEx" value="${esc(w?.ex||'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
+     <input class="inp" id="fEx" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="${esc(w?.ex||'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
    <button class="btn pri" onclick="saveWord()">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
      ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('reset')}${t('To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('archive')}${t('To Archive')}</button>`}
@@ -3533,6 +3533,15 @@ function wordForm(id,opts){
 let TR={en:'fEn',ru:'fRu',st:'trSt',chips:'chips',lang:DEF_LANG};
 function trSetup(cfg){TR=Object.assign({en:'fEn',ru:'fRu',st:'trSt',chips:'chips',lang:DEF_LANG},cfg||{});}
 const lcFirst=(a,en)=>{a=String(a==null?'':a);if(!a||!en||en.charAt(0)!==en.charAt(0).toLowerCase())return a;const c=a.charAt(0);return(c!==c.toLowerCase()&&(a.length<2||a.charAt(1)===a.charAt(1).toLowerCase()))?c.toLowerCase()+a.slice(1):a;};
+/* Enter in any field of the word form = the Add / Save button */
+async function enterAdd(e,kind){
+  if(e.key!=='Enter'||e.isComposing)return;
+  e.preventDefault();
+  const ruEl=$('#'+TR.ru),enEl=$('#'+TR.en);
+  if(ruEl&&enEl&&enEl.value.trim()&&!ruEl.value.trim()&&!ruTouched){clearTimeout(trTimer);await doTr(true);}
+  if(kind==='student'){if($('#fEn'))saveWord();}
+  else{const b=$('#tSave');if(b&&!b.disabled)b.click();}
+}
 function autoTr(){clearTimeout(trTimer);trTimer=setTimeout(()=>doTr(false),650);}
 async function doTr(force){
   const enEl=$('#'+TR.en);if(!enEl)return;const en=enEl.value.trim();if(!en)return;
