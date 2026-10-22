@@ -6,14 +6,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Vocab">
+<meta name="apple-mobile-web-app-title" content="NOEON">
 <meta name="theme-color" content="#f3f6fb">
-<title>Vocabulary</title>
+<title>NOEON Words</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32-v2.png">
-<link rel="icon" type="image/png" sizes="192x192" href="favicon-192-v2.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180-v2.png">
-<meta name="description" content="Vocabulary — личный словарь для изучения английских слов: карточки, тесты и интервальные повторения.">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32-v3.png">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192-v3.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180-v3.png">
+<meta name="description" content="NOEON Words — личный словарь для изучения английских слов: карточки, тесты и интервальные повторения.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>(function(){try{var s=(JSON.parse(localStorage.getItem('vocab.v2')||'{}').settings)||{};var m=s.theme||'auto',dark;if(m==='dark')dark=true;else if(m==='light')dark=false;else{var h=new Date().getHours();dark=h<7||h>=19;}document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
@@ -2081,7 +2081,7 @@ let softMode=false;
 function softRender(){if(studyBusy||inl||dnd)return;softMode=true;try{render();}finally{softMode=false;}}
 const pulse=el=>{if(!el)return;el.classList.remove('viewin');void el.offsetWidth;el.classList.add('viewin');};
 const hdr=(title,back,right='')=>{
-  try{document.title=(title&&title!=='Vocabulary')?title+' · Vocabulary':'Vocabulary';}catch(e){}
+  try{document.title=(title&&title!=='Vocabulary'&&title!==t('Vocabulary'))?title+' · NOEON Words':'NOEON Words';}catch(e){}
   return `<header>${back?`<button class="ic back" aria-label="Back" onclick="${back}">${ic('left',22)}</button>`:`<span style="width:2px"></span>`}<h1>${esc(title)}</h1>${right}${String(right).indexOf('aria-label="Theme"')<0?themeBtn():''}</header>`;};
 
 /* ---------- views ---------- */
@@ -3658,7 +3658,7 @@ async function makePdf(){
     });
     const n=doc.getNumberOfPages();
     for(let p=1;p<=n;p++){doc.setPage(p);doc.setFont('DV','normal');doc.setFontSize(8.5);doc.setTextColor(150,158,175);
-      doc.text(p+' / '+n,W/2,H-9,{align:'center'});doc.text('NOEON · Vocabulary',M,H-9);}
+      doc.text(p+' / '+n,W/2,H-9,{align:'center'});doc.text('NOEON Words',M,H-9);}
     const name=(sp.title.replace(/[^\wа-яёА-ЯЁ\- ]/gi,'_').replace(/\s+/g,' ').trim()||'words')+'.pdf';
     const blob=doc.output('blob');
     closeSheet();
