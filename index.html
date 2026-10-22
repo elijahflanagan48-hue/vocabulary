@@ -939,6 +939,7 @@ function ic(n,sz,w){
 Object.assign(RU_DICT,{"Text": "Текст", "New text": "Новый текст", "Untitled": "Без названия", "added": "добавлено", "Read texts with your dictionary": "Читайте тексты со своим словарём", "Paste a text or upload a screenshot. Tap an unknown word and it goes to your list together with the sentence it came from.": "Вставьте текст или загрузите скриншот. Нажмите на незнакомое слово, и оно попадёт в ваш список вместе с предложением, из которого оно взято.", "Upload a screenshot or photo": "Загрузить скриншот или фото", "Paste text": "Вставить текст", "Paste from clipboard": "Вставить из буфера обмена", "or paste the text itself": "или вставьте сам текст", "Paste or type the text here…": "Вставьте или напечатайте текст здесь…", "Language of the text": "Язык текста", "The clipboard is empty": "Буфер обмена пуст", "Can’t read the clipboard — paste into the box below": "Не удалось прочитать буфер обмена: вставьте текст в поле ниже", "Page": "Страница", "Preparing the image…": "Готовим изображение…", "Reading the text…": "Читаем текст…", "Loading the recognizer (only the first time, about 7 MB)…": "Загружаем распознавание (только в первый раз, около 7 МБ)…", "No text found in the picture.": "На снимке не нашли текст.", "Couldn’t read the text. Try another picture or paste the text.": "Не удалось прочитать текст. Попробуйте другой снимок или вставьте текст.", "Edit text": "Правка текста", "Check the text": "Проверка текста", "Recognised": "Распознано", "accuracy": "точность", "Compare it with the picture and fix any mistakes.": "Сравните с картинкой и поправьте ошибки.", "Show the original": "Показать оригинал", "Hide the original": "Скрыть оригинал", "Title": "Название", "An empty line starts a new paragraph. A line starting with “## ” is a subheading.": "Пустая строка начинает новый абзац. Строка, которая начинается с «## », это подзаголовок.", "Read": "Читать", "Delete this text?": "Удалить этот текст?", "in your dictionary": "в вашем словаре", "in your lists": "в ваших списках", "Text size": "Размер текста", "Serif font": "С засечками", "Sans-serif font": "Без засечек", "Example (from the text)": "Пример (из текста)", "List": "Список", "Already in your list": "Уже есть в списке", "is already in your list": "уже есть в вашем списке", "Add to list": "Добавить в список", "green frame = fits the sentence": "зелёная рамка: подходит к предложению"});
 Object.assign(RU_DICT,{"Looking for examples…": "Ищем примеры…", "Examples — tap to use:": "Примеры: нажмите, чтобы подставить:", "No examples found for this word.": "Для этого слова примеров не нашлось."});
 Object.assign(RU_DICT,{"More":"Ещё","Less":"Скрыть","In the text:":"В тексте:","Base form:":"Начальная форма:"});
+Object.assign(RU_DICT,{"Copy":"Копировать","Copied":"Скопировано","Couldn’t copy":"Не удалось скопировать","min read":"мин"});
 function load(){
   try{
     let raw=localStorage.getItem(KEY);
@@ -3428,14 +3429,24 @@ async function tCreateSet(){
 function selBar(inArch){
   const n=selIds.size;
   const moveLabel=inArch?`${ic('reset')}${t('To learning')}${n?` (${n})`:''}`:`${ic('archive')}${t('To Archive')}${n?` (${n})`:''}`;
-  return `<div class="selbar"><div class="in row2">
-    <button class="btn pri" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${moveLabel}</button>
-    <button class="btn danger" ${n?'':'disabled'} onclick="bulkDelete()">${ic('trash')}${t('Delete')}${n?` (${n})`:''}</button>
+  return `<div class="selbar"><div class="in row2" style="display:flex;gap:8px">
+    <button class="btn ghost" style="flex:none;width:auto;padding:0 16px" onclick="bulkCopy()">${t('Copy')}${n?` (${n})`:''}</button>
+    <button class="btn pri" style="flex:1;min-width:0" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${moveLabel}</button>
+    <button class="btn danger" style="flex:none;width:auto;padding:0 16px" ${n?'':'disabled'} onclick="bulkDelete()" aria-label="${t('Delete')}">${ic('trash')}</button>
   </div></div>`;
 }
 function toggleSelMode(){selMode=!selMode;selIds.clear();if(selMode&&markMode){markMode=false;document.body.classList.remove('markmode');}render();}
 function togglePick(id){if(selIds.has(id))selIds.delete(id);else selIds.add(id);render();}
 function selAll(){const p=viewPool();if(selIds.size>=p.length)selIds.clear();else p.forEach(w=>selIds.add(w.id));render();}
+/* the selected words (all of the list when nothing is selected) as "word — translation" lines */
+function bulkCopy(){
+  const pool=viewPool(),sel=selIds.size?pool.filter(w=>selIds.has(w.id)):pool;
+  if(!sel.length)return toast(t('No words'));
+  const txt=sel.map(w=>w.en+' — '+(w.ru||'')).join('\n');
+  const done=()=>toast(t('Copied')+': '+sel.length);
+  const fb=()=>{try{const a=document.createElement('textarea');a.value=txt;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();done();}catch(e){toast(t('Couldn’t copy'));}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fb);else fb();
+}
 function bulkArch(toArch){
   let n=0;const moved=[];
   S.sets.forEach(s=>s.words.forEach(w=>{if(selIds.has(w.id)&&w.arch!==toArch){
@@ -5301,7 +5312,7 @@ VIEWS.text=function(app){
       return `<div class="setcard" onclick="go('read',{id:'${x.id}'})"${x===L[0]?' style="margin-top:14px"':''}>
         <div class="arch-ic">${ic('text')}</div>
         <div class="t"><div class="nm">${esc(x.title||t('Untitled'))}</div>
-        <div class="meta">${nWords(n)}${add?' · '+t('added')+' '+add:''} · ${fmtDay(x.upd||x.created||Date.now())}</div></div>${ic('right',18)}</div>`;}).join('')
+        <div class="meta">${nWords(n)} · ${rdTime(n)}${add?' · '+t('added')+' '+add:''} · ${fmtDay(x.upd||x.created||Date.now())}</div></div>${ic('right',18)}</div>`;}).join('')
     :`<div class="empty"><div class="big">${ic('text',26)}</div><b>${t('Read texts with your dictionary')}</b>
       <p>${t('Paste a text or upload a screenshot. Tap an unknown word and it goes to your list together with the sentence it came from.')}</p>
       <button class="btn pri" style="margin-top:16px" onclick="textAdd(true)">${ic('image',19)}${t('Upload a screenshot or photo')}</button>
@@ -5468,11 +5479,13 @@ function rdParHtml(text,pi){
 function rdArticle(){
   return RD.pars.map((p,i)=>p.h?`<h3 class="rs">${rdParHtml(p.text,i)}</h3>`:`<p>${rdParHtml(p.text,i)}</p>`).join('');
 }
+/* about 170 words a minute for a learner */
+function rdTime(n){const m=Math.round(n/170);return '~'+(m<1?'1':m)+' '+t('min read');}
 function rdStats(){
   const T=RD.T;let n=0,kn=0;
   RD.pars.forEach(p=>tokensOf(p.text).forEach(k=>{n++;const f=fold(k.t);if(RD.added.has(f)||knownOf(f,RD.map))kn++;}));
   const add=(T.added||[]).length;
-  return `${nWords(n)} · ${kn} ${t('in your dictionary')}${add?' · '+t('added')+' '+add:''}`;
+  return `${nWords(n)} · ${rdTime(n)} · ${kn} ${t('in your dictionary')}${add?' · '+t('added')+' '+add:''}`;
 }
 VIEWS.read=function(app){
   const T=findText(view.id);if(!T)return go('text');
