@@ -1,6 +1,7 @@
-const CACHE = 'vocab-v84';
+const CACHE = 'vocab-v85';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v3.png', './icon-512-v3.png', './icon-mask-512-v3.png', './favicon-32-v3.png', './favicon-192-v3.png',
   './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
+const OCR_CACHE = 'noeon-ocr-v1';
 const EXTERNAL = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
 
 self.addEventListener('install', e => {
@@ -14,7 +15,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== OCR_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -36,6 +37,17 @@ self.addEventListener('fetch', e => {
           .catch(() => caches.match(req))
       );
     }
+    return;
+  }
+
+  // the offline text recogniser is large and never changes: keep it once, across releases
+  if (/\/lib\/ocr\//.test(req.url)) {
+    e.respondWith(
+      caches.open(OCR_CACHE).then(c => c.match(req).then(hit => hit || fetch(req).then(res => {
+        if (res.ok) c.put(req, res.clone());
+        return res;
+      })))
+    );
     return;
   }
 
