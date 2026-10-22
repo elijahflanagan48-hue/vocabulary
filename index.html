@@ -321,6 +321,35 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .w.ad{background:var(--ok-soft);color:var(--ok);font-weight:600}
 .rdlegend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mut);font-size:12.5px;margin:18px 2px 8px;padding-top:14px;border-top:1px solid var(--line)}
 .rdlegend i{font-style:normal;font-size:12.5px;padding:0 3px;pointer-events:none}
+.reader .w.cur{background:var(--pri-soft);box-shadow:0 0 0 2px var(--pri-soft);border-radius:4px}
+.rdpop{position:fixed;left:0;right:0;bottom:0;z-index:30;max-width:680px;margin:0 auto;background:var(--surf);border-radius:22px 22px 0 0;
+  box-shadow:0 -10px 36px rgba(0,0,0,.22),0 -1px 0 var(--line);padding:4px 14px calc(12px + env(safe-area-inset-bottom));max-height:64vh;overflow-y:auto;
+  animation:rdup .24s cubic-bezier(.22,1,.36,1)}
+.rdpop.out{animation:rddn .17s ease forwards}
+@keyframes rdup{from{transform:translateY(100%)}to{transform:none}}
+@keyframes rddn{to{transform:translateY(100%)}}
+.rpgrip{width:38px;height:4px;border-radius:2px;background:var(--line2);margin:5px auto 9px;position:relative}
+.rpgrip::after{content:"";position:absolute;left:-30px;right:-30px;top:-12px;bottom:-12px}
+.rp-top{display:flex;align-items:center;gap:6px}
+.rdpop .rp-en{flex:1;min-width:0;height:42px;padding:0 12px;font-size:16px;font-weight:700;background:transparent;border-color:transparent;padding-left:2px}
+.rdpop .rp-b{width:42px;height:42px;flex:none}
+.rp-form{display:inline-block;margin:0 0 4px;padding:3px 10px;border-radius:9px;background:var(--surf2);color:var(--mut);font-size:12.5px}
+.rp-form[hidden]{display:none}
+.rp-form b{color:var(--tx);font-weight:650}
+.rp-ru{display:flex;gap:8px;margin:2px 0 4px}
+.rdpop .rp-ru .inp{flex:1;min-width:0;height:60px;font-size:25px;font-weight:800;letter-spacing:-.02em;color:var(--pri-d);background:var(--pri-soft);border-color:transparent;padding:0 14px}
+.rdpop .rp-ru .rp-g{width:52px;height:60px}
+.rdpop .rp-st{font-size:12px;margin:0 2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rdpop .rp-chips{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px 10px;padding:0 14px;scrollbar-width:none;align-items:center}
+.rdpop .rp-chips::-webkit-scrollbar{display:none}
+.rdpop .rp-chips .chip,.rdpop .rp-chips .chpos{flex:none;white-space:nowrap}
+.rp-more{display:none;margin-bottom:6px}
+.rdpop.more .rp-more{display:block}
+.rp-act{display:flex;gap:8px}
+.rp-act .btn{height:48px;width:auto;margin:0}
+.rp-act .btn.ghost{flex:none;padding:0 20px}
+.rp-act .btn.pri{flex:1;min-width:0}
+.rp-st[hidden]{display:none}
 .rwstrip{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
 .pw{padding:6px 11px;border-radius:10px;background:var(--surf2);border:1px solid var(--line);font-size:14.5px;color:var(--tx);transition:background-color .15s,color .15s}
 .pw.on{background:var(--pri);color:var(--on-pri);border-color:transparent;font-weight:650}
@@ -909,6 +938,7 @@ function ic(n,sz,w){
 /* ---------- storage + migration ---------- */
 Object.assign(RU_DICT,{"Text": "Текст", "New text": "Новый текст", "Untitled": "Без названия", "added": "добавлено", "Read texts with your dictionary": "Читайте тексты со своим словарём", "Paste a text or upload a screenshot. Tap an unknown word and it goes to your list together with the sentence it came from.": "Вставьте текст или загрузите скриншот. Нажмите на незнакомое слово, и оно попадёт в ваш список вместе с предложением, из которого оно взято.", "Upload a screenshot or photo": "Загрузить скриншот или фото", "Paste text": "Вставить текст", "Paste from clipboard": "Вставить из буфера обмена", "or paste the text itself": "или вставьте сам текст", "Paste or type the text here…": "Вставьте или напечатайте текст здесь…", "Language of the text": "Язык текста", "The clipboard is empty": "Буфер обмена пуст", "Can’t read the clipboard — paste into the box below": "Не удалось прочитать буфер обмена: вставьте текст в поле ниже", "Page": "Страница", "Preparing the image…": "Готовим изображение…", "Reading the text…": "Читаем текст…", "Loading the recognizer (only the first time, about 7 MB)…": "Загружаем распознавание (только в первый раз, около 7 МБ)…", "No text found in the picture.": "На снимке не нашли текст.", "Couldn’t read the text. Try another picture or paste the text.": "Не удалось прочитать текст. Попробуйте другой снимок или вставьте текст.", "Edit text": "Правка текста", "Check the text": "Проверка текста", "Recognised": "Распознано", "accuracy": "точность", "Compare it with the picture and fix any mistakes.": "Сравните с картинкой и поправьте ошибки.", "Show the original": "Показать оригинал", "Hide the original": "Скрыть оригинал", "Title": "Название", "An empty line starts a new paragraph. A line starting with “## ” is a subheading.": "Пустая строка начинает новый абзац. Строка, которая начинается с «## », это подзаголовок.", "Read": "Читать", "Delete this text?": "Удалить этот текст?", "in your dictionary": "в вашем словаре", "in your lists": "в ваших списках", "Text size": "Размер текста", "Serif font": "С засечками", "Sans-serif font": "Без засечек", "Example (from the text)": "Пример (из текста)", "List": "Список", "Already in your list": "Уже есть в списке", "is already in your list": "уже есть в вашем списке", "Add to list": "Добавить в список", "green frame = fits the sentence": "зелёная рамка: подходит к предложению"});
 Object.assign(RU_DICT,{"Looking for examples…": "Ищем примеры…", "Examples — tap to use:": "Примеры: нажмите, чтобы подставить:", "No examples found for this word.": "Для этого слова примеров не нашлось."});
+Object.assign(RU_DICT,{"More":"Ещё","Less":"Скрыть","In the text:":"В тексте:","Base form:":"Начальная форма:"});
 function load(){
   try{
     let raw=localStorage.getItem(KEY);
@@ -2129,7 +2159,7 @@ let view={name:'home'};
 let selMode=false;const selIds=new Set();
 function clearSel(){selMode=false;selIds.clear();}
 function go(name,p={}){
-  PENDV=null;todayPick=null;rowCap=400;if(inl)inlineCommit();swClose();
+  PENDV=null;todayPick=null;rowCap=400;if(window.rdClose)rdClose(1);if(inl)inlineCommit();swClose();
   /* older entry points still work: lists and the two smart lists are filters now */
   if(name==='home')name='today';
   clearSel();
@@ -5452,7 +5482,7 @@ VIEWS.read=function(app){
    `<h2 class="rtitle${P.serif?' serif':''}">${esc(T.title||t('Untitled'))}</h2>
     <div class="rdmeta" id="rdMeta">${rdStats()}</div>
     <article class="reader${P.serif?' serif':''}" id="rdArt" style="--rd:${P.size}px" onclick="rdTap(event)">${rdArticle()}</article>
-    <div class="rdlegend"><span><i class="w kn">abc</i> ${t('in your lists')}</span><span><i class="w lr">abc</i> ${t('learned')}</span><span><i class="w ad">abc</i> ${t('added')}</span></div>`;
+    <div class="rdlegend"><span><i class="w kn">abc</i> ${t('in your lists')}</span><span><i class="w lr">abc</i> ${t('learned')}</span><span><i class="w ad">abc</i> ${t('added')}</span></div><div id="rdSpace" style="height:0;transition:height .25s"></div>`;
 };
 function rdRefresh(){
   const a=$('#rdArt'),m=$('#rdMeta');if(!a)return;
@@ -5460,6 +5490,7 @@ function rdRefresh(){
   a.innerHTML=rdArticle();if(m)m.textContent=rdStats();
 }
 function rdSettings(){
+  rdClose(1);
   const P=rdPrefs();
   sheet(`<h2>${t('Text size')}</h2>
    <div class="row2"><button class="btn ghost" onclick="rdSize(-1)"><span style="font-size:15px;font-weight:800">A</span></button><button class="btn ghost" onclick="rdSize(1)"><span style="font-size:22px;font-weight:800">A</span></button></div>
@@ -5470,10 +5501,71 @@ function rdSave(P){try{localStorage.setItem(RDK,JSON.stringify(P));}catch(e){}co
 function rdSize(d){const P=rdPrefs();P.size=Math.max(14,Math.min(30,P.size+d*2));rdSave(P);}
 function rdSerif(v){const P=rdPrefs();P.serif=v;rdSave(P);rdSettings();}
 
-/* tapping a word opens its card: the phrase, its sentence, the translation that fits the sentence, add */
-const RS={p:0,tokens:[],from:0,to:0,sents:[],phrase:'',sentence:''};
+/* ---- dictionary form: wonders → wonder, went → go ---- */
+const LEM_KEEP=new Set('this his its yes us as bus plus news always perhaps thus series species means physics lens gas class glass pass less across process business address success dress press stress mess kiss miss boss cross loss moss during morning evening king thing something nothing anything everything ring spring string bring sing wing swing ceiling bed red need seed speed indeed hundred sacred wicked naked beloved feed weed heed deed reed bleed breed proceed exceed succeed creed greed steed tweed bit rose wound bore lay shed sled embed hatred kindred'.split(/\s+/));
+const LEM_PART=new Set('up down out off on in over about at for with to away back through into after along around forward by from of'.split(' '));
+const LEM_NOUN={children:'child',men:'man',women:'woman',feet:'foot',teeth:'tooth',mice:'mouse',geese:'goose',oxen:'ox',is:'be',am:'be',are:'be',was:'be',were:'be',been:'be',being:'be',has:'have',having:'have',does:'do',doing:'do',goes:'go',going:'go'};
+let LEM_IRR=null;
+function lemIrr(w){
+  if(!LEM_IRR){irregOf('');LEM_IRR={};Object.keys(IRR).forEach(b=>{IRR[b].past.concat(IRR[b].pp).forEach(f=>{if(f!==b&&!IRR[f]&&!(f in LEM_IRR))LEM_IRR[f]=b;});});}
+  return LEM_IRR[w]||null;
+}
+/* possible base forms of a regular inflection, most likely first; [word, sure-without-a-dictionary] */
+function lemCands(w){
+  const out=[];
+  const add=(x,strong)=>{if(x&&x.length>=2&&x!==w&&!out.some(o=>o[0]===x))out.push([x,!!strong]);};
+  const dd=s=>/([^aeiou])\1$/.test(s)&&!/(ll|ss|ff|zz)$/.test(s)?s.slice(0,-1):null;
+  const one=s=>(s.match(/[aeiouy]+/g)||[]).length===1&&/[^aeiou][aeiou][^aeiouwxy]$/.test(s);
+  const pair=s=>{const d=dd(s);if(d)add(d,true);if(one(s)&&!d){add(s+'e');add(s);}else{add(s);add(s+'e');}};
+  if(/ies$/.test(w)&&w.length>4){add(w.slice(0,-3)+'y',true);add(w.slice(0,-1));}
+  else if(/(ss|sh|ch|x|z)es$/.test(w)){add(w.slice(0,-2),true);add(w.slice(0,-1));}
+  else if(/oes$/.test(w)){add(w.slice(0,-1));add(w.slice(0,-2));}
+  else if(/[^su]s$/.test(w)&&!/(ss|is|us)$/.test(w)&&w.length>3)add(w.slice(0,-1),true);
+  if(/ied$/.test(w)&&w.length>4){add(w.slice(0,-3)+'y',true);add(w.slice(0,-1));}
+  else if(/eed$/.test(w)&&w.length>4)add(w.slice(0,-1));
+  else if(/ed$/.test(w)&&w.length>4)pair(w.slice(0,-2));
+  if(/ing$/.test(w)&&w.length>=5)pair(w.slice(0,-3));
+  if(/[^aeiou]ying$/.test(w)&&w.length>=5)add(w.slice(0,-4)+'ie');
+  return out;
+}
+const LEM_C={};
+async function lemExists(w){
+  if(w in LEM_C)return LEM_C[w];
+  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),2500);
+  try{
+    const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w),{signal:ac.signal});
+    if(r.status===404){LEM_C[w]=false;return false;}
+    if(!r.ok)return null;
+    LEM_C[w]=true;return true;
+  }catch(e){return null;}
+  finally{clearTimeout(tm);}
+}
+async function lemWord(w){
+  if(!/^[a-z]+$/.test(w)||LEM_KEEP.has(w))return null;
+  if(LEM_NOUN[w])return LEM_NOUN[w];
+  const ir=lemIrr(w);if(ir)return ir;
+  const cs=lemCands(w);
+  for(const [c,strong] of cs){
+    const ex=await lemExists(c);
+    if(ex===true)return c;
+    if(ex===null)return strong?c:null;      /* the dictionary is unreachable: trust only the safe rules */
+  }
+  return null;
+}
+/* null = keep as is. Only a single English word, or a verb with its particle ("looks forward") */
+async function lemmaOf(phrase,lang){
+  if(lang!=='en'||/[A-Z]/.test(phrase))return null;
+  const p=phrase.trim().split(/\s+/);
+  if(p.length>2||(p.length===2&&!LEM_PART.has(p[1])))return null;
+  const b=await lemWord(p[0]);
+  return b?[b].concat(p.slice(1)).join(' '):null;
+}
+
+/* ---- tapping a word opens a small card at the bottom; the text stays readable above it ---- */
+const RS={p:0,tokens:[],from:0,to:0,sents:[],phrase:'',sentence:'',seq:0,orig:'',lem:null,more:false};
 function rdTap(e){
-  const el=e.target.closest&&e.target.closest('.w');if(!el||!el.dataset||el.dataset.p==null)return;
+  const el=e.target.closest&&e.target.closest('.w');
+  if(!el||!el.dataset||el.dataset.p==null){rdClose();return;}
   const p=+el.dataset.p,s=+el.dataset.s,text=RD.pars[p].text;
   RS.p=p;RS.tokens=tokensOf(text);RS.sents=sentRanges(text);
   const i=RS.tokens.findIndex(k=>k.s===s);if(i<0)return;
@@ -5488,6 +5580,53 @@ function rdExt(i){
   rdSheet();
 }
 const SENT_CACHE={};
+function rdClose(now){
+  const pop=$('#rdPop');
+  document.querySelectorAll('.reader .w.cur').forEach(x=>x.classList.remove('cur'));
+  const sp=$('#rdSpace');if(sp)sp.style.height='0px';
+  RS.seq++;RS.more=false;
+  if(!pop)return;
+  pop.id='';
+  if(now){pop.remove();return;}
+  pop.classList.add('out');setTimeout(()=>pop.remove(),180);
+}
+function rdMore(){
+  const pop=$('#rdPop');if(!pop)return;
+  RS.more=!RS.more;pop.classList.toggle('more',RS.more);
+  const b=$('#rMore');if(b)b.firstChild.nodeValue=t(RS.more?'Less':'More')+' ';
+  rdPad();
+}
+/* keep the tapped word above the card */
+function rdPad(){
+  const pop=$('#rdPop'),sp=$('#rdSpace');if(!pop)return;
+  const h=pop.offsetHeight;if(sp)sp.style.height=(h+12)+'px';
+  const w=document.querySelector('.reader .w.cur');if(!w)return;
+  const r=w.getBoundingClientRect(),lim=innerHeight-h-18;
+  if(r.bottom>lim)scrollBy({top:r.bottom-lim+34,behavior:'smooth'});
+  else if(r.top<70)scrollBy({top:r.top-90,behavior:'smooth'});
+}
+function rdMark(a,b){
+  document.querySelectorAll('.reader .w.cur').forEach(x=>x.classList.remove('cur'));
+  document.querySelectorAll('.reader .w[data-p="'+RS.p+'"]').forEach(x=>{const s=+x.dataset.s;if(s>=a&&s<=b)x.classList.add('cur');});
+}
+function rdFormUi(){
+  const el=$('#rEn'),b=$('#rForm');if(!b||!el)return;
+  if(!RS.lem){b.hidden=true;return;}
+  b.hidden=false;
+  const inLem=el.value.trim()===RS.lem;
+  b.innerHTML=inLem?`${esc(t('In the text:'))} <b>${esc(RS.orig)}</b> ⇄`:`${esc(t('Base form:'))} <b>${esc(RS.lem)}</b> ⇄`;
+}
+function rdForm(){
+  const el=$('#rEn');if(!el||!RS.lem)return;
+  el.value=el.value.trim()===RS.lem?RS.orig:RS.lem;
+  rdFormUi();rdDupUi();rdTr(true);
+}
+function rdDupUi(){
+  const T=RD.T,en=(($('#rEn')||{}).value||'').trim(),box=$('#rDup'),btn=$('#rAdd');if(!box)return;
+  const d=en?findDup(T.lang,en):null;
+  box.innerHTML=d?`<div class="rwdup">${t('Already in your list')} «${esc(d.s.name===ARCH_NAME?t('Archive'):d.s.name)}»: <b>${esc(d.w.ru||'')}</b></div>`:'';
+  if(btn)btn.disabled=!!d;
+}
 function rdSheet(){
   const T=RD.T,par=RD.pars[RS.p].text,tk=RS.tokens,a=tk[RS.from],b=tk[RS.to];
   let phrase=par.slice(a.s,b.e).replace(/\s+/g,' ');
@@ -5496,27 +5635,50 @@ function rdSheet(){
   const idx=tk.map((k,i)=>i).filter(i=>tk[i].s>=sr.s&&tk[i].e<=sr.e);
   const first=idx[0];
   if(RS.from===first&&!/^I(\b|['’])/.test(phrase)&&!/^\p{Lu}{2,}/u.test(phrase))phrase=phrase.charAt(0).toLowerCase()+phrase.slice(1);
-  RS.phrase=phrase;RS.sentence=sentence;
+  RS.phrase=phrase;RS.sentence=sentence;RS.orig=phrase;RS.lem=null;
+  const seq=++RS.seq;
   const lo=Math.max(first,RS.from-6),hi=Math.min(idx[idx.length-1],RS.to+6);
   const strip=(lo>first?'<span class="pw gap">…</span>':'')+idx.filter(i=>i>=lo&&i<=hi).map(i=>`<button class="pw${i>=RS.from&&i<=RS.to?' on':''}" onclick="rdExt(${i})">${esc(tk[i].t)}</button>`).join('')+(hi<idx[idx.length-1]?'<span class="pw gap">…</span>':'');
-  const dup=findDup(T.lang,phrase);
   const ls=lists().filter(s=>setLangOf(s)===T.lang);
   const def=(ls.find(s=>s.id===S.settings.lastSet)||ls[0]||{}).id;
   trSetup({en:'rEn',ru:'rRu',ex:'rEx',st:'rSt',chips:'rChips',exch:'rExChips',lang:T.lang});
   ruTouched=false;
-  sheet(`<div class="row" style="gap:8px;align-items:center"><input class="inp" id="rEn" value="${esc(phrase)}" ${NOASSIST} oninput="autoTr()" onkeydown="enterAdd(event,'reader')" style="flex:1;font-weight:700;font-size:18px"><button class="ic" style="width:48px;height:51px" aria-label="Listen" onclick="speak($('#rEn').value,'${T.lang}')">${ic('sound',20)}</button></div>
-   <div class="rwstrip">${strip}</div>
-   <div class="rwtr" id="rSent">${esc(sentence)}</div>
-   <div class="field" style="margin-top:12px"><label>${t('Translation')}</label>
-    <div class="row"><input class="inp" id="rRu" ${NOASSIST} placeholder="…" oninput="ruTouched=true;this.dataset.auto='0';syncChips()" onkeydown="enterAdd(event,'reader')" style="flex:1">
-    <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="rdTr(true)">${ic('globe')}</button></div></div>
-   <div class="hint" id="rSt">${t('Translating…')}</div>
-   <div class="chips" id="rChips"></div>
-   <div class="field"><label>${t('Example (from the text)')}</label><input class="inp" id="rEx" value="${esc(sentence)}" ${NOASSIST} onkeydown="enterAdd(event,'reader')"></div>
-   ${ls.length>1?`<div class="field"><label>${t('List')}</label><select class="inp" id="rList">${ls.map(s=>`<option value="${s.id}"${s.id===def?' selected':''}>${esc(s.name)}</option>`).join('')}</select></div>`:''}
-   ${dup?`<div class="rwdup">${t('Already in your list')} «${esc(dup.s.name===ARCH_NAME?t('Archive'):dup.s.name)}»: <b>${esc(dup.w.ru||'')}</b></div>`:''}
-   <button class="btn pri" id="rAdd" onclick="rdAdd()"${dup?' disabled':''}>${ic('plus',18)}${t('Add to list')}</button>`);
-  rdTr(true);
+  const html=`<div class="rpgrip"></div>
+   <div class="rp-top"><input class="inp rp-en" id="rEn" value="${esc(phrase)}" ${NOASSIST} oninput="autoTr();rdFormUi();rdDupUi()" onkeydown="enterAdd(event,'reader')">
+    <button class="ic rp-b" aria-label="Listen" onclick="speak($('#rEn').value,'${T.lang}')">${ic('sound',20)}</button>
+    <button class="ic rp-b" aria-label="Close" onclick="rdClose()">${ic('close',20)}</button></div>
+   <button class="rp-form" id="rForm" hidden onclick="rdForm()"></button>
+   <div class="rp-ru"><input class="inp" id="rRu" ${NOASSIST} placeholder="…" oninput="ruTouched=true;this.dataset.auto='0';syncChips()" onkeydown="enterAdd(event,'reader')">
+    <button class="ic rp-b rp-g" aria-label="Translate" onclick="rdTr(true)">${ic('globe',20)}</button></div>
+   <div class="hint rp-st" id="rSt">${t('Translating…')}</div>
+   <div class="chips rp-chips" id="rChips"></div>
+   <div class="rp-more">
+    <div class="rwstrip">${strip}</div>
+    <div class="rwtr" id="rSent">${esc(sentence)}</div>
+    <div class="field" style="margin-top:12px"><label>${t('Example (from the text)')}</label><input class="inp" id="rEx" value="${esc(sentence)}" ${NOASSIST} onkeydown="enterAdd(event,'reader')"></div>
+    ${ls.length>1?`<div class="field"><label>${t('List')}</label><select class="inp" id="rList">${ls.map(s=>`<option value="${s.id}"${s.id===def?' selected':''}>${esc(s.name)}</option>`).join('')}</select></div>`:''}
+   </div>
+   <div id="rDup"></div>
+   <div class="rp-act"><button class="btn ghost" id="rMore" onclick="rdMore()">${t(RS.more?'Less':'More')} </button><button class="btn pri" id="rAdd" onclick="rdAdd()">${ic('plus',18)}${t('Add to list')}</button></div>`;
+  let pop=$('#rdPop');
+  if(!pop){
+    pop=document.createElement('div');pop.id='rdPop';pop.className='rdpop';document.body.appendChild(pop);
+    let y0=null;
+    pop.addEventListener('touchstart',e=>{y0=e.target.closest('.rpgrip')?e.touches[0].clientY:null;},{passive:true});
+    pop.addEventListener('touchmove',e=>{if(y0!=null&&e.touches[0].clientY-y0>40){y0=null;rdClose();}},{passive:true});
+  }
+  pop.classList.remove('out');pop.classList.toggle('more',RS.more);
+  pop.innerHTML=html;
+  rdMark(a.s,b.s);rdDupUi();rdPad();
+  (async()=>{
+    const lem=await Promise.race([lemmaOf(phrase,T.lang),new Promise(r=>setTimeout(()=>r(null),2200))]).catch(()=>null);
+    if(seq!==RS.seq)return;
+    const el=$('#rEn');
+    if(lem&&lem!==phrase&&el&&el.value===phrase){el.value=lem;RS.lem=lem;rdDupUi();}
+    else if(lem&&lem!==phrase)RS.lem=lem;
+    rdFormUi();
+    rdTr(true);
+  })();
 }
 const STEM_END=/(ться|тись|ться|ть|ти|чь|ся|сь|ый|ий|ой|ая|яя|ое|ее|ые|ие|ого|его|ому|ему|ым|им|ом|ем|ую|юю|ей|ов|ев|ам|ям|ах|ях|ами|ями|а|я|о|е|ы|и|у|ю|ь)$/;
 async function rdTr(force){
@@ -5527,6 +5689,7 @@ async function rdTr(force){
     return SENT_CACHE[sentence];
   })();
   await doTr(force);
+  {const h=$('#rSt');if(h&&RS.sentence===sentence)h.hidden=!/^⚠/.test(h.textContent);}
   const r=await sent;
   const box=$('#rSent');if(!box||!r||!r.main||RS.sentence!==sentence)return;
   box.innerHTML=`${esc(sentence)}<span class="rwru">${esc(r.main)}</span>`;
@@ -5556,9 +5719,8 @@ function rdAdd(){
   let s=(sel&&S.sets.find(x=>x.id===sel.value))||lists().find(x=>x.id===S.settings.lastSet&&setLangOf(x)===T.lang)||lists().find(x=>setLangOf(x)===T.lang);
   if(!s){s={id:uid(),name:t('My words'),lang:T.lang,words:[],upd:Date.now(),synced:false};S.sets.push(s);}
   s.words.unshift(newWord(en,ru,ex));S.settings.lastSet=s.id;
-  const f=fold(en);
-  (T.added||(T.added=[])).push(f);T.upd=Date.now();
-  save();closeSheet();toast(t('Added ✓'));
+  (T.added||(T.added=[])).push(fold(RS.orig||en));T.upd=Date.now();
+  save();rdClose();toast(t('Added ✓'));
   setTimeout(rdRefresh,60);
 }
 
