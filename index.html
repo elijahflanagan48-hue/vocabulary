@@ -293,7 +293,8 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .chip.on small{opacity:.85}
 .chpos{flex:0 0 100%;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut,#7a869a);margin-top:4px}
 .chpos:first-child{margin-top:0}
-.chip.exs{font-weight:500;text-align:left;font-size:13.5px}
+.chip.exs{font-weight:500;text-align:left;font-size:13.5px;max-width:100%}
+.chip.exs small{display:block;margin:3px 0 0;font-size:12.5px;opacity:.7}
 .exhint{flex:0 0 100%;font-size:12.5px;color:var(--mut,#7a869a)}
 /* ---- texts / reader ---- */
 .txsep{display:flex;align-items:center;gap:12px;margin:16px 0 12px;color:var(--fade);font-size:13px}
@@ -907,6 +908,7 @@ function ic(n,sz,w){
 }
 /* ---------- storage + migration ---------- */
 Object.assign(RU_DICT,{"Text": "Текст", "New text": "Новый текст", "Untitled": "Без названия", "added": "добавлено", "Read texts with your dictionary": "Читайте тексты со своим словарём", "Paste a text or upload a screenshot. Tap an unknown word and it goes to your list together with the sentence it came from.": "Вставьте текст или загрузите скриншот. Нажмите на незнакомое слово, и оно попадёт в ваш список вместе с предложением, из которого оно взято.", "Upload a screenshot or photo": "Загрузить скриншот или фото", "Paste text": "Вставить текст", "Paste from clipboard": "Вставить из буфера обмена", "or paste the text itself": "или вставьте сам текст", "Paste or type the text here…": "Вставьте или напечатайте текст здесь…", "Language of the text": "Язык текста", "The clipboard is empty": "Буфер обмена пуст", "Can’t read the clipboard — paste into the box below": "Не удалось прочитать буфер обмена: вставьте текст в поле ниже", "Page": "Страница", "Preparing the image…": "Готовим изображение…", "Reading the text…": "Читаем текст…", "Loading the recognizer (only the first time, about 7 MB)…": "Загружаем распознавание (только в первый раз, около 7 МБ)…", "No text found in the picture.": "На снимке не нашли текст.", "Couldn’t read the text. Try another picture or paste the text.": "Не удалось прочитать текст. Попробуйте другой снимок или вставьте текст.", "Edit text": "Правка текста", "Check the text": "Проверка текста", "Recognised": "Распознано", "accuracy": "точность", "Compare it with the picture and fix any mistakes.": "Сравните с картинкой и поправьте ошибки.", "Show the original": "Показать оригинал", "Hide the original": "Скрыть оригинал", "Title": "Название", "An empty line starts a new paragraph. A line starting with “## ” is a subheading.": "Пустая строка начинает новый абзац. Строка, которая начинается с «## », это подзаголовок.", "Read": "Читать", "Delete this text?": "Удалить этот текст?", "in your dictionary": "в вашем словаре", "in your lists": "в ваших списках", "Text size": "Размер текста", "Serif font": "С засечками", "Sans-serif font": "Без засечек", "Example (from the text)": "Пример (из текста)", "List": "Список", "Already in your list": "Уже есть в списке", "is already in your list": "уже есть в вашем списке", "Add to list": "Добавить в список", "green frame = fits the sentence": "зелёная рамка: подходит к предложению"});
+Object.assign(RU_DICT,{"Looking for examples…": "Ищем примеры…", "Examples — tap to use:": "Примеры: нажмите, чтобы подставить:", "No examples found for this word.": "Для этого слова примеров не нашлось."});
 function load(){
   try{
     let raw=localStorage.getItem(KEY);
@@ -3624,31 +3626,81 @@ async function enterAdd(e,kind){
   if(kind==='student'){if($('#fEn'))saveWord();}
   else{const b=$('#tSave');if(b&&!b.disabled)b.click();}
 }
+/* ---- example sentences: Tatoeba (with a Russian translation), then Wiktionary and the dictionary ---- */
 const EXC={};
-async function fetchExamples(word){
-  const k=String(word||'').toLowerCase();if(!k)return[];if(k in EXC)return EXC[k];
-  try{
-    const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(k));
-    if(!r.ok){EXC[k]=[];return[];}
-    const j=await r.json(),out=[];
-    (Array.isArray(j)?j:[]).forEach(en=>(en.meanings||[]).forEach(m=>(m.definitions||[]).forEach(d=>{
-      let x=String(d.example||'').trim();
-      if(x&&x.length<=110){x=/^I[\s']/.test(x)?x:x.charAt(0).toLowerCase()+x.slice(1);if(!out.includes(x))out.push(x);}
-    })));
-    return EXC[k]=out.slice(0,3);
-  }catch(e){return[];}
+const TAT_FIX={no:'nob',zh:'cmn',fa:'pes',la:'lat'};
+const tatCode=l=>TAT_FIX[l]||(typeof OCR_CODES!=='undefined'&&OCR_CODES[l])||null;
+const reEsc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+/* does the sentence really use the word (or one of its forms), not just contain it inside another word? */
+function usesForm(sent,forms){
+  const low=sent.toLowerCase();
+  return forms.some(f=>{
+    if(/\s/.test(f))return low.includes(f);
+    return new RegExp('(^|[^\\p{L}])'+reEsc(f)+'(?:s|es|ed|d|ing|ly|er|est|ies|ied)?(?![\\p{L}])','u').test(low);
+  });
+}
+async function getJson(url,ms){
+  const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),ms||7000);
+  try{const r=await fetch(url,{signal:ac.signal});if(!r.ok)return null;return await r.json();}
+  catch(e){return null;}
+  finally{clearTimeout(tm);}
+}
+async function exTatoeba(q,lang,forms){
+  const code=tatCode(lang);if(!code)return[];
+  const j=await getJson('https://tatoeba.org/en/api_v0/search?from='+code+'&to=rus&query='+encodeURIComponent(q)+'&orphans=no&unapproved=no&sort=relevance');
+  const out=[];
+  ((j&&j.results)||[]).forEach(r=>{
+    const x=String(r.text||'').trim();if(!x||x.length>120||!usesForm(x,forms))return;
+    const tr=[].concat(...(r.translations||[])).filter(y=>y&&y.lang==='rus'&&y.text);
+    const ru=(tr.find(y=>y.isDirect)||tr[0]||{}).text||'';
+    out.push({en:x,ru,s:(ru?0:40)+Math.abs(x.length-60)/3});
+  });
+  return out.sort((a,b)=>a.s-b.s);
+}
+async function exWiki(q,forms){
+  const j=await getJson('https://en.wiktionary.org/api/rest_v1/page/definition/'+encodeURIComponent(q));
+  const out=[],strip=x=>String(x||'').replace(/<[^>]*>/g,'').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim();
+  ((j&&j.en)||[]).forEach(e=>(e.definitions||[]).forEach(d=>{
+    [].concat(d.examples||[],(d.parsedExamples||[]).map(x=>x.example)).forEach(x=>{x=strip(x);if(x&&x.length>=12&&x.length<=120&&usesForm(x,forms))out.push({en:x,ru:'',s:50});});
+  }));
+  return out;
+}
+async function exDict(q,forms){
+  const j=await getJson('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(q));
+  const out=[];
+  (Array.isArray(j)?j:[]).forEach(en=>(en.meanings||[]).forEach(m=>(m.definitions||[]).forEach(d=>{
+    const x=String(d.example||'').trim();if(x&&x.length<=120&&usesForm(x,forms))out.push({en:x,ru:'',s:55});
+  })));
+  return out;
+}
+/* up to three sentences: those with a Russian translation first */
+async function fetchExamples(word,lang,irr){
+  const q=String(word||'').toLowerCase().trim();if(!q)return{list:[],failed:false};
+  const k=lang+'|'+q+(irr?'|'+irr.forms:'');if(k in EXC)return EXC[k];
+  const forms=irr?irr.forms.split(' '):[q];
+  const jobs=[exTatoeba(irr?irr.base:q,lang,forms)];
+  if(lang==='en'){jobs.push(exWiki(irr?irr.base:q,forms));jobs.push(exDict(irr?irr.base:q,forms));}
+  const res=await Promise.all(jobs.map(x=>x.catch(()=>null)));
+  const all=[].concat(...res.map(x=>x||[])).sort((a,b)=>a.s-b.s);
+  const seen=new Set(),list=[];
+  all.forEach(x=>{const k2=x.en.toLowerCase();if(seen.has(k2)||list.length>=3)return;seen.add(k2);list.push(x);});
+  const out={list,failed:!list.length&&res.every(x=>x==null||!x.length)};
+  if(list.length)EXC[k]=out;
+  return out;
 }
 function clearEx(){const e=$('#'+TR.exch);if(e)e.innerHTML='';}
 async function showExamples(seq,en,irr){
   const el=$('#'+TR.exch);if(!el)return;
-  if(TR.lang!=='en'){el.innerHTML='';return;}
   const base=irr?irr.base:en.replace(/^to\s+/i,'').trim();
-  if(!base||base.split(/\s+/).length>1){el.innerHTML='';return;}
-  const exs=await fetchExamples(base);
+  if(!base||base.split(/\s+/).length>4||!tatCode(TR.lang)){el.innerHTML='';return;}
+  el.innerHTML=`<div class="exhint">${t('Looking for examples…')}</div>`;
+  const r=await fetchExamples(base,TR.lang,irr);
   if(seq!==trSeq||!$('#'+TR.exch))return;
-  $('#'+TR.exch).innerHTML=exs.length?`<div class="exhint">${t('Examples from the dictionary — tap to use:')}</div>`+exs.map(x=>`<button class="chip exs" onclick="pickEx(this)">${esc(x)}</button>`).join(''):'';
+  $('#'+TR.exch).innerHTML=r.list.length
+    ?`<div class="exhint">${t('Examples — tap to use:')}</div>`+r.list.map(x=>`<button class="chip exs" data-v="${esc(x.en)}" onclick="pickEx(this)">${esc(x.en)}${x.ru?`<small>${esc(x.ru)}</small>`:''}</button>`).join('')
+    :`<div class="exhint">${t('No examples found for this word.')}</div>`;
 }
-function pickEx(b){const i=$('#'+(TR.ex||'fEx'));if(i){i.value=b.textContent;i.focus();}}
+function pickEx(b){const i=$('#'+(TR.ex||'fEx'));if(i){i.value=b.dataset.v||'';i.focus();}}
 /* tap = choose, tap again = unchoose, several can be combined; the first tap replaces the automatic guess */
 function pickChip(b){
   const ru=$('#'+TR.ru);if(!ru)return;
