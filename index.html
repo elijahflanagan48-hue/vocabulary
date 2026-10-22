@@ -350,6 +350,13 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .rp-act .btn.ghost{flex:none;padding:0 20px}
 .rp-act .btn.pri{flex:1;min-width:0}
 .rp-st[hidden]{display:none}
+.lbadge{flex:none;margin-right:6px;padding:3px 9px;border-radius:9px;background:var(--pri-soft);color:var(--pri-d);font-size:12.5px;font-weight:700}
+.lbadge.ok{background:var(--ok-soft);color:var(--ok)}
+.libwords{border:1px solid var(--line);border-radius:16px;background:var(--surf);overflow:hidden;margin-top:6px}
+.lw{display:flex;justify-content:space-between;gap:14px;padding:11px 14px;border-top:1px solid var(--line);font-size:15px}
+.lw:first-child{border-top:0}
+.lw b{font-weight:650}
+.lw span{color:var(--mut);text-align:right}
 .rwstrip{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
 .pw{padding:6px 11px;border-radius:10px;background:var(--surf2);border:1px solid var(--line);font-size:14.5px;color:var(--tx);transition:background-color .15s,color .15s}
 .pw.on{background:var(--pri);color:var(--on-pri);border-color:transparent;font-weight:650}
@@ -940,6 +947,7 @@ Object.assign(RU_DICT,{"Text": "Текст", "New text": "Новый текст"
 Object.assign(RU_DICT,{"Looking for examples…": "Ищем примеры…", "Examples — tap to use:": "Примеры: нажмите, чтобы подставить:", "No examples found for this word.": "Для этого слова примеров не нашлось."});
 Object.assign(RU_DICT,{"More":"Ещё","Less":"Скрыть","In the text:":"В тексте:","Base form:":"Начальная форма:"});
 Object.assign(RU_DICT,{"Copy":"Копировать","Copied":"Скопировано","Couldn’t copy":"Не удалось скопировать","min read":"мин"});
+Object.assign(RU_DICT,{"Library": "Библиотека", "Irregular verbs: essential": "Неправильные глаголы: основные", "The verbs you meet every day": "Глаголы, которые встречаются каждый день", "Irregular verbs: more": "Неправильные глаголы: ещё", "Less common irregular verbs": "Менее частые неправильные глаголы", "By link": "По ссылке", "Draft": "Черновик", "Updates": "Обновления", "new from your teacher": "новых от учителя", "Irregular verbs, sets from your teacher": "Неправильные глаголы и наборы от учителя", "Open by link": "Открыть по ссылке", "Paste a link or code": "Вставьте ссылку или код", "Open": "Открыть", "My sets": "Мои наборы", "The library tables are not set up yet — run the SQL from the instructions.": "Таблицы библиотеки ещё не созданы — выполните SQL из инструкции.", "Publish one of your lists — students add it with one tap.": "Опубликуйте один из своих списков — ученики добавят его одним нажатием.", "Publish a list": "Опубликовать список", "From your teacher": "От вашего учителя", "New!": "Новое", "Ready-made sets": "Готовые наборы", "That doesn’t look like a set link": "Это не похоже на ссылку на набор", "Set not found, or it is no longer shared": "Набор не найден или доступ закрыт", "Link copied": "Ссылка скопирована", "Add to my lists": "Добавить в мои списки", "Add new words": "Добавить новые слова", "Already in your lists": "Уже в ваших списках", "from": "от", "Visible to": "Виден", "Share the link": "Поделиться ссылкой", "Forms checked against Wikipedia “List of English irregular verbs” (CC BY-SA 4.0).": "Формы сверены с Wikipedia «List of English irregular verbs» (CC BY-SA 4.0).", "already had": "уже были", "Set settings": "Настройки набора", "Title": "Название", "Description": "Описание", "One line for students": "Одна строка для учеников", "Level": "Уровень", "Who can see it": "Кто видит", "Only you can see it.": "Видите только вы.", "Your linked students see it in their Library.": "Привязанные ученики увидят набор в своей Библиотеке.", "Anyone with the link can add it; your students see it too.": "Добавить может любой, у кого есть ссылка; ваши ученики тоже видят набор.", "Update the words from a list": "Обновить слова из списка", "Keep the current words": "Не менять слова", "Words from the list": "Слова из списка", "Delete set": "Удалить набор", "Delete this set? Students keep the words they already added.": "Удалить набор? У учеников останутся уже добавленные слова.", "Publish": "Опубликовать", "added it": "добавили"});
 function load(){
   try{
     let raw=localStorage.getItem(KEY);
@@ -974,6 +982,7 @@ function fix(d){
     id:w.id,pos:w.pos!=null?w.pos:wi,mark:w.mark||0,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),aat:w.aat||0,
     due:w.due||0,rep:w.rep||0,upd:w.upd||Date.now(),synced:!!w.synced
   }))}));
+  d.libSubs=(d.libSubs&&typeof d.libSubs==='object'&&!Array.isArray(d.libSubs))?d.libSubs:{};
   d.texts=Array.isArray(d.texts)?d.texts.filter(x=>x&&x.id&&typeof x.body==='string'):[];
   d.sets.forEach(sortPos);
   return d;
@@ -2221,7 +2230,7 @@ function syncTabs(){
     nav.innerHTML=tabs.map(([n,i,l])=>`<button class="tab" data-tab="${n}" onclick="go('${n}')"><span class="ti"></span><span>${esc(l)}</span></button>`).join('');
     nav._on={};
   }
-  const act=n=>n===cur||(n==='students'&&(cur==='tsets'||cur==='twords'))||(n==='text'&&(cur==='read'||cur==='tedit'));
+  const act=n=>n===cur||(n==='students'&&(cur==='tsets'||cur==='twords'))||(n==='text'&&(cur==='read'||cur==='tedit'))||(n==='vocab'&&(cur==='library'||cur==='libset'));
   tabs.forEach(([n,i])=>{
     const b=nav.querySelector('[data-tab="'+n+'"]');if(!b)return;
     const on=act(n);
@@ -2298,7 +2307,7 @@ vocab(app){
          <div class="t"><div class="nm">${esc(s.name)}</div>
          <div class="meta">${multi?esc(langName(setLangOf(s)))+' · ':''}${a} ${t('learning')}${learned?` · ${learned} ${t('learned')}`:''}</div></div>
          ${ic('right',18)}</div>`)}).join('')+
-     archive+
+     libEntry()+archive+
      (hardN>=3?`<div class="setcard" onclick="go('hard')">
         <div class="arch-ic" style="background:var(--bad-soft);border-color:transparent;color:var(--bad)">${ic('zap')}</div>
         <div class="t"><div class="nm">${t('Tricky words')}</div>
@@ -2306,7 +2315,8 @@ vocab(app){
         ${ic('right',18)}</div>`:'')
      :`<div class="empty"><div class="big">${ic('book',26)}</div><b>${t('Your word lists will live here')}</b><p>${t('Create a list — for example “Unit 1” — and start adding new words. Learned words collect in a shared Archive.')}</p></div>`)+
    `<button class="btn pri" style="margin-top:12px" onclick="newSet()">${ic('plus',18)}${t('New list')}</button></div>`+
-   tabBar();
+   (S.sets.length?'':libEntry())+tabBar();
+  libEntryBg();
   if(LQ)vocabSearch(LQ);
 },
 
@@ -5736,6 +5746,232 @@ function rdAdd(){
   save();rdClose();toast(t('Added ✓'));
   setTimeout(rdRefresh,60);
 }
+
+/* ================= Library: ready-made sets, a teacher's sets, sets by link ================= */
+const LIB_CORE=[{"en": "be was been", "ru": "быть", "ex": "was / were; I am, you are, he is"}, {"en": "beat beat beaten", "ru": "бить; побеждать", "ex": ""}, {"en": "become became become", "ru": "становиться", "ex": ""}, {"en": "begin began begun", "ru": "начинать(ся)", "ex": ""}, {"en": "bend bent bent", "ru": "гнуть; сгибать(ся)", "ex": ""}, {"en": "bet bet bet", "ru": "держать пари; ставить", "ex": "также betted"}, {"en": "bite bit bitten", "ru": "кусать", "ex": ""}, {"en": "blow blew blown", "ru": "дуть", "ex": ""}, {"en": "break broke broken", "ru": "ломать; разбивать", "ex": ""}, {"en": "bring brought brought", "ru": "приносить", "ex": ""}, {"en": "build built built", "ru": "строить", "ex": ""}, {"en": "burn burnt burnt", "ru": "гореть; жечь", "ex": "также burned"}, {"en": "burst burst burst", "ru": "лопаться; взрываться", "ex": ""}, {"en": "buy bought bought", "ru": "покупать", "ex": ""}, {"en": "catch caught caught", "ru": "ловить; поймать", "ex": ""}, {"en": "choose chose chosen", "ru": "выбирать", "ex": ""}, {"en": "come came come", "ru": "приходить; приезжать", "ex": ""}, {"en": "cost cost cost", "ru": "стоить", "ex": ""}, {"en": "cut cut cut", "ru": "резать; сокращать", "ex": ""}, {"en": "deal dealt dealt", "ru": "иметь дело; раздавать", "ex": ""}, {"en": "dig dug dug", "ru": "копать", "ex": ""}, {"en": "do did done", "ru": "делать", "ex": ""}, {"en": "draw drew drawn", "ru": "рисовать; тянуть", "ex": ""}, {"en": "dream dreamt dreamt", "ru": "мечтать; видеть сон", "ex": "также dreamed"}, {"en": "drink drank drunk", "ru": "пить", "ex": ""}, {"en": "drive drove driven", "ru": "водить (машину); ехать", "ex": ""}, {"en": "eat ate eaten", "ru": "есть; кушать", "ex": ""}, {"en": "fall fell fallen", "ru": "падать", "ex": ""}, {"en": "feed fed fed", "ru": "кормить", "ex": ""}, {"en": "feel felt felt", "ru": "чувствовать", "ex": ""}, {"en": "fight fought fought", "ru": "драться; бороться", "ex": ""}, {"en": "find found found", "ru": "находить", "ex": ""}, {"en": "fly flew flown", "ru": "летать; лететь", "ex": ""}, {"en": "forget forgot forgotten", "ru": "забывать", "ex": ""}, {"en": "forgive forgave forgiven", "ru": "прощать", "ex": ""}, {"en": "freeze froze frozen", "ru": "замерзать; замораживать", "ex": ""}, {"en": "get got got", "ru": "получать; становиться; добираться", "ex": "US: gotten"}, {"en": "give gave given", "ru": "давать", "ex": ""}, {"en": "go went gone", "ru": "идти; ехать; ходить", "ex": "gone; been — «бывал»"}, {"en": "grow grew grown", "ru": "расти; выращивать", "ex": ""}, {"en": "hang hung hung", "ru": "вешать; висеть", "ex": "о казни: hanged"}, {"en": "have had had", "ru": "иметь; есть (у кого-то)", "ex": ""}, {"en": "hear heard heard", "ru": "слышать", "ex": ""}, {"en": "hide hid hidden", "ru": "прятать(ся)", "ex": ""}, {"en": "hit hit hit", "ru": "ударять; попадать", "ex": ""}, {"en": "hold held held", "ru": "держать; проводить (мероприятие)", "ex": ""}, {"en": "hurt hurt hurt", "ru": "причинять боль; болеть", "ex": ""}, {"en": "keep kept kept", "ru": "хранить; держать; продолжать", "ex": ""}, {"en": "know knew known", "ru": "знать", "ex": ""}, {"en": "lay laid laid", "ru": "класть; накрывать", "ex": "lay → laid → laid"}, {"en": "lead led led", "ru": "вести; возглавлять", "ex": ""}, {"en": "learn learnt learnt", "ru": "учить; узнавать", "ex": "также learned"}, {"en": "leave left left", "ru": "уходить; покидать; оставлять", "ex": ""}, {"en": "lend lent lent", "ru": "одалживать (кому-то)", "ex": ""}, {"en": "let let let", "ru": "позволять; разрешать", "ex": ""}, {"en": "lie lay lain", "ru": "лежать", "ex": "regular: lie – lied – lied («лгать»)"}, {"en": "light lit lit", "ru": "зажигать; освещать", "ex": "также lighted"}, {"en": "lose lost lost", "ru": "терять; проигрывать", "ex": ""}, {"en": "make made made", "ru": "делать; создавать", "ex": ""}, {"en": "mean meant meant", "ru": "означать; иметь в виду", "ex": ""}, {"en": "meet met met", "ru": "встречать(ся); знакомиться", "ex": ""}, {"en": "pay paid paid", "ru": "платить", "ex": ""}, {"en": "put put put", "ru": "класть; ставить", "ex": ""}, {"en": "read read read", "ru": "читать", "ex": "произносится /red/ в Past и Participle"}, {"en": "ride rode ridden", "ru": "ездить верхом; кататься", "ex": ""}, {"en": "ring rang rung", "ru": "звонить; звенеть", "ex": ""}, {"en": "rise rose risen", "ru": "подниматься; вставать", "ex": ""}, {"en": "run ran run", "ru": "бегать; управлять", "ex": ""}, {"en": "say said said", "ru": "говорить; сказать", "ex": ""}, {"en": "see saw seen", "ru": "видеть", "ex": ""}, {"en": "seek sought sought", "ru": "искать; стремиться", "ex": ""}, {"en": "sell sold sold", "ru": "продавать", "ex": ""}, {"en": "send sent sent", "ru": "отправлять", "ex": ""}, {"en": "set set set", "ru": "ставить; устанавливать", "ex": ""}, {"en": "shake shook shaken", "ru": "трясти; встряхивать", "ex": ""}, {"en": "shoot shot shot", "ru": "стрелять", "ex": ""}, {"en": "show showed shown", "ru": "показывать", "ex": "также showed"}, {"en": "shut shut shut", "ru": "закрывать", "ex": ""}, {"en": "sing sang sung", "ru": "петь", "ex": ""}, {"en": "sink sank sunk", "ru": "тонуть; опускаться", "ex": "sunk / sunken (прил.)"}, {"en": "sit sat sat", "ru": "сидеть", "ex": ""}, {"en": "sleep slept slept", "ru": "спать", "ex": ""}, {"en": "speak spoke spoken", "ru": "говорить; разговаривать", "ex": ""}, {"en": "spend spent spent", "ru": "тратить; проводить (время)", "ex": ""}, {"en": "spread spread spread", "ru": "распространять(ся)", "ex": ""}, {"en": "stand stood stood", "ru": "стоять; терпеть", "ex": ""}, {"en": "steal stole stolen", "ru": "красть", "ex": ""}, {"en": "stick stuck stuck", "ru": "приклеивать; застревать; втыкать", "ex": ""}, {"en": "strike struck struck", "ru": "ударять; поражать; бастовать", "ex": "также stricken"}, {"en": "swear swore sworn", "ru": "клясться; ругаться", "ex": ""}, {"en": "swim swam swum", "ru": "плавать", "ex": ""}, {"en": "take took taken", "ru": "брать; взять", "ex": ""}, {"en": "teach taught taught", "ru": "преподавать; учить (кого-то)", "ex": ""}, {"en": "tear tore torn", "ru": "рвать; разрывать", "ex": ""}, {"en": "tell told told", "ru": "рассказывать; сообщать", "ex": ""}, {"en": "think thought thought", "ru": "думать", "ex": ""}, {"en": "throw threw thrown", "ru": "бросать", "ex": ""}, {"en": "understand understood understood", "ru": "понимать", "ex": ""}, {"en": "wake woke woken", "ru": "просыпаться; будить", "ex": ""}, {"en": "wear wore worn", "ru": "носить (одежду)", "ex": ""}, {"en": "win won won", "ru": "выигрывать", "ex": ""}, {"en": "write wrote written", "ru": "писать", "ex": ""}];
+const LIB_MORE=[{"en": "arise arose arisen", "ru": "возникать; появляться", "ex": ""}, {"en": "awake awoke awoken", "ru": "просыпаться; будить", "ex": ""}, {"en": "bear bore borne", "ru": "выносить; нести; терпеть", "ex": ""}, {"en": "bid bid bid", "ru": "предлагать цену (на торгах)", "ex": ""}, {"en": "bind bound bound", "ru": "связывать; привязывать", "ex": ""}, {"en": "bleed bled bled", "ru": "кровоточить", "ex": ""}, {"en": "breed bred bred", "ru": "разводить (животных); воспитывать", "ex": ""}, {"en": "broadcast broadcast broadcast", "ru": "транслировать; передавать в эфир", "ex": ""}, {"en": "flee fled fled", "ru": "спасаться бегством", "ex": ""}, {"en": "forbid forbade forbidden", "ru": "запрещать", "ex": ""}, {"en": "kneel knelt knelt", "ru": "стоять на коленях; становиться на колени", "ex": "также kneeled"}, {"en": "knit knit knit", "ru": "вязать", "ex": "также knitted"}, {"en": "leap leapt leapt", "ru": "прыгать; скакать", "ex": "также leaped"}, {"en": "overcome overcame overcome", "ru": "преодолевать", "ex": ""}, {"en": "overtake overtook overtaken", "ru": "обгонять", "ex": ""}, {"en": "prove proved proven", "ru": "доказывать", "ex": "также proved"}, {"en": "quit quit quit", "ru": "бросать (занятие); увольняться", "ex": "также quitted"}, {"en": "rebuild rebuilt rebuilt", "ru": "перестраивать; восстанавливать", "ex": ""}, {"en": "sew sewed sewn", "ru": "шить", "ex": "также sewn"}, {"en": "shine shone shone", "ru": "светить; сиять", "ex": "также shined (прям. знач.)"}, {"en": "shrink shrank shrunk", "ru": "сокращаться; садиться (о ткани)", "ex": "также shrunken (прил.)"}, {"en": "slide slid slid", "ru": "скользить", "ex": ""}, {"en": "smell smelt smelt", "ru": "пахнуть; нюхать", "ex": "также smelled"}, {"en": "sow sowed sown", "ru": "сеять", "ex": ""}, {"en": "speed sped sped", "ru": "мчаться; ехать на большой скорости", "ex": "также speeded"}, {"en": "spell spelt spelt", "ru": "произносить по буквам; писать правильно", "ex": "также spelled"}, {"en": "spill spilt spilt", "ru": "проливать", "ex": "также spilled"}, {"en": "spin spun spun", "ru": "вращать(ся); прясть", "ex": ""}, {"en": "spit spat spat", "ru": "плевать", "ex": ""}, {"en": "split split split", "ru": "раскалывать; делить", "ex": ""}, {"en": "spring sprang sprung", "ru": "прыгать; внезапно возникать", "ex": ""}, {"en": "sting stung stung", "ru": "жалить", "ex": ""}, {"en": "stink stank stunk", "ru": "вонять", "ex": ""}, {"en": "stride strode stridden", "ru": "шагать широкими шагами", "ex": ""}, {"en": "strive strove striven", "ru": "стремиться; прилагать усилия", "ex": ""}, {"en": "sweep swept swept", "ru": "подметать; сметать", "ex": ""}, {"en": "swell swelled swollen", "ru": "опухать; раздуваться", "ex": "также swelled"}, {"en": "swing swung swung", "ru": "качать(ся)", "ex": ""}, {"en": "tread trod trodden", "ru": "ступать; топтать", "ex": "также trod"}, {"en": "undergo underwent undergone", "ru": "переносить; подвергаться", "ex": ""}, {"en": "undo undid undone", "ru": "отменять; расстёгивать; развязывать", "ex": ""}, {"en": "upset upset upset", "ru": "расстраивать; опрокидывать", "ex": ""}, {"en": "weave wove woven", "ru": "ткать; плести", "ex": ""}, {"en": "weep wept wept", "ru": "плакать", "ex": ""}, {"en": "wet wet wet", "ru": "мочить; смачивать", "ex": "также wetted"}, {"en": "wind wound wound", "ru": "наматывать; заводить", "ex": ""}, {"en": "withdraw withdrew withdrawn", "ru": "отзывать; снимать (деньги); отступать", "ex": ""}, {"en": "wring wrung wrung", "ru": "выжимать", "ex": ""}];
+const LIB_BUILTIN=[
+  {id:'b:irr1',title:'Irregular verbs: essential',descr:'The verbs you meet every day',level:'A2–B1',lang:'en',version:1,words:LIB_CORE,builtin:true},
+  {id:'b:irr2',title:'Irregular verbs: more',descr:'Less common irregular verbs',level:'B2–C1',lang:'en',version:1,words:LIB_MORE,builtin:true}
+];
+const LIB_KEY='noeon.lib.v1';
+let LIBX={list:[],subs:[],at:0,err:false,noTable:false};
+let LV=null;
+try{const c=JSON.parse(localStorage.getItem(LIB_KEY)||'null');if(c&&Array.isArray(c.list))LIBX.list=c.list;}catch(e){}
+const libTeacher=()=>!!(AUTH.profile&&AUTH.profile.role==='teacher');
+const libNorm=r=>({id:r.id,title:r.title||'',descr:r.descr||'',level:r.level||'',lang:r.lang||'en',words:Array.isArray(r.words)?r.words:[],version:r.version||1,status:r.status||'',token:r.token||'',teacher_id:r.teacher_id||'',teacher_name:r.teacher_name||''});
+const libMine=()=>LIBX.list.filter(x=>libTeacher()&&AUTH.user&&x.teacher_id===AUTH.user.id);
+const libFromTeacher=()=>LIBX.list.filter(x=>!(AUTH.user&&x.teacher_id===AUTH.user.id));
+function libSubsOf(id){return LIBX.subs.filter(s=>s.lib_id===id).length;}
+function libLocal(x){const sub=(S.libSubs||{})[x.id];return sub?{sub,set:S.sets.find(s=>s.id===sub.setId)||null}:{sub:null,set:null};}
+function libNewWords(x,set){const have=new Set(set.words.map(w=>fold(w.en)));return x.words.filter(w=>w.en&&!have.has(fold(w.en)));}
+/* sets from the teacher that changed since the student added them */
+function libUpdates(){
+  let n=0;
+  libFromTeacher().forEach(x=>{const {sub,set}=libLocal(x);if(sub&&set&&x.version>sub.ver&&libNewWords(x,set).length)n++;});
+  return n;
+}
+function libNewForMe(){return libFromTeacher().filter(x=>!libLocal(x).sub).length;}
+async function libLoad(force){
+  if(!sb||!AUTH.user)return;
+  if(!force&&Date.now()-LIBX.at<60000)return;
+  try{
+    await ensureAuth();
+    const a=await sb.from('library_sets').select('id,teacher_id,title,descr,level,lang,status,token,words,version,updated_at').eq('deleted',false).order('updated_at',{ascending:false});
+    if(a.error)throw a.error;
+    LIBX.list=(a.data||[]).map(libNorm);
+    const b=await sb.from('library_subs').select('lib_id,student_id,ver');
+    LIBX.subs=b.error?[]:(b.data||[]);
+    LIBX.at=Date.now();LIBX.err=false;LIBX.noTable=false;
+    try{localStorage.setItem(LIB_KEY,JSON.stringify({list:LIBX.list}));}catch(e){}
+  }catch(e){
+    const m=String((e&&(e.message||e.code))||'');
+    LIBX.noTable=/42P01|PGRST205|relation|schema cache|library_sets/i.test(m);
+    LIBX.err=true;
+  }
+}
+const libCardHtml=(icn,nm,meta,badge,on)=>`<div class="setcard" onclick="${on}"><div class="arch-ic">${ic(icn)}</div><div class="t"><div class="nm">${esc(nm)}</div><div class="meta">${meta}</div></div>${badge||''}${ic('right',18)}</div>`;
+const libTitle=x=>x.builtin?t(x.title):x.title;
+const libDescr=x=>x.builtin?t(x.descr):x.descr;
+const libStatusTxt=s=>s==='link'?t('By link'):s==='students'?t('My students'):t('Draft');
+/* the entry on the Vocabulary screen */
+function libEntry(){
+  const u=libUpdates(),nw=libNewForMe();
+  const meta=u?`${t('Updates')}: ${u}`:nw?`${nw} ${t('new from your teacher')}`:t('Irregular verbs, sets from your teacher');
+  return `<div class="setcard" onclick="go('library')"><div class="arch-ic">${ic('cards')}</div><div class="t"><div class="nm">${t('Library')}</div><div class="meta" id="libEntryMeta" ${u||nw?'style="color:var(--pri);font-weight:650"':''}>${meta}</div></div>${ic('right',18)}</div>`;
+}
+function libEntryBg(){
+  if(!sb||!AUTH.user||Date.now()-LIBX.at<300000)return;
+  libLoad().then(()=>{const m=$('#libEntryMeta');if(!m||view.name!=='vocab')return;const u=libUpdates(),nw=libNewForMe();
+    m.textContent=u?`${t('Updates')}: ${u}`:nw?`${nw} ${t('new from your teacher')}`:t('Irregular verbs, sets from your teacher');
+    m.style.color=u||nw?'var(--pri)':'';m.style.fontWeight=u||nw?'650':'';});
+}
+VIEWS.library=function(app){
+  app.innerHTML=hdr(t('Library'),"go('vocab')",libTeacher()?`<button class="ic" aria-label="Publish" onclick="libPublish()">${ic('plus')}</button>`:'')+'<div id="libBody"></div>'+tabBar();
+  libDraw();
+  if(sb&&AUTH.user)libLoad(true).then(()=>{if(view.name==='library')libDraw();});
+};
+function libDraw(){
+  const box=$('#libBody');if(!box)return;
+  const sec=s=>`<div class="tbar" style="margin-top:18px"><span class="t">${s}</span></div>`;
+  let h=`<div class="setcard" style="margin-top:14px;cursor:default"><div class="t"><div class="nm" style="font-size:15px">${t('Open by link')}</div>
+    <div class="row" style="margin-top:8px;gap:8px"><input class="inp" id="libLink" placeholder="${t('Paste a link or code')}" ${NOASSIST} style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();libOpenInput();}"><button class="btn pri" style="width:auto;padding:0 18px" onclick="libOpenInput()">${t('Open')}</button></div></div></div>`;
+  if(libTeacher()){
+    h+=sec(t('My sets'));
+    if(LIBX.noTable)h+=`<div class="rwdup" style="background:var(--bad-soft);color:var(--bad)">${t('The library tables are not set up yet — run the SQL from the instructions.')}</div>`;
+    const m=libMine();
+    h+=m.length?m.map(x=>libCardHtml('cards',x.title,`${nWords(x.words.length)} · ${libStatusTxt(x.status)}${libSubsOf(x.id)?' · '+libSubsOf(x.id)+' '+t('added it'):''}`,'',`libOpen('server','${x.id}')`)).join('')
+      :`<div class="hint" style="margin:10px 2px">${t('Publish one of your lists — students add it with one tap.')}</div><button class="btn pri" style="margin-top:6px" onclick="libPublish()">${ic('plus',18)}${t('Publish a list')}</button>`;
+  }else{
+    const f=libFromTeacher();
+    if(f.length){
+      h+=sec(t('From your teacher'));
+      h+=f.map(x=>{
+        const {sub,set}=libLocal(x),nn=sub&&set&&x.version>sub.ver?libNewWords(x,set).length:0;
+        const badge=nn?`<span class="lbadge">+${nn}</span>`:(!sub?`<span class="lbadge">${t('New!')}</span>`:(set?`<span class="lbadge ok">✓</span>`:''));
+        return libCardHtml('cards',x.title,`${nWords(x.words.length)}${x.level?' · '+esc(x.level):''}${x.descr?' · '+esc(x.descr):''}`,badge,`libOpen('server','${x.id}')`);
+      }).join('');
+    }
+  }
+  h+=sec(t('Ready-made sets'));
+  h+=LIB_BUILTIN.map(x=>{
+    const {sub,set}=libLocal(x);
+    return libCardHtml('book',libTitle(x),`${nWords(x.words.length)} · ${x.level} · ${esc(libDescr(x))}`,sub&&set?`<span class="lbadge ok">✓</span>`:'',`libOpen('builtin','${x.id}')`);
+  }).join('');
+  box.innerHTML=h;
+}
+function libOpen(src,id){
+  const x=src==='builtin'?LIB_BUILTIN.find(z=>z.id===id):LIBX.list.find(z=>z.id===id);
+  if(!x)return;
+  LV={src,set:x};go('libset');
+}
+async function libOpenInput(){
+  const v=($('#libLink')||{}).value||'';
+  if(!v.trim())return;
+  await libOpenToken(v);
+}
+async function libOpenToken(raw){
+  let tok=String(raw||'').trim();const m=tok.match(/[?&]lib=([A-Za-z0-9]+)/);if(m)tok=m[1];
+  if(!/^[A-Za-z0-9]{16,64}$/.test(tok))return toast(t('That doesn’t look like a set link'));
+  if(!sb)return toast(t('No connection — try again when you’re online.'));
+  try{
+    const {data,error}=await sb.rpc('library_by_token',{tok});
+    if(error)throw error;
+    if(!data||!data.length)return toast(t('Set not found, or it is no longer shared'));
+    const r=data[0];LV={src:'link',set:Object.assign(libNorm(r),{teacher_name:r.teacher_name||''})};
+    go('libset');
+  }catch(e){toast(t('No connection — try again when you’re online.'));}
+}
+const libUrl=x=>location.origin+location.pathname.replace(/index\.html$/,'')+'?lib='+x.token;
+async function libShare(){
+  const x=LV&&LV.set;if(!x||!x.token)return;
+  const url=libUrl(x);
+  try{
+    if(navigator.share&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){await navigator.share({title:x.title,url});return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}
+  try{await navigator.clipboard.writeText(url);toast(t('Link copied'));}
+  catch(e){const a=document.createElement('textarea');a.value=url;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy');toast(t('Link copied'));}catch(_){toast(url);}a.remove();}
+}
+VIEWS.libset=function(app){
+  if(!LV)return go('library');
+  const x=LV.set,mine=LV.src==='server'&&libTeacher()&&AUTH.user&&x.teacher_id===AUTH.user.id;
+  const {sub,set}=libLocal(x);
+  const nn=set?libNewWords(x,set).length:x.words.length;
+  const upd=set&&x.version>sub.ver&&nn>0;
+  const back=LV.src==='link'?"go('library')":"go('library')";
+  let act;
+  if(!set)act=`<button class="btn pri" onclick="libAdd()">${ic('plus',18)}${t('Add to my lists')} (${x.words.length})</button>`;
+  else if(upd)act=`<button class="btn pri" onclick="libAdd()">${ic('plus',18)}${t('Add new words')} (${nn})</button>`;
+  else act=`<button class="btn ghost" disabled>${ic('check',18)}${t('Already in your lists')}</button>`;
+  const info=[nWords(x.words.length),x.level,x.lang&&x.lang!=='en'?langName(x.lang):'',x.teacher_name?t('from')+' '+x.teacher_name:''].filter(Boolean).map(esc).join(' · ');
+  app.innerHTML=hdr(t('Library'),back,mine?`<button class="ic" aria-label="Settings" onclick="libPublish('${x.id}')">${ic('sliders')}</button>`:'')+
+   `<h2 class="rtitle" style="font-size:24px">${esc(libTitle(x))}</h2>
+    <div class="rdmeta">${info}</div>
+    ${libDescr(x)?`<p class="hint" style="margin:8px 2px 0">${esc(libDescr(x))}</p>`:''}
+    ${mine?`<div class="rwdup" style="margin-top:12px;background:var(--surf2);color:var(--tx)">${t('Visible to')}: <b>${libStatusTxt(x.status)}</b>${libSubsOf(x.id)?' · '+libSubsOf(x.id)+' '+t('added it'):''}
+      ${x.status==='link'?`<button class="btn ghost" style="margin-top:10px" onclick="libShare()">${ic('link',18)}${t('Share the link')}</button>`:''}</div>`:''}
+    <div style="margin:14px 0 6px">${act}</div>
+    ${x.builtin?`<div class="hint" style="margin:6px 2px 10px">${t('Forms checked against Wikipedia “List of English irregular verbs” (CC BY-SA 4.0).')}</div>`:''}
+    <div class="libwords">${x.words.map(w=>`<div class="lw"><b>${esc(w.en)}</b><span>${esc(w.ru||'')}</span></div>`).join('')}</div>`+tabBar();
+};
+function libAdd(){
+  const x=LV&&LV.set;if(!x)return;
+  let {sub,set}=libLocal(x);
+  if(!set){set={id:uid(),name:libTitle(x),lang:x.lang||'en',words:[],upd:Date.now(),synced:false};S.sets.push(set);}
+  const have=new Set(set.words.map(w=>fold(w.en)));
+  const fresh=x.words.filter(w=>w.en&&!have.has(fold(w.en)));
+  const mine=[],dupes=[];
+  fresh.forEach(w=>{(findDup(set.lang,w.en)?dupes:mine).push(w);});
+  const rows=mine.map((w,i)=>{const nw=newWord(w.en,w.ru||'—',w.ex||'');nw.pos=posNow(i,mine.length);return nw;});
+  set.words.unshift(...rows);set.upd=Date.now();set.synced=false;
+  (S.libSubs||(S.libSubs={}))[x.id]={setId:set.id,ver:x.version||1,at:Date.now()};
+  S.settings.lastSet=set.id;
+  save();
+  if(LV.src!=='builtin'&&sb&&AUTH.user&&!libTeacher())sb.from('library_subs').upsert({student_id:AUTH.user.id,lib_id:x.id,ver:x.version||1}).then(()=>{},()=>{});
+  toast(t('Added ✓')+': '+rows.length+(dupes.length?' · '+t('already had')+' '+dupes.length:''));
+  render();
+}
+/* ---- the teacher publishes / edits a set ---- */
+let LP=null;
+const LIB_LEVELS=['','A1','A2','B1','B2','C1','C2','A2–B1','B1–B2','B2–C1','ЕГЭ','IELTS'];
+function libPublish(id){
+  if(!libTeacher())return;
+  const x=id?LIBX.list.find(z=>z.id===id):null,ls=lists();
+  if(!x&&!ls.length)return toast(t('No words'));
+  LP={id:id||null,status:x?x.status:'students'};
+  const st=(v,l)=>`<button data-s="${v}" class="${LP.status===v?'on':''}" onclick="libSt(this)">${l}</button>`;
+  sheet(`<h2>${x?t('Set settings'):t('Publish a list')}</h2>
+   <div class="field"><label>${t('Title')}</label><input class="inp" id="lpT" value="${esc(x?x.title:(ls[0]?ls[0].name:''))}" ${NOASSIST}></div>
+   <div class="field"><label>${t('Description')}</label><input class="inp" id="lpD" value="${esc(x?x.descr:'')}" placeholder="${t('One line for students')}" ${NOASSIST}></div>
+   <div class="field"><label>${t('Level')}</label><select class="inp" id="lpL">${LIB_LEVELS.map(l=>`<option value="${l}"${x&&x.level===l?' selected':''}>${l||'—'}</option>`).join('')}</select></div>
+   <div class="field"><label>${t('Who can see it')}</label><div class="sel-opt" id="lpS">${st('draft',t('Draft'))}${st('students',t('My students'))}${st('link',t('By link'))}</div>
+    <div class="hint" id="lpH"></div></div>
+   <div class="field"><label>${x?t('Update the words from a list'):t('Words from the list')}</label><select class="inp" id="lpSrc">${x?`<option value="">${t('Keep the current words')}</option>`:''}${ls.map(s=>`<option value="${s.id}">${esc(s.name)} · ${s.words.length}</option>`).join('')}</select></div>
+   <div class="err" id="lpErr"></div>
+   <button class="btn pri" id="lpGo" onclick="libSave()">${x?t('Save'):t('Publish')}</button>
+   ${x?`<button class="btn ghost" style="margin-top:8px;color:var(--bad)" onclick="libDelete('${x.id}')">${t('Delete set')}</button>`:''}`);
+  libStHint();
+}
+function libSt(b){LP.status=b.dataset.s;document.querySelectorAll('#lpS button').forEach(e=>e.classList.toggle('on',e===b));libStHint();}
+function libStHint(){const h=$('#lpH');if(h)h.textContent={draft:t('Only you can see it.'),students:t('Your linked students see it in their Library.'),link:t('Anyone with the link can add it; your students see it too.')}[LP.status]||'';}
+async function libSave(){
+  const err=$('#lpErr'),btn=$('#lpGo');err.textContent='';
+  const title=$('#lpT').value.trim();if(!title){err.textContent=t('Enter a name');return;}
+  const x=LP.id?LIBX.list.find(z=>z.id===LP.id):null;
+  const srcId=$('#lpSrc').value,src=srcId?S.sets.find(s=>s.id===srcId):null;
+  if(!x&&!src){err.textContent=t('No words');return;}
+  const row={title,descr:$('#lpD').value.trim(),level:$('#lpL').value,status:LP.status,updated_at:new Date().toISOString()};
+  if(src){row.words=src.words.filter(w=>w.en).map(w=>({en:w.en,ru:w.ru||'',ex:w.ex||''}));row.lang=setLangOf(src);}
+  if(x&&src&&JSON.stringify(row.words)!==JSON.stringify(x.words))row.version=(x.version||1)+1;
+  btn.disabled=true;
+  try{
+    await ensureAuth();
+    let r;
+    if(x)r=await sb.from('library_sets').update(row).eq('id',x.id).select('id');
+    else r=await sb.from('library_sets').insert(Object.assign({teacher_id:AUTH.user.id},row)).select('id');
+    if(r.error)throw r.error;
+    await libLoad(true);closeSheet();toast(t('Saved ✓'));
+    if(view.name==='libset'&&LV){const n=LIBX.list.find(z=>z.id===LV.set.id);if(n)LV.set=n;}
+    render();
+  }catch(e){
+    btn.disabled=false;
+    const m=String((e&&(e.message||e.code))||'');
+    err.textContent=/42P01|PGRST205|relation|schema cache/i.test(m)?t('The library tables are not set up yet — run the SQL from the instructions.'):t('Couldn’t save — check your connection');
+  }
+}
+async function libDelete(id){
+  if(!confirm(t('Delete this set? Students keep the words they already added.')))return;
+  try{await ensureAuth();const r=await sb.from('library_sets').update({deleted:true,updated_at:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error;
+    await libLoad(true);closeSheet();toast(t('Deleted'));go('library');}
+  catch(e){toast(t('Couldn’t delete'));}
+}
+/* a link like …/?lib=TOKEN opens the set */
+(function(){
+  const m=location.search.match(/[?&]lib=([A-Za-z0-9]+)/);
+  if(!m)return;
+  try{history.replaceState(null,'',location.pathname);}catch(e){}
+  setTimeout(()=>libOpenToken(m[1]),1200);
+})();
 
 const TEACH_VIEWS=['students','tsets','twords'];
 function viewSave(){try{localStorage.setItem(VKEY,JSON.stringify({v:view,at:Date.now(),y:0}));}catch(e){}}
