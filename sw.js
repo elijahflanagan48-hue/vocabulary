@@ -1,4 +1,4 @@
-const CACHE = 'vocab-v91';
+const CACHE = 'vocab-v92';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v3.png', './icon-512-v3.png', './icon-mask-512-v3.png', './favicon-32-v3.png', './favicon-192-v3.png',
   './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const OCR_CACHE = 'noeon-ocr-v1';
