@@ -323,7 +323,7 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .rdlegend i{font-style:normal;font-size:12.5px;padding:0 3px;pointer-events:none}
 .reader .w.cur{background:var(--pri-soft);box-shadow:0 0 0 2px var(--pri-soft);border-radius:4px}
 .rdpop{position:fixed;left:0;right:0;bottom:0;z-index:30;max-width:680px;margin:0 auto;background:var(--surf);border-radius:22px 22px 0 0;
-  box-shadow:0 -10px 36px rgba(0,0,0,.22),0 -1px 0 var(--line);padding:4px 14px calc(12px + env(safe-area-inset-bottom));max-height:64vh;overflow-y:auto;
+  box-shadow:0 -10px 36px rgba(0,0,0,.22),0 -1px 0 var(--line);padding:4px 14px 0;max-height:64vh;overflow-y:auto;
   animation:rdup .24s cubic-bezier(.22,1,.36,1)}
 .rdpop.out{animation:rddn .17s ease forwards}
 @keyframes rdup{from{transform:translateY(100%)}to{transform:none}}
@@ -345,7 +345,7 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .rdpop .rp-chips .chip,.rdpop .rp-chips .chpos{flex:none;white-space:nowrap}
 .rp-more{display:none;margin-bottom:6px}
 .rdpop.more .rp-more{display:block}
-.rp-act{display:flex;gap:8px}
+.rp-act{display:flex;gap:8px;position:sticky;bottom:0;background:var(--surf);padding:8px 0 calc(12px + env(safe-area-inset-bottom))}
 .rp-act .btn{height:48px;width:auto;margin:0}
 .rp-act .btn.ghost{flex:none;padding:0 20px}
 .rp-act .btn.pri{flex:1;min-width:0}
@@ -948,6 +948,7 @@ Object.assign(RU_DICT,{"Looking for examples…": "Ищем примеры…", 
 Object.assign(RU_DICT,{"More":"Ещё","Less":"Скрыть","In the text:":"В тексте:","Base form:":"Начальная форма:"});
 Object.assign(RU_DICT,{"Copy":"Копировать","Copied":"Скопировано","Couldn’t copy":"Не удалось скопировать","min read":"мин"});
 Object.assign(RU_DICT,{"Library": "Библиотека", "Irregular verbs: essential": "Неправильные глаголы: основные", "The verbs you meet every day": "Глаголы, которые встречаются каждый день", "Irregular verbs: more": "Неправильные глаголы: ещё", "Less common irregular verbs": "Менее частые неправильные глаголы", "By link": "По ссылке", "Draft": "Черновик", "Updates": "Обновления", "new from your teacher": "новых от учителя", "Irregular verbs, sets from your teacher": "Неправильные глаголы и наборы от учителя", "Open by link": "Открыть по ссылке", "Paste a link or code": "Вставьте ссылку или код", "Open": "Открыть", "My sets": "Мои наборы", "The library tables are not set up yet — run the SQL from the instructions.": "Таблицы библиотеки ещё не созданы — выполните SQL из инструкции.", "Publish one of your lists — students add it with one tap.": "Опубликуйте один из своих списков — ученики добавят его одним нажатием.", "Publish a list": "Опубликовать список", "From your teacher": "От вашего учителя", "New!": "Новое", "Ready-made sets": "Готовые наборы", "That doesn’t look like a set link": "Это не похоже на ссылку на набор", "Set not found, or it is no longer shared": "Набор не найден или доступ закрыт", "Link copied": "Ссылка скопирована", "Add to my lists": "Добавить в мои списки", "Add new words": "Добавить новые слова", "Already in your lists": "Уже в ваших списках", "from": "от", "Visible to": "Виден", "Share the link": "Поделиться ссылкой", "Forms checked against Wikipedia “List of English irregular verbs” (CC BY-SA 4.0).": "Формы сверены с Wikipedia «List of English irregular verbs» (CC BY-SA 4.0).", "already had": "уже были", "Set settings": "Настройки набора", "Title": "Название", "Description": "Описание", "One line for students": "Одна строка для учеников", "Level": "Уровень", "Who can see it": "Кто видит", "Only you can see it.": "Видите только вы.", "Your linked students see it in their Library.": "Привязанные ученики увидят набор в своей Библиотеке.", "Anyone with the link can add it; your students see it too.": "Добавить может любой, у кого есть ссылка; ваши ученики тоже видят набор.", "Update the words from a list": "Обновить слова из списка", "Keep the current words": "Не менять слова", "Words from the list": "Слова из списка", "Delete set": "Удалить набор", "Delete this set? Students keep the words they already added.": "Удалить набор? У учеников останутся уже добавленные слова.", "Publish": "Опубликовать", "added it": "добавили"});
+Object.assign(RU_DICT,{"Moved to Archive":"В Архив","Archive review: results don't change progress.":"Повторение из Архива: результаты не меняют прогресс."});
 function load(){
   try{
     let raw=localStorage.getItem(KEY);
@@ -5506,6 +5507,8 @@ VIEWS.read=function(app){
     <div class="rdmeta" id="rdMeta">${rdStats()}</div>
     <article class="reader${P.serif?' serif':''}" id="rdArt" style="--rd:${P.size}px" onclick="rdTap(event)">${rdArticle()}</article>
     <div class="rdlegend"><span><i class="w kn">abc</i> ${t('in your lists')}</span><span><i class="w lr">abc</i> ${t('learned')}</span><span><i class="w ad">abc</i> ${t('added')}</span></div><div id="rdSpace" style="height:0;transition:height .25s"></div>`;
+  /* a background refresh redraws the page under an open card: keep the word marked and the space reserved */
+  if($('#rdPop')){rdMark(RS.ms,RS.me);const sp=$('#rdSpace');if(sp)sp.style.height=($('#rdPop').offsetHeight+12)+'px';}
 };
 function rdRefresh(){
   const a=$('#rdArt'),m=$('#rdMeta');if(!a)return;
@@ -5527,7 +5530,7 @@ function rdSerif(v){const P=rdPrefs();P.serif=v;rdSave(P);rdSettings();}
 /* ---- dictionary form: wonders → wonder, went → go ---- */
 const LEM_KEEP=new Set('this his its yes us as bus plus news always perhaps thus series species means physics lens gas class glass pass less across process business address success dress press stress mess kiss miss boss cross loss moss during morning evening king thing something nothing anything everything ring spring string bring sing wing swing ceiling bed red need seed speed indeed hundred sacred wicked naked beloved feed weed heed deed reed bleed breed proceed exceed succeed creed greed steed tweed bit rose wound bore lay shed sled embed hatred kindred'.split(/\s+/));
 const LEM_PART=new Set('up down out off on in over about at for with to away back through into after along around forward by from of'.split(' '));
-const LEM_NOUN={children:'child',men:'man',women:'woman',feet:'foot',teeth:'tooth',mice:'mouse',geese:'goose',oxen:'ox',is:'be',am:'be',are:'be',was:'be',were:'be',been:'be',being:'be',has:'have',having:'have',does:'do',doing:'do',goes:'go',going:'go'};
+const LEM_NOUN={used:'use',children:'child',men:'man',women:'woman',feet:'foot',teeth:'tooth',mice:'mouse',geese:'goose',oxen:'ox',is:'be',am:'be',are:'be',was:'be',were:'be',been:'be',being:'be',has:'have',having:'have',does:'do',doing:'do',goes:'go',going:'go'};
 let LEM_IRR=null;
 function lemIrr(w){
   if(!LEM_IRR){irregOf('');LEM_IRR={};Object.keys(IRR).forEach(b=>{IRR[b].past.concat(IRR[b].pp).forEach(f=>{if(f!==b&&!IRR[f]&&!(f in LEM_IRR))LEM_IRR[f]=b;});});}
@@ -5539,12 +5542,12 @@ function lemCands(w){
   const add=(x,strong)=>{if(x&&x.length>=2&&x!==w&&!out.some(o=>o[0]===x))out.push([x,!!strong]);};
   const dd=s=>/([^aeiou])\1$/.test(s)&&!/(ll|ss|ff|zz)$/.test(s)?s.slice(0,-1):null;
   const one=s=>(s.match(/[aeiouy]+/g)||[]).length===1&&/[^aeiou][aeiou][^aeiouwxy]$/.test(s);
-  const pair=s=>{const d=dd(s);if(d)add(d,true);if(one(s)&&!d){add(s+'e');add(s);}else{add(s);add(s+'e');}};
+  const pair=s=>{if(s.length<=2){add(s+'e');return;}const d=dd(s);if(d)add(d,true);if(one(s)&&!d){add(s+'e');add(s);}else{add(s);add(s+'e');}if(!d&&/(ll|ss|ff|zz)$/.test(s))add(s.slice(0,-1));};
   if(/ies$/.test(w)&&w.length>4){add(w.slice(0,-3)+'y',true);add(w.slice(0,-1));}
-  else if(/(ss|sh|ch|x|z)es$/.test(w)){add(w.slice(0,-2),true);add(w.slice(0,-1));}
+  else if(/(ss|sh|ch|x|z)es$/.test(w)){if(/zzes$/.test(w))add(w.slice(0,-3));add(w.slice(0,-2),true);add(w.slice(0,-1));}
   else if(/oes$/.test(w)){add(w.slice(0,-1));add(w.slice(0,-2));}
-  else if(/[^su]s$/.test(w)&&!/(ss|is|us)$/.test(w)&&w.length>3)add(w.slice(0,-1),true);
-  if(/ied$/.test(w)&&w.length>4){add(w.slice(0,-3)+'y',true);add(w.slice(0,-1));}
+  else if(/[^su]s$/.test(w)&&!/(ss|is|us)$/.test(w)&&w.length>3){add(w.slice(0,-1),true);if(/ves$/.test(w)){add(w.slice(0,-3)+'fe');add(w.slice(0,-3)+'f');}if(/ses$/.test(w)&&w.length>4)add(w.slice(0,-2));}
+  if(/ied$/.test(w)&&w.length>=4){add(w.slice(0,-3)+'y',true);add(w.slice(0,-1));}
   else if(/eed$/.test(w)&&w.length>4)add(w.slice(0,-1));
   else if(/ed$/.test(w)&&w.length>4)pair(w.slice(0,-2));
   if(/ing$/.test(w)&&w.length>=5)pair(w.slice(0,-3));
@@ -5613,6 +5616,7 @@ function rdClose(now){
   if(now){pop.remove();return;}
   pop.classList.add('out');setTimeout(()=>pop.remove(),180);
 }
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#rdPop')&&!$('#scrim'))rdClose();});
 function rdMore(){
   const pop=$('#rdPop');if(!pop)return;
   RS.more=!RS.more;pop.classList.toggle('more',RS.more);
@@ -5692,7 +5696,7 @@ function rdSheet(){
   }
   pop.classList.remove('out');pop.classList.toggle('more',RS.more);
   pop.innerHTML=html;
-  rdMark(a.s,b.s);rdDupUi();rdPad();
+  RS.ms=a.s;RS.me=b.s;rdMark(a.s,b.s);rdDupUi();rdPad();
   (async()=>{
     const lem=await Promise.race([lemmaOf(phrase,T.lang),new Promise(r=>setTimeout(()=>r(null),2200))]).catch(()=>null);
     if(seq!==RS.seq)return;
@@ -5755,13 +5759,14 @@ const LIB_BUILTIN=[
   {id:'b:irr2',title:'Irregular verbs: more',descr:'Less common irregular verbs',level:'B2–C1',lang:'en',version:1,words:LIB_MORE,builtin:true}
 ];
 const LIB_KEY='noeon.lib.v1';
-let LIBX={list:[],subs:[],at:0,err:false,noTable:false};
+let LIBX={list:[],subs:[],at:0,err:false,noTable:false,uid:''};
 let LV=null;
-try{const c=JSON.parse(localStorage.getItem(LIB_KEY)||'null');if(c&&Array.isArray(c.list))LIBX.list=c.list;}catch(e){}
+try{const c=JSON.parse(localStorage.getItem(LIB_KEY)||'null');if(c&&Array.isArray(c.list)){LIBX.list=c.list;LIBX.uid=c.uid||'';}}catch(e){}
 const libTeacher=()=>!!(AUTH.profile&&AUTH.profile.role==='teacher');
 const libNorm=r=>({id:r.id,title:r.title||'',descr:r.descr||'',level:r.level||'',lang:r.lang||'en',words:Array.isArray(r.words)?r.words:[],version:r.version||1,status:r.status||'',token:r.token||'',teacher_id:r.teacher_id||'',teacher_name:r.teacher_name||''});
-const libMine=()=>LIBX.list.filter(x=>libTeacher()&&AUTH.user&&x.teacher_id===AUTH.user.id);
-const libFromTeacher=()=>LIBX.list.filter(x=>!(AUTH.user&&x.teacher_id===AUTH.user.id));
+const libOk=()=>!!(AUTH.user&&LIBX.uid===AUTH.user.id);   /* a cached list belongs to the account that loaded it */
+const libMine=()=>libOk()?LIBX.list.filter(x=>libTeacher()&&x.teacher_id===AUTH.user.id):[];
+const libFromTeacher=()=>libOk()?LIBX.list.filter(x=>x.teacher_id!==AUTH.user.id):[];
 function libSubsOf(id){return LIBX.subs.filter(s=>s.lib_id===id).length;}
 function libLocal(x){const sub=(S.libSubs||{})[x.id];return sub?{sub,set:S.sets.find(s=>s.id===sub.setId)||null}:{sub:null,set:null};}
 function libNewWords(x,set){const have=new Set(set.words.map(w=>fold(w.en)));return x.words.filter(w=>w.en&&!have.has(fold(w.en)));}
@@ -5782,8 +5787,8 @@ async function libLoad(force){
     LIBX.list=(a.data||[]).map(libNorm);
     const b=await sb.from('library_subs').select('lib_id,student_id,ver');
     LIBX.subs=b.error?[]:(b.data||[]);
-    LIBX.at=Date.now();LIBX.err=false;LIBX.noTable=false;
-    try{localStorage.setItem(LIB_KEY,JSON.stringify({list:LIBX.list}));}catch(e){}
+    LIBX.at=Date.now();LIBX.err=false;LIBX.noTable=false;LIBX.uid=AUTH.user.id;
+    try{localStorage.setItem(LIB_KEY,JSON.stringify({uid:LIBX.uid,list:LIBX.list}));}catch(e){}
   }catch(e){
     const m=String((e&&(e.message||e.code))||'');
     LIBX.noTable=/42P01|PGRST205|relation|schema cache|library_sets/i.test(m);
