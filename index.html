@@ -62,7 +62,10 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--ff);
 #app{max-width:680px;margin:0 auto;padding:0 16px}
 button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
 input,textarea,select{font-family:inherit;font-size:16px}
-::selection{background:var(--pri-soft)}
+::selection{background:rgba(47,111,237,.32);color:inherit}
+:root[data-theme="dark"] ::selection{background:rgba(122,172,255,.55);color:#fff}
+input::selection,textarea::selection{background:rgba(47,111,237,.32);color:inherit}
+:root[data-theme="dark"] input::selection,:root[data-theme="dark"] textarea::selection{background:rgba(122,172,255,.55);color:#fff}
 
 /* header */
 header{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;
