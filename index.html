@@ -952,15 +952,102 @@ Object.assign(RU_DICT,{"Moved to Archive":"В Архив","Archive review: resul
 Object.assign(RU_DICT,{"Algorithm": "Алгоритм", "Intervals": "Интервалы", "beta": "бета", "FSRS picks the next review for each word separately: words you know well come back less often, tricky ones more often. Current due dates stay; FSRS takes over after each word’s next review.": "FSRS подбирает следующее повторение для каждого слова отдельно: хорошо знакомые слова возвращаются реже, трудные чаще. Текущие сроки сохраняются; FSRS подключится после очередного повторения каждого слова.", "Fixed steps: the same schedule for every word. The default.": "Фиксированные шаги: одно расписание для всех слов. Включено по умолчанию.", "Desired retention": "Желаемое запоминание", "The chance that you still remember a word when it comes back. Higher means more reviews.": "С какой вероятностью вы помните слово, когда оно возвращается. Чем выше, тем больше повторений."});
 Object.assign(RU_DICT,{"Ask again sooner":"Спросить раньше","The word stays in the Archive; FSRS brings it back after a shorter break.":"Слово останется в Архиве; FSRS вернёт его после более короткого перерыва."});
 Object.assign(RU_DICT,{"Type any number from 1 to":"Введите любое число от 1 до","Enter the number of questions":"Введите количество вопросов"});
+Object.assign(RU_DICT,{"Couldn’t open saved words. Close and reopen the app.":"Не удалось открыть сохранённые слова. Закройте и снова откройте приложение."});
 Object.assign(RU_DICT,{"Matching groups several words into one question, so the total can be smaller.":"«Подбор» объединяет несколько слов в один вопрос, поэтому вопросов может получиться меньше."});
+/* BOOT_IDB tells the boot to look in IndexedDB first:
+   'big' — the data outgrew localStorage and lives in IndexedDB; 'empty' / 'broken' — nothing usable here, maybe a copy there */
+let BOOT_IDB='';
 function load(){
   try{
     let raw=localStorage.getItem(KEY);
-    if(raw){const d=JSON.parse(raw);return fix(d);}
+    if(raw){const d=JSON.parse(raw);if(d&&d.__idb){BOOT_IDB='big';return fix(null);}return fix(d);}
     const old=localStorage.getItem('vocab.v1');
     if(old){const d=JSON.parse(old);return fix(migrate(d));}
-  }catch(e){}
+  }catch(e){BOOT_IDB='broken';return DB();}
+  BOOT_IDB='empty';
   return DB();
+}
+
+/* ---------- storage ----------
+   localStorage keeps the whole state for an instant start (as before). IndexedDB keeps a second copy of the same
+   text, and takes over alone when the state no longer fits localStorage (then localStorage keeps a small pointer).
+   Several saves in a row are written once; anything pending is written at once when the app goes to the background.
+   Nothing here touches the cloud sync: it still reads and writes S in memory exactly as before. */
+const IDB_NAME='noeon-words',IDB_ST='kv',IDB_KEY='state';
+let _idbP=null;
+function idbOpen(){
+  if(_idbP)return _idbP;
+  _idbP=new Promise(res=>{
+    let done=false;const fin=v=>{if(!done){done=true;res(v);}};
+    try{
+      if(!window.indexedDB)return fin(null);
+      const rq=indexedDB.open(IDB_NAME,1);
+      rq.onupgradeneeded=()=>{try{rq.result.createObjectStore(IDB_ST);}catch(e){}};
+      rq.onsuccess=()=>{const db=rq.result;db.onversionchange=()=>{try{db.close();}catch(e){}_idbP=null;};db.onclose=()=>{_idbP=null;};fin(db);};
+      rq.onerror=()=>fin(null);rq.onblocked=()=>fin(null);
+    }catch(e){fin(null);}
+    setTimeout(()=>fin(null),3000);
+  });
+  _idbP.then(db=>{if(!db)_idbP=null;});      /* try again next time */
+  return _idbP;
+}
+function idbDo(mode,fn){
+  return idbOpen().then(db=>new Promise(res=>{
+    if(!db)return res({ok:false});
+    try{
+      const tx=db.transaction(IDB_ST,mode),st=tx.objectStore(IDB_ST);let out;
+      const rq=fn(st);if(rq)rq.onsuccess=()=>{out=rq.result;};
+      tx.oncomplete=()=>res({ok:true,v:out});
+      tx.onerror=tx.onabort=()=>res({ok:false});
+    }catch(e){_idbP=null;res({ok:false});}
+  }));
+}
+const idbGet=()=>idbDo('readonly',st=>st.get(IDB_KEY));
+const idbPut=v=>idbDo('readwrite',st=>st.put(v,IDB_KEY)).then(r=>r.ok);
+let _wT=0,_wSeq=0,_wLock=false,_wChain=Promise.resolve(),_wToast=0,_wMir=0;
+function storeFull(){const n=Date.now();if(n-_wToast>60000){_wToast=n;try{toast(t('No storage space left'));}catch(e){}}}
+/* write now: localStorage synchronously, IndexedDB right after (in order) */
+function writeNow(){
+  clearTimeout(_wT);_wT=0;
+  if(_wLock)return;
+  let json;try{json=JSON.stringify(S);}catch(e){return;}
+  const seq=++_wSeq,at=Date.now();
+  let lsOk=false;
+  try{localStorage.setItem(KEY,json);lsOk=true;}catch(e){}
+  if(lsOk){
+    /* the second copy: not on every keystroke — at most every couple of seconds, and always when leaving */
+    clearTimeout(_wMir);_wMir=0;
+    const mir=()=>{_wMir=0;_wChain=_wChain.then(()=>idbPut({at,json}));};
+    if(document.visibilityState==='hidden')mir();else _wMir=setTimeout(mir,2000);
+    return;
+  }
+  /* does not fit localStorage → IndexedDB is the only home; the pointer goes in only once the data is safely there */
+  clearTimeout(_wMir);_wMir=0;
+  _wChain=_wChain.then(()=>idbPut({at,json})).then(ok=>{
+    if(!ok){storeFull();return;}
+    if(seq!==_wSeq)return;                    /* a newer write already decided */
+    try{localStorage.setItem(KEY,JSON.stringify({__idb:at,settings:{theme:S.settings.theme}}));}catch(e){}
+  });
+}
+function persist(){if(_wLock)return;if(!_wT)_wT=setTimeout(writeNow,120);}
+/* make sure the second copy exists even if nothing changes in this session */
+setTimeout(()=>{if(!_wLock&&!_wT&&!_wMir){let json;try{json=JSON.stringify(S);}catch(e){return;}_wChain=_wChain.then(()=>idbPut({at:Date.now(),json}));}},5000);
+['pagehide','beforeunload','freeze'].forEach(ev=>addEventListener(ev,()=>{if(_wT)writeNow();},{capture:true}));
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&(_wT||_wMir))writeNow();},{capture:true});
+/* at boot: read the IndexedDB copy when localStorage had nothing usable */
+async function bootStore(){
+  let r={ok:false};
+  for(let i=0;i<3&&!r.ok;i++){r=await idbGet();if(!r.ok)await new Promise(z=>setTimeout(z,300));}
+  const v=r.ok&&r.v&&typeof r.v.json==='string'?r.v:null;
+  let got=false;
+  if(v){try{S=fix(JSON.parse(v.json));_lgIdx=null;got=true;}catch(e){}}
+  if(!got&&BOOT_IDB==='big'){
+    /* the data is there but could not be opened right now: never overwrite it with an empty state */
+    setTimeout(()=>{try{toast(t('Couldn’t open saved words. Close and reopen the app.'));}catch(e){}},600);
+    return;                                   /* writes stay locked for this session */
+  }
+  _wLock=false;
+  if(got&&BOOT_IDB!=='big')writeNow();       /* recovered → put it back into localStorage too */
 }
 function migrate(d){ // v1 -> v2
   (d.sets||[]).forEach(s=>s.words.forEach(w=>{w.arch=(w.box||0)>=3;w.added=w.added||Date.now();}));
@@ -1014,7 +1101,7 @@ function rescueHolders(){
     h.words=h.words.filter(w=>w.arch);
   });
 }
-const save=()=>{rescueHolders();_lgIdx=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast(t('No storage space left'))};cloudKick();};
+const save=()=>{rescueHolders();_lgIdx=null;persist();cloudKick();};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const q1=s=>String(s??'').replace(/[\\']/g,'\\$&');
@@ -1792,7 +1879,7 @@ async function pullPrefs(me,quiet){
   if(error){prefsErr=errText(error).slice(0,140)||'error';if(colMissing(error))noPrefsSync=true;return;}
   let ch=false;
   if(data){if(data.stats&&mergeStats(data.stats))ch=true;if(data.settings&&mergeSettings(data.settings))ch=true;}
-  if(ch){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+  if(ch)persist();
 }
 /* merge whatever the profile row already carried (called right after sign-in) */
 function mergePrefsFrom(profile){
@@ -1857,7 +1944,7 @@ async function cloudPush(){
       else pushErr=errText(error).slice(0,140)||'error';
     }
     if(prefsDirty)await pushPrefs(me);
-    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+    persist();
   }catch(e){}
   syncing=false;
   if(PULLAGAIN){PULLAGAIN=false;setTimeout(()=>cloudPull().then(softRender),250);}
@@ -1922,7 +2009,7 @@ function mergeCloud(cs,cw,authoritative){
     if(authoritative)S.sets.forEach(s=>{s.words=s.words.filter(w=>wordIds.has(w.id)||!w.synced);});
     S.sets.forEach(sortPos);
     _lgIdx=null;
-    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+    persist();
   }catch(e){}
 }
 async function cloudDeleteSet(s){
@@ -6179,7 +6266,7 @@ function liveRow(table,p){
         else{liveCatchUp();return;}                    /* a word for a list we don't have yet */
         touched=true;
       }
-      if(touched){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+      if(touched)persist();
     }
     liveRefresh(owner&&owner!==me?owner:null,touched||!mine);
   }catch(e){}
@@ -6221,6 +6308,7 @@ setInterval(liveCheck,20000);
   window[n]=function(){const r=o.apply(this,arguments);if($('#qb')||$('#app .topbar')||$('#app .pbar')||$('#app .qdot')||$('#app .tiles'))studyBusy=true;return r;};
 });
 /* ---------- boot ---------- */
+function bootApp(){
 loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
 applyTheme();
 try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.addEventListener&&mq.addEventListener('change',()=>{if((S.settings.theme||'auto')==='auto')applyTheme();});}}catch(e){}
@@ -6232,7 +6320,10 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 setInterval(pingSeen,120000);
 setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(softRender);},150000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+if('serviceWorker' in navigator){const reg=()=>navigator.serviceWorker.register('sw.js').catch(()=>{});if(document.readyState==='complete')reg();else addEventListener('load',reg);}
+}
+if(BOOT_IDB){_wLock=true;const a=$('#app');if(a)a.innerHTML=skel(5);bootStore().then(bootApp,bootApp);}
+else bootApp();
 </script>
 </body>
 </html>
