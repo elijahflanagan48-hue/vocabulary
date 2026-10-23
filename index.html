@@ -951,6 +951,8 @@ Object.assign(RU_DICT,{"Library": "Библиотека", "Irregular verbs: esse
 Object.assign(RU_DICT,{"Moved to Archive":"В Архив","Archive review: results don't change progress.":"Повторение из Архива: результаты не меняют прогресс."});
 Object.assign(RU_DICT,{"Algorithm": "Алгоритм", "Intervals": "Интервалы", "beta": "бета", "FSRS picks the next review for each word separately: words you know well come back less often, tricky ones more often. Current due dates stay; FSRS takes over after each word’s next review.": "FSRS подбирает следующее повторение для каждого слова отдельно: хорошо знакомые слова возвращаются реже, трудные чаще. Текущие сроки сохраняются; FSRS подключится после очередного повторения каждого слова.", "Fixed steps: the same schedule for every word. The default.": "Фиксированные шаги: одно расписание для всех слов. Включено по умолчанию.", "Desired retention": "Желаемое запоминание", "The chance that you still remember a word when it comes back. Higher means more reviews.": "С какой вероятностью вы помните слово, когда оно возвращается. Чем выше, тем больше повторений."});
 Object.assign(RU_DICT,{"Ask again sooner":"Спросить раньше","The word stays in the Archive; FSRS brings it back after a shorter break.":"Слово останется в Архиве; FSRS вернёт его после более короткого перерыва."});
+Object.assign(RU_DICT,{"Type any number from 1 to":"Введите любое число от 1 до","Enter the number of questions":"Введите количество вопросов"});
+Object.assign(RU_DICT,{"Matching groups several words into one question, so the total can be smaller.":"«Подбор» объединяет несколько слов в один вопрос, поэтому вопросов может получиться меньше."});
 function load(){
   try{
     let raw=localStorage.getItem(KEY);
@@ -4372,9 +4374,13 @@ function startLearn(review){
 function testSetup(review){
   const pool=poolNow();if(!pool.length)return toast(t('No words'));
   const n=pool.length;const opts=[...new Set([5,10,20,n].filter(v=>v<=n))].sort((a,b)=>a-b);
+  let last=0;try{last=parseInt(localStorage.getItem('vocab.tn')||'0',10)||0;}catch(e){}
+  const def=Math.min(n,last>0?last:10);
   sheet(`<h2>${t('Test')}</h2>
    <div class="field"><label>${t('How many questions')}</label>
-     <select class="inp" id="tn">${opts.map(v=>`<option value="${v}">${v===n?t('All words')+' ('+n+')':v}</option>`).join('')}</select></div>
+     <input class="inp" id="tn" type="number" inputmode="numeric" min="1" max="${n}" value="${def}" oninput="tnSync()" onkeydown="if(event.key==='Enter'){event.preventDefault();beginTest(${!!review});}">
+     <div class="sel-opt" id="tnOpts" style="margin-top:8px">${opts.map(v=>`<button data-n="${v}" onclick="tnSet(${v})">${v===n?t('All words')+' ('+n+')':v}</button>`).join('')}</div>
+     <div class="hint">${t('Type any number from 1 to')} ${n}. ${t('Matching groups several words into one question, so the total can be smaller.')}</div></div>
    <div class="field"><label>${t('Question types')}</label><div class="stack">
      ${[['k1',t('Multiple choice')],['k2',t('Type the answer')],['k3',t('True / false')],['k4',t('Matching')]].map(o=>
        `<div class="toggle" onclick="const sw=this.querySelector('.sw');sw.classList.toggle('on');"><label>${o[1]}</label><div class="sw on" id="${o[0]}"><i></i></div></div>`).join('')}</div></div>
@@ -4388,11 +4394,17 @@ function testSetup(review){
      })()}</div>
    ${review?'<div class="hint">'+t('Archive review: results don\'t change progress.')+'</div>':''}
    <button class="btn pri" onclick="beginTest(${!!review})">${t('Start test')}</button>`);
+  tnSync();
 }
+function tnSync(){const v=+($('#tn')||{}).value;document.querySelectorAll('#tnOpts button').forEach(b=>b.classList.toggle('on',+b.dataset.n===v));}
+function tnSet(v){const i=$('#tn');if(i){i.value=v;tnSync();}}
 function beginTest(review){
   const kinds=[$('#k1').classList.contains('on')&&'mc',$('#k2').classList.contains('on')&&'type',$('#k3').classList.contains('on')&&'tf',$('#k4').classList.contains('on')&&'match'].filter(Boolean);
   if(!kinds.length)return toast(t('Pick at least one type'));
-  const n=+$('#tn').value;closeSheet();runTest(shuffle(poolNow()).slice(0,n),kinds,review);
+  const max=poolNow().length;let n=Math.round(+$('#tn').value);
+  if(!(n>=1))return toast(t('Enter the number of questions'));
+  n=Math.min(n,max);try{localStorage.setItem('vocab.tn',String(n));}catch(e){}
+  closeSheet();runTest(shuffle(poolNow()).slice(0,n),kinds,review);
 }
 /* an unfinished test is kept on the device, so a stray Back or a refresh doesn't lose it */
 const TKEY='vocab.test';
