@@ -4219,17 +4219,76 @@ function mqHtml(q,a,sel){
   }).join('')+'</div>';
 }
 /* ---------- questions engine ---------- */
+/* ---- wrong answers that are worth thinking about: same part of speech, similar form ---- */
+const ruChunks=w=>String(w.ru||'').toLowerCase().replace(/\(.*?\)/g,' ').split(/[;,\/]/).map(x=>x.trim()).filter(Boolean);
+const ADV_EN=new Set('soon often always never sometimes usually already still yet just almost quite very too also again here there now then today tomorrow yesterday well fast hard late early away together maybe perhaps rather really actually nearly hardly ever once twice mostly together abroad upstairs downstairs outside inside nowhere everywhere anywhere somewhere else instead meanwhile however therefore'.split(' '));
+const ADV_RU=new Set('часто скоро всегда никогда иногда обычно уже ещё еще почти очень слишком также снова здесь там сейчас теперь потом сегодня завтра вчера вместе поздно рано далеко близко возможно вероятно довольно действительно фактически едва однако поэтому вместо'.split(' '));
+/* a rough part of speech from the Russian translation and the word itself: v, adj, adv, n, phr */
+function posOf(w){
+  const en=String(w.en||'').toLowerCase().trim(),lg=langOf(w);
+  const ch=ruChunks(w),head=(ch[0]||'').split(/\s+/)[0]||'';
+  const isV=/(ть|ться|ти|тись|чь)$/.test(head)&&head.length>3;
+  const multi=/\s/.test(en.replace(/^to\s+/,''));
+  if(lg==='en'&&(/^to\s/.test(en)||en.split(/\s+/).length===3&&typeof irregOf==='function'&&irregOf(en)))return 'v';
+  if(multi)return isV?'v':'phr';
+  if(isV)return 'v';
+  if(ADV_EN.has(en)||ADV_RU.has(head))return 'adv';
+  if(/(ый|ий|ой|ая|яя|ое|ее|ые|ие)$/.test(head)&&head.length>3)return 'adj';
+  if(lg==='en'){
+    if(/ly$/.test(en)&&en.length>4&&/[оеи]$/.test(head))return 'adv';
+    if(/(ful|ous|ive|able|ible|ical|less|ish|ent|ant)$/.test(en)&&en.length>5)return 'adj';
+    if(/(tion|sion|ment|ness|ity|ship|hood|ism|er|or|ist)$/.test(en))return 'n';
+  }
+  if(/(о|е)$/.test(head)&&/^[а-яё]+$/.test(head)&&lg==='en'&&/ly$/.test(en))return 'adv';
+  return 'n';
+}
+function lev(a,b){
+  const m=a.length,n=b.length;if(!m)return n;if(!n)return m;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur;}
+  return prev[n];
+}
+const strSim=(a,b)=>{a=String(a).toLowerCase();b=String(b).toLowerCase();const L=Math.max(a.length,b.length)||1;
+  let suf=0;while(suf<3&&suf<a.length&&suf<b.length&&a[a.length-1-suf]===b[b.length-1-suf])suf++;
+  return Math.max(0,1-lev(a,b)/L)+suf*0.12;};
+/* the people who answer should be tempted, not given a free pass; some randomness keeps repeats fresh */
+function pickDecoys(cands,w,dir,k){
+  const pw=posOf(w),mine=ruChunks(w),tw=dir==='en2ru'?(mine[0]||''):String(w.en||'').toLowerCase();
+  const sc=cands.map(x=>{
+    const tx=dir==='en2ru'?(ruChunks(x)[0]||''):String(x.en||'').toLowerCase();
+    const lenSim=1-Math.abs(tx.length-tw.length)/(Math.max(tx.length,tw.length)||1);
+    const wc=(a)=>a.split(/\s+/).length;
+    return{x,tx,s:(posOf(x)===pw?3:0)+2*strSim(tx,tw)+0.8*lenSim+(wc(tx)===wc(tw)?0.4:0)+Math.random()*0.9};
+  }).sort((a,b)=>b.s-a.s);
+  const out=[],seen=new Set([tw]);
+  for(const c of sc){if(out.length>=k)break;if(!c.tx||seen.has(c.tx))continue;seen.add(c.tx);out.push(c.x);}
+  return out;
+}
+/* every other word of the same language: the session pool first, then the whole dictionary */
+function decoyPool(pool,w,lg){
+  const mine=new Set(ruChunks(w)),en=String(w.en||'').toLowerCase().trim(),seen=new Set(),out=[];
+  const add=x=>{
+    if(!x||x===w||x.id===w.id||seen.has(x.id)||langOf(x)!==lg)return;
+    seen.add(x.id);
+    if(String(x.en||'').toLowerCase().trim()===en)return;
+    if(ruChunks(x).some(c=>mine.has(c)))return;      /* a synonym with the same translation would be a second right answer */
+    out.push(x);
+  };
+  pool.forEach(add);S.sets.forEach(st=>st.words.forEach(add));
+  return out;
+}
 function mkQ(pool,w,kind,forceDir){
   const lg=langOf(w);
   /* decoys must be in the same language as the word, or the question makes no sense */
-  const others=pool.filter(x=>x!==w&&langOf(x)===lg);
+  const others=decoyPool(pool,w,lg);
   if(kind==='mc'&&others.length<1)kind='type';
   if(kind==='tf'&&others.length<1)kind='type';
   const dir=forceDir||(Math.random()<.5?'en2ru':'ru2en');
-  if(kind==='mc'){const ds=shuffle(others).slice(0,Math.min(3,others.length));
+  if(kind==='mc'){const ds=pickDecoys(others,w,dir,Math.min(3,others.length));
     return{w,lg,type:'mc',dir,opts:shuffle([w,...ds]).map(x=>({t:dir==='en2ru'?x.ru:x.en,c:x===w}))};}
-  if(kind==='tf'){const isTrue=Math.random()<.5;const d=isTrue?w:shuffle(others)[0];
+  if(kind==='tf'){const isTrue=Math.random()<.5;
     const td=forceDir==='ru2en'?'ru2en':'en2ru';
+    const d=isTrue?w:shuffle(pickDecoys(others,w,td==='ru2en'?'ru2en':'en2ru',3))[0]||others[0];
     return{w,lg,type:'tf',dir:td,shown:td==='ru2en'?d.en:d.ru,isTrue};}
   return{w,lg,type:'type',dir};
 }
