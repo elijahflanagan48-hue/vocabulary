@@ -836,6 +836,60 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .cfnote b{font-weight:750}
 .ffnote{border-radius:14px;padding:10px 13px;margin-top:8px;font-size:14px;line-height:1.45;background:var(--bad-soft);color:var(--bad)}
 .ffnote b{font-weight:750}
+/* ---- v97: word formation ---- */
+.wf-lv{display:flex;gap:8px;margin:14px 0 6px}
+.wf-lv button{flex:1;display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:11px 12px;border-radius:14px;border:1.5px solid var(--line2);background:var(--surf);color:var(--tx);font:inherit;cursor:pointer}
+.wf-lv button b{font-size:15px;letter-spacing:-.01em}
+.wf-lv button span{font-size:12px;color:var(--mut);line-height:1.25}
+.wf-lv button.on{border-color:var(--pri);background:var(--pri-soft)}
+.wf-lv button.on b{color:var(--pri-d)}
+.wfcard{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);padding:16px 16px 6px;margin-top:12px}
+.wfcard h2{font-size:19px;font-weight:750;letter-spacing:-.02em;text-align:center;margin:2px 0 12px;color:var(--tx)}
+.wfintro{font-size:17px;line-height:1.7;padding-bottom:10px;color:var(--tx)}
+.wfr{display:grid;grid-template-columns:1fr auto;column-gap:12px;padding:11px 8px;margin:0 -8px;border-top:1px solid var(--line);border-radius:12px;transition:background .15s}
+.wfr.cur{background:var(--pri-soft);border-top-color:transparent}
+.wfx{font-size:17px;line-height:1.95;color:var(--tx)}
+.wfb{display:flex;flex-direction:column;gap:2px;align-items:flex-end;text-align:right;padding-top:5px;font-size:11.5px;font-weight:750;letter-spacing:.07em;color:var(--mut);word-break:keep-all}
+.wfg{display:inline-block;white-space:nowrap;margin:0 2px;vertical-align:middle;line-height:1.5}
+.wfg i{font-style:normal;font-size:11px;font-weight:700;color:var(--fade);vertical-align:middle;margin-right:4px}
+.wfg input{display:inline-block;vertical-align:middle;font:inherit;font-size:17px;line-height:1.5;height:1.7em;color:var(--pri);font-weight:600;border:0;border-bottom:1.5px solid var(--line2);background:transparent;padding:0 2px;margin:0;border-radius:0;min-width:5.5ch;width:8ch;outline:none;-webkit-appearance:none;appearance:none;text-align:left}
+.wfg input:focus{border-bottom:2px solid var(--pri)}
+.wfg.blank input{border-bottom-color:var(--bad)}
+.wfbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:none;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:var(--surf);border-top:1px solid var(--line);font-size:14px;color:var(--mut);box-shadow:0 -4px 16px rgba(15,26,46,.06)}
+.wfbar.on{display:flex}
+.wfbar b{color:var(--pri)}
+.wfbar button{border:0;background:transparent;color:var(--pri);font:inherit;font-weight:650;padding:8px 6px;cursor:pointer;min-width:46px}
+.wfbar button:disabled{color:var(--fade);opacity:.5}
+.wfbar .mid{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wfres{font-size:17px;line-height:2;color:var(--tx)}
+.wfa{display:inline;white-space:normal;border-bottom:2px solid var(--ok);font-weight:650;color:var(--ok);padding:0 1px}
+.wfa.bad{border-bottom-color:var(--bad);color:var(--bad)}
+.wfa i{font-style:normal;font-size:10.5px;font-weight:800;color:#fff;background:var(--ok);border-radius:8px;padding:1px 6px;margin-right:4px;vertical-align:2px}
+.wfa.bad i{background:var(--bad)}
+.wfa s{opacity:.65;font-weight:500;margin-right:4px}
+.wfbase{display:inline-block;font-size:11px;font-weight:750;letter-spacing:.06em;color:var(--mut);background:var(--surf2);border-radius:7px;padding:0 6px;margin:0 3px;vertical-align:2px}
+.wfgc{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;margin-top:10px}
+.wfgc .h{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:baseline;font-size:16px}
+.wfgc .h .n{font-weight:800;color:var(--ok)}
+.wfgc.bad .h .n{color:var(--bad)}
+.wfgc .h .b{color:var(--mut);font-weight:600;font-size:14px;letter-spacing:.03em}
+.wfgc .h .a{font-weight:750}
+.wfgc .ch{display:inline-block;font-size:12px;font-weight:650;color:var(--pri-d);background:var(--pri-soft);border-radius:8px;padding:2px 8px}
+.wfgc .ans{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.wfgc .ans span{font-size:15px;font-weight:600;border-radius:10px;padding:3px 10px}
+.wfgc .ans .no{background:var(--bad-soft);color:var(--bad)}
+.wfgc .ans .yes{background:var(--ok-soft);color:var(--ok)}
+.wfgc .why{margin-top:8px;color:var(--mut);font-size:14.5px;line-height:1.45}
+.wfbars{background:var(--surf);border:1px solid var(--line);border-radius:var(--r);padding:6px 16px;margin-top:14px}
+.wfbars .h{font-size:14px;font-weight:700;color:var(--mut);padding:10px 0 8px;border-bottom:1px solid var(--line)}
+.wfbars .r{display:grid;grid-template-columns:1fr 1.05fr 42px;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:15px}
+.wfbars .r:last-child{border-bottom:0}
+.wfbars .tr{height:7px;border-radius:5px;background:var(--line)}
+.wfbars .tr i{display:block;height:100%;border-radius:5px;background:var(--pri)}
+.wfbars .p{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.wfbars .r.low .tr i{background:var(--warn)}
+.wfnote{color:var(--mut);font-size:14.5px;line-height:1.45;margin:12px 4px}
+@media (max-width:380px){.wfx,.wfg input{font-size:16px}.wfb{font-size:10.5px}}
 </style>
 </head>
 <body>
@@ -1864,7 +1918,7 @@ function permBlocked(e){const m=errText(e);return m.indexOf('row-level')>=0||m.i
 const dayNum=k=>{if(!k)return 0;const p=String(k).split('-');return (+p[0]||0)*10000+(+p[1]||0)*100+(+p[2]||0);};
 
 let SEEN=0,_seenT=0;
-function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,seen:SEEN||0,conf:st.conf||{}};}
+function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,seen:SEEN||0,conf:st.conf||{},wf:st.wf||{}};}
 /* a student's device tells the teacher it was opened: at most once every ~2 minutes while visible */
 function pingSeen(){
   try{
@@ -1898,6 +1952,13 @@ function mergeStats(r){
   if(r.conf&&typeof r.conf==='object'){
     const lc=l.conf||(l.conf={});
     Object.keys(r.conf).forEach(k=>{const a=r.conf[k],b=lc[k];if(a&&typeof a==='object'&&(!b||(+a.u||0)>(+b.u||0))){lc[k]=Object.assign({},a);ch=true;}});
+  }
+  /* word formation: finished texts keep the later result; the chosen level follows the newer choice */
+  if(r.wf&&typeof r.wf==='object'){
+    const lw=wfSt();
+    if(r.wf.d&&typeof r.wf.d==='object')Object.keys(r.wf.d).forEach(lv=>{const a=r.wf.d[lv];if(!a||typeof a!=='object')return;const b=lw.d[lv]||(lw.d[lv]={});
+      Object.keys(a).forEach(i=>{const v=+a[i]||0;if(v>(+b[i]||0)){b[i]=v;ch=true;}});});
+    if(r.wf.lv&&(+r.wf.u||0)>(+lw.u||0)&&r.wf.lv!==lw.lv){lw.lv=r.wf.lv;lw.u=+r.wf.u;ch=true;}
   }
   if((l.best||0)<(l.streak||0)){l.best=l.streak;ch=true;}
   if(ch)l.upd=Math.max(l.upd||0,r.upd||0,Date.now());   /* re-sync the merged truth */
@@ -4514,6 +4575,186 @@ function startConf(key){
   }
 }
 
+/* ================= v97: word formation ================= */
+Object.assign(RU_DICT,{"Word formation":"Словообразование","Practice":"Практика","Texts for three levels · new every week":"Тексты трёх уровней · новые каждую неделю",
+"Change the word in capitals so that it fits the gap in meaning and grammar.":"Измените слово, написанное заглавными, так, чтобы оно подошло к пропуску по смыслу и грамматике.",
+"A2–B1 level":"Базовый","Short texts, simple prefixes and suffixes":"Короткие тексты, простые приставки и суффиксы",
+"B1–B2 level":"Средний","All the common prefixes and suffixes":"Все частые приставки и суффиксы",
+"B2–C1 level":"Продвинутый","Academic texts, more word-building patterns":"Академические тексты, больше моделей",
+"wf text":"текст","wf texts":"текста","wf texts_many":"текстов","done":"пройдено","New text":"Новый текст","Check":"Проверить","Next text":"Следующий текст","Task":"Задание","of":"из",
+"Progress by type":"Прогресс по типам","Fill in all the gaps":"Заполните все пропуски","Mistakes":"Ошибки","spelling":"орфография","word form":"форма слова","Correct":"Верно",
+"Couldn’t load the texts — check the internet connection and try again.":"Не удалось загрузить тексты — проверьте интернет и попробуйте снова.","Loading…":"Загрузка…",
+"You have done every text — starting again.":"Вы прошли все тексты — начинаем сначала.","Negatives (un-, in-, dis-, -less)":"Отрицания (un-, in-, dis-, -less)",
+"Nouns":"Существительные","Adjectives":"Прилагательные","Adverbs":"Наречия","Verbs":"Глаголы","Numerals":"Числительные","Plural and verb endings":"Мн. число и окончания",
+"Do a few texts to see your progress.":"Решите несколько текстов, и здесь появится прогресс.","Most mistakes are in":"Чаще всего ошибки в категории","The next texts will have more of them.":"В следующих текстах их будет больше.",
+"texts":"текстов","tasks":"заданий","Exit this text?":"Выйти из текста? Ответы не сохранятся."});
+const WF_LVS=[['a2','A2–B1 level','Short texts, simple prefixes and suffixes'],['b2','B1–B2 level','All the common prefixes and suffixes'],['c1','B2–C1 level','Academic texts, more word-building patterns']];
+const WF_DAY0=19723;                      /* 1 Jan 2024, in days since 1970 */
+let WF={packs:{},ix:null},WFT=null;
+const wfPlural=n=>plr(n,t('wf text'),t('wf texts'),t('wf texts_many'));
+const wfEN=()=>(S.settings.lang||'ru')==='en';
+const wfPosName=p=>wfEN()?p:({noun:'сущ.',adj:'прил.',adv:'нареч.',verb:'глаг.',num:'числ.'})[p]||p;
+/* progress: stats.wf = {lv:'b2', u:ts, d:{a2:{<text index>:day*128+mask}}}. mask bit k = gap k was right. Only numbers, so it stays tiny and merges by max */
+function wfSt(){const st=S.stats;if(!st.wf||typeof st.wf!=='object')st.wf={};const w=st.wf;if(!w.d||typeof w.d!=='object')w.d={};if(!w.lv)w.lv='b2';return w;}
+function wfDone(lv){const w=wfSt();return w.d[lv]||(w.d[lv]={});}
+async function wfLoad(lv){
+  const have=WF.packs[lv];if(have)return have;
+  const ix=await fetch('wf/index.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw 0;return r.json();});
+  WF.ix=ix;const L=(ix.levels||{})[lv];if(!L||!L.files)throw 0;
+  const parts=await Promise.all(L.files.map(f=>fetch('wf/'+f.name+'?v='+f.v).then(r=>{if(!r.ok)throw 0;return r.json();})));
+  return WF.packs[lv]=[].concat(...parts);
+}
+/* what a gap trains: for the progress screen and for choosing the next text */
+const WF_CATS=['neg','noun','adj','adv','verb','num','end'];
+function wfCats(g){
+  const m=g[2]||'',p=g[3],c=[];
+  if(/(^|[^a-z])(un|in|im|il|ir|non)-|-less|dis-/.test(m))c.push('neg');
+  if(p&&WF_CATS.indexOf(p)>=0)c.push(p);
+  if(/plural|3rd|past|-ing form|\+\s*-?s\b/.test(m))c.push('end');
+  return c;
+}
+function wfStats(lv){
+  const list=WF.packs[lv]||[],d=wfDone(lv),out={};WF_CATS.forEach(k=>out[k]=[0,0]);
+  Object.keys(d).forEach(i=>{const x=list[+i];if(!x)return;const mask=(+d[i])%128;
+    x.g.forEach((g,k)=>{const ok=(mask>>k)&1;wfCats(g).forEach(c=>{out[c][1]++;out[c][0]+=ok;});});});
+  return out;
+}
+function wfPick(lv){
+  const list=WF.packs[lv]||[],d=wfDone(lv),un=[];
+  for(let i=0;i<list.length;i++)if(!(i in d))un.push(i);
+  if(!un.length){toast(t('You have done every text — starting again.'));
+    return Object.keys(d).map(Number).sort((a,b)=>(d[a]-d[b])).slice(0,Math.max(1,Math.floor(list.length/3)))[Math.random()*Math.max(1,Math.floor(list.length/3))|0];}
+  /* a few at random; take the one with the most gaps of the kind this student misses most */
+  const st=wfStats(lv),weak={};WF_CATS.forEach(k=>{const [a,n]=st[k];weak[k]=n<6?0.35:1-a/n;});
+  let best=-1,bi=un[0];
+  shuffle(un).slice(0,12).forEach(i=>{const sc=list[i].g.reduce((s,g)=>s+wfCats(g).reduce((q,c)=>q+weak[c],0),0)+Math.random()*.6;if(sc>best){best=sc;bi=i;}});
+  return bi;
+}
+function wfSplit(tx){
+  const out=[],re=/[.!?]["”’')]*\s+(?=["“‘(]?[A-Z0-9{])/g;let s=0,m;
+  while((m=re.exec(tx))){
+    const tok=tx.slice(s,m.index+1).split(/\s+/).pop();
+    if(/^(Mr|Mrs|Ms|Dr|St|No|vs|etc|Prof|Mt|Jr|Sr)\.$/.test(tok)||/^[A-Z]\.$/.test(tok))continue;
+    out.push(tx.slice(s,m.index+m[0].length));s=m.index+m[0].length;
+  }
+  out.push(tx.slice(s));return out.filter(x=>x.trim());
+}
+/* the text as the exam prints it: opening sentences, then one row per sentence with gaps and the base word beside it */
+function wfRows(tx){
+  const ss=wfSplit(tx),rows=[];let intro=[];
+  ss.forEach(s=>{
+    const has=/\{\d\}/.test(s);
+    if(has)rows.push({t:s,k:[...s.matchAll(/\{(\d)\}/g)].map(m=>+m[1])});
+    else if(rows.length)rows[rows.length-1].t+=s;
+    else intro.push(s);
+  });
+  return {intro:intro.join('').trim(),rows};
+}
+const wfFill=(s,fn)=>s.split(/\{(\d)\}/).map((p,i)=>i%2?fn(+p):esc(p)).join('');
+function wfGapIn(k){
+  const v=WFT.ans[k-1]||'';
+  return `<span class="wfg${v?'':' blank'}" id="wfg${k}"><i>${k}</i><input id="wfi${k}" data-k="${k}" type="text" ${NOASSIST.replace('enterkeyhint="done"','enterkeyhint="next"')} aria-label="${k}" value="${esc(v)}" style="width:${Math.max(8,v.length+1)}ch" oninput="wfIn(this)" onfocus="wfFocus(${k})" onkeydown="wfKey(event,${k})"></span>`;
+}
+async function wfStart(lv,again){
+  const body=$('#wfBody');if(body)body.innerHTML=`<div class="hint" style="margin:18px 2px">${t('Loading…')}</div>`;
+  try{await wfLoad(lv);}catch(e){return toast(t('Couldn’t load the texts — check the internet connection and try again.'));}
+  const w=wfSt();if(w.lv!==lv){w.lv=lv;w.u=Date.now();S.stats.upd=w.u;save();}
+  const idx=wfPick(lv);if(idx==null)return;
+  WFT={lv,idx,ans:[],res:null};go('wftask');
+}
+VIEWS.wf=function(app){
+  const w=wfSt(),lv=w.lv,L=WF_LVS.find(x=>x[0]===lv)||WF_LVS[1];
+  const done=Object.keys(wfDone(lv)).length;
+  app.innerHTML=hdr(t('Word formation'),"go('library')")+
+   `<div class="hint" style="margin:12px 2px 2px;font-size:15px;line-height:1.45">${t('Change the word in capitals so that it fits the gap in meaning and grammar.')}</div>
+    <div class="wf-lv">${WF_LVS.map(x=>`<button class="${x[0]===lv?'on':''}" onclick="wfLevel('${x[0]}')"><b>${x[0]==='a2'?'A2–B1':x[0]==='b2'?'B1–B2':'B2–C1'}</b><span>${t(x[2])}</span></button>`).join('')}</div>
+    <div class="hint" id="wfCount" style="margin:6px 2px 14px;font-size:14px"></div>
+    <div id="wfBody"><button class="btn pri" style="width:100%" onclick="wfStart('${lv}')">${ic('pen',18)}${t('New text')}</button>
+    <div style="height:10px"></div><button class="btn ghost" style="width:100%" onclick="go('wfprog')">${ic('trend',18)}${t('Progress by type')}</button></div>`+tabBar();
+  wfLoad(lv).then(l=>{const c=$('#wfCount');if(c&&view.name==='wf')c.textContent=`${l.length} ${wfPlural(l.length)} · ${t("done")} ${done}`;}).catch(()=>{});
+};
+function wfLevel(lv){const w=wfSt();if(w.lv===lv)return;w.lv=lv;w.u=Date.now();S.stats.upd=w.u;save();render();}
+VIEWS.wftask=function(app){
+  if(!WFT||!(WF.packs[WFT.lv]||[])[WFT.idx])return go('wf');
+  studyBusy=true;tabWanted=false;
+  if(WFT.res)return wfShowResult(app);
+  const x=WF.packs[WFT.lv][WFT.idx],R=wfRows(x.x);
+  app.innerHTML=hdr(t('Word formation'),"if(!document.querySelector('.wfg input')||confirm(t('Exit this text?')))go('wf')")+
+   `<div class="wfcard"><h2>${esc(x.t)}</h2>${R.intro?`<div class="wfintro">${esc(R.intro)}</div>`:''}
+    ${R.rows.map((r,i)=>`<div class="wfr" id="wfr${i}" data-k="${r.k.join(',')}"><div class="wfx">${wfFill(r.t,wfGapIn)}</div><div class="wfb">${r.k.map(k=>`<span>${esc(x.g[k-1][0])}</span>`).join('')}</div></div>`).join('')}</div>
+    <div style="height:14px"></div><button class="btn pri" style="width:100%" onclick="wfCheck()">${t('Check')}</button><div style="height:120px"></div>
+    <div class="wfbar" id="wfbar"><button id="wfPrev" onclick="wfGo(-1)"></button><span class="mid" id="wfMid"></span><button id="wfNext" onclick="wfGo(1)"></button></div>`;
+  window.scrollTo(0,0);
+  if(window.visualViewport&&!wfTask._vv){wfTask._vv=1;['resize','scroll'].forEach(e=>visualViewport.addEventListener(e,wfBarPos));}
+};
+const wfTask=VIEWS.wftask;
+function wfBarPos(){const b=$('#wfbar'),v=window.visualViewport;if(!b||!v)return;b.style.bottom=Math.max(0,innerHeight-v.height-v.offsetTop)+'px';}
+let WFcur=0;
+function wfFocus(k){
+  WFcur=k;const x=WF.packs[WFT.lv][WFT.idx],n=x.g.length;
+  document.querySelectorAll('.wfr.cur').forEach(e=>e.classList.remove('cur'));
+  const inp=$('#wfi'+k);if(inp){const r=inp.closest('.wfr');if(r)r.classList.add('cur');}
+  const bar=$('#wfbar');if(!bar)return;bar.classList.add('on');wfBarPos();
+  $('#wfPrev').textContent=k>1?'‹ '+(k-1):'';$('#wfPrev').disabled=k<=1;
+  $('#wfNext').textContent=k<n?(k+1)+' ›':'';$('#wfNext').disabled=k>=n;
+  $('#wfMid').innerHTML=`${t('Task')} <b>${k}</b> ${t('of')} ${n} · ${esc(x.g[k-1][0])}`;
+  setTimeout(()=>{const e=$('#wfi'+k);if(e&&document.activeElement===e&&e.scrollIntoView)e.scrollIntoView({block:'center',behavior:'smooth'});},260);
+}
+document.addEventListener('focusout',e=>{if(!e.target||!e.target.closest||!e.target.closest('.wfg'))return;
+  setTimeout(()=>{if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.wfg'))return;
+    const b=$('#wfbar');if(b)b.classList.remove('on');document.querySelectorAll('.wfr.cur').forEach(x=>x.classList.remove('cur'));},120);});
+function wfIn(el){const k=+el.dataset.k;WFT.ans[k-1]=el.value;el.style.width=Math.max(8,el.value.length+1)+'ch';const g=el.closest('.wfg');if(g)g.classList.toggle('blank',!el.value);}
+function wfGo(d){const n=WF.packs[WFT.lv][WFT.idx].g.length,k=Math.min(n,Math.max(1,WFcur+d)),e=$('#wfi'+k);if(e)e.focus();}
+function wfKey(ev,k){
+  if(ev.key==='Enter'){ev.preventDefault();const n=WF.packs[WFT.lv][WFT.idx].g.length;if(k<n)wfGo(1);else{ev.target.blur();wfCheck();}}
+  else if(ev.key===' '&&true){ev.preventDefault();}      /* answers are one word: a space does nothing */
+}
+const wfNorm=s=>String(s||'').toLowerCase().replace(/[\s'’\-]/g,'');
+function wfDist(a,b){const m=a.length,n=b.length;if(!m||!n)return Math.max(m,n);let p=[...Array(n+1).keys()];
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+function wfCheck(){
+  const x=WF.packs[WFT.lv][WFT.idx],n=x.g.length;
+  for(let k=1;k<=n;k++)if(!wfNorm(WFT.ans[k-1])){toast(t('Fill in all the gaps'));const e=$('#wfi'+k);if(e)e.focus();return;}
+  let mask=0,sp=0,fm=0;const res=x.g.map((g,k)=>{
+    const got=wfNorm(WFT.ans[k]),keys=g[1].map(wfNorm),ok=keys.indexOf(got)>=0;
+    if(ok)mask|=1<<k;else{const near=Math.min(...keys.map(a=>wfDist(got,a)))<=2&&got.length>=4;near?sp++:fm++;}
+    return {ok,got:String(WFT.ans[k]).trim()};});
+  const d=wfDone(WFT.lv),day=Math.floor(Date.now()/864e5)-WF_DAY0;
+  d[WFT.idx]=day*128+mask;S.stats.upd=Date.now();save();
+  WFT.res={res,sp,fm,ok:res.filter(r=>r.ok).length};
+  render();window.scrollTo(0,0);
+}
+function wfShowResult(app){
+  const x=WF.packs[WFT.lv][WFT.idx],R=WFT.res,n=x.g.length,pct=Math.round(R.ok/n*100);
+  const err=[R.sp?`${t('spelling')} — ${R.sp}`:'',R.fm?`${t('word form')} — ${R.fm}`:''].filter(Boolean).join(', ');
+  const ann=wfFill(x.x,k=>{const g=x.g[k-1],r=R.res[k-1];
+    return `<span class="wfa${r.ok?'':' bad'}"><i>${k}</i>${r.ok?'':`<s>${esc(r.got)}</s>`}${esc(g[1][0])}</span><span class="wfbase">${esc(g[0])}</span>`;});
+  app.innerHTML=hdr(t('Word formation'),"go('wf')")+
+    celHero('test',{pct,title:scoreTitle(pct),sub:`${R.ok} / ${n}${err?' · '+t('Mistakes')+': '+err:''}`})+
+    `<div class="wfcard"><h2>${esc(x.t)}</h2><div class="wfres">${ann}</div></div>`+
+    x.g.map((g,i)=>{const r=R.res[i];
+      return `<div class="wfgc${r.ok?'':' bad'}"><div class="h"><span class="n">${i+1}</span><span class="b">${esc(g[0])}</span><span>→</span><span class="a">${esc(g[1].join(' / '))}</span><span class="ch">${wfPosName(g[3])} ${esc(g[2])}</span></div>
+        ${r.ok?'':`<div class="ans"><span class="no">${esc(r.got)}</span><span class="yes">${esc(g[1][0])}</span></div>`}<div class="why">${esc(g[4])}</div></div>`;}).join('')+
+    `<div style="height:16px"></div><button class="btn pri" style="width:100%" onclick="wfStart('${WFT.lv}')">${t('Next text')}</button>
+     <div style="height:9px"></div><button class="btn ghost" style="width:100%" onclick="go('wfprog')">${t('Progress by type')}</button><div style="height:24px"></div>`;
+  window.scrollTo(0,0);celPlay();
+}
+VIEWS.wfprog=function(app){
+  const lv=wfSt().lv;
+  app.innerHTML=hdr(t('Progress by type'),"go('wf')")+'<div id="wfpBody"><div class="hint" style="margin:18px 2px">'+t('Loading…')+'</div></div>'+tabBar();
+  wfLoad(lv).then(()=>{
+    if(view.name!=='wfprog')return;
+    const d=wfDone(lv),nt=Object.keys(d).length,st=wfStats(lv);
+    const rows=[['neg','Negatives (un-, in-, dis-, -less)'],['noun','Nouns'],['adj','Adjectives'],['adv','Adverbs'],['verb','Verbs'],['num','Numerals'],['end','Plural and verb endings']].filter(r=>st[r[0]][1]>0);
+    let worst=null,wv=2;rows.forEach(r=>{const [a,n]=st[r[0]];if(n>=6&&a/n<wv){wv=a/n;worst=r;}});
+    $('#wfpBody').innerHTML=nt?`<div class="wfbars"><div class="h">${t('Word formation')} · ${nt} ${wfPlural(nt)} · ${rows.length?Object.keys(d).reduce((s,i)=>s+(WF.packs[lv][+i]?WF.packs[lv][+i].g.length:0),0):0} ${t('tasks')}</div>
+      ${rows.map(r=>{const [a,n]=st[r[0]],p=Math.round(a/n*100);return `<div class="r${p<65&&n>=6?' low':''}"><span>${t(r[1])}</span><div class="tr"><i style="width:${p}%"></i></div><span class="p">${p}%</span></div>`;}).join('')}</div>
+      ${worst&&wv<.85?`<div class="wfnote">${t('Most mistakes are in')}: ${t(worst[1])}. ${t('The next texts will have more of them.')}</div>`:''}
+      <button class="btn pri" style="width:100%;margin-top:6px" onclick="wfStart('${lv}')">${t('Next text')}</button>`
+      :`<div class="hint" style="margin:18px 2px">${t('Do a few texts to see your progress.')}</div><button class="btn pri" style="width:100%;margin-top:10px" onclick="wfStart('${lv}')">${t('New text')}</button>`;
+  }).catch(()=>{const b=$('#wfpBody');if(b)b.innerHTML=`<div class="hint" style="margin:18px 2px">${t('Couldn’t load the texts — check the internet connection and try again.')}</div>`;});
+};
+
 /* ---------- questions engine ---------- */
 /* ---- wrong answers that are worth thinking about: same part of speech, similar form ---- */
 const ruChunks=w=>String(w.ru||'').toLowerCase().replace(/\(.*?\)/g,' ').split(/[;,\/]/).map(x=>x.trim()).filter(Boolean);
@@ -6277,6 +6518,7 @@ function libDraw(){
       }).join('');
     }
   }
+  h+=sec(t('Practice'))+libCardHtml('pen',t('Word formation'),t('Texts for three levels · new every week'),'',"go('wf')");
   h+=sec(t('Ready-made sets'));
   h+=LIB_BUILTIN.map(x=>{
     const {sub,set}=libLocal(x);

@@ -1,4 +1,4 @@
-const CACHE = 'vocab-v96';
+const CACHE = 'vocab-v97';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v3.png', './icon-512-v3.png', './icon-mask-512-v3.png', './favicon-32-v3.png', './favicon-192-v3.png',
   './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const OCR_CACHE = 'noeon-ocr-v1';
@@ -65,6 +65,11 @@ self.addEventListener('fetch', e => {
   /* fonts, icons and the PDF libraries do not change between versions: open the saved copy at once,
      refresh it in the background */
   if (/\/lib\//.test(url.pathname)) {          /* large; a new release brings a fresh copy anyway (new cache) */
+    e.respondWith(caches.match(req).then(hit => hit || fetchAndKeep(req)));
+    return;
+  }
+  /* word-formation texts: a file's address carries its version (?v=...), so a saved copy is always the right one */
+  if (/\/wf\/[a-z0-9]+-\d+\.json$/.test(url.pathname)) {
     e.respondWith(caches.match(req).then(hit => hit || fetchAndKeep(req)));
     return;
   }
