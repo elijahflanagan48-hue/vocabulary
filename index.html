@@ -4752,11 +4752,24 @@ const PLS='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="c
 /* ---- pronunciation: the dictionary's transcription and real recordings, with the device voice as a fallback ---- */
 const DICT={};
 const cleanIpa=x=>String(x||'').replace(/^\s*[\/\[]|[\/\]]\s*$/g,'').trim();
+/* transcriptions of the ~19,000 most common words ship with the app: instant, works offline */
+const IPAT={ready:null,d:null};
+function ipaLoad(){
+  if(!IPAT.ready)IPAT.ready=fetch('lib/ipa.json?v=99').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{IPAT.d=j.d||{};return true;}).catch(()=>{IPAT.ready=null;return false;});
+  return IPAT.ready;
+}
 async function dictLookup(word){
-  const q=String(word||'').toLowerCase().trim();
+  const q=String(word||'').toLowerCase().trim().replace(/^to\s+/,'');
   if(!q||/\s/.test(q)||/[^a-z'-]/.test(q))return null;
   if(q in DICT)return DICT[q];
-  const j=await getJson('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(q),7000);
+  await ipaLoad();
+  const keys=famKeys(q);
+  for(const k of keys){
+    const v=IPAT.d&&IPAT.d[k];
+    if(v&&k===q){const [us,uk]=v.split('|');return DICT[q]={uk:uk||us,us:us,auk:'',aus:'',any:us,aany:'',pos:''};}
+  }
+  /* a rare word: ask the online dictionary, but never make the card wait for long */
+  const j=await getJson('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(q),3500);
   if(!Array.isArray(j)||!j.length)return null;
   const o={uk:'',us:'',auk:'',aus:'',any:'',aany:'',pos:''};
   j.forEach(e=>{
@@ -4769,6 +4782,7 @@ async function dictLookup(word){
     });
   });
   o.uk=o.uk||o.any;o.us=o.us||o.any;
+  if(!o.uk&&!o.us)return null;
   DICT[q]=o;return o;
 }
 const ipaStr=o=>o&&(o.uk||o.us)?(o.uk&&o.us&&o.uk!==o.us?o.uk+' | '+o.us:(o.uk||o.us)):'';
@@ -4833,10 +4847,10 @@ function exForms(q){
 /* lower = better. null = not good enough for a learner */
 function exQuality(x,forms,stems,relax){
   const en=String(x.en||'').trim();
-  if(en.length<(relax?14:18)||en.length>(relax?120:95)||EX_BAD.test(en))return null;
+  if(en.length<(relax?14:18)||en.length>(relax>1?150:relax?120:95)||(relax>1?/[\[\]@#\\_*%]|https?:/:EX_BAD).test(en))return null;
   if(!/^[A-Z]/.test(en)||!/[.!?]$/.test(en))return null;
   const ws=(en.toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g)||[]);const n=ws.length;
-  if(n<(relax?3:4)||n>(relax?20:15))return null;
+  if(n<(relax?3:4)||n>(relax>1?26:relax?20:15))return null;
   let s=Math.abs(n-9)*2,rare=0,mid=0,name=0;
   ws.forEach(w=>{
     if(forms.some(f=>w===f))return;
@@ -4844,7 +4858,7 @@ function exQuality(x,forms,stems,relax){
     const b=fqBand(w.replace(/'(s|t|re|ve|ll|d|m)$/,''),'en');
     if(b===5)rare++;else if(b===4)mid++;
   });
-  if(rare>(relax?2:1))return null;
+  if(rare>(relax>1?4:relax?2:1))return null;
   s+=rare*14+mid*3+name*3;
   if(x.ru){
     s-=14;
@@ -4859,38 +4873,41 @@ function exStems(r){
   vals.join(', ').split(/[,;]\s*|\s+/).forEach(v=>{v=v.toLowerCase().replace(/[^а-яё]/g,'');if(v.length>=4)st.add(v.slice(0,Math.max(4,Math.min(6,v.length-2))));});
   return [...st];
 }
-async function tatQuery(q,code,sort){
-  const j=await getJson('https://tatoeba.org/en/api_v0/search?from='+code+'&to=rus&query='+encodeURIComponent(q)+'&orphans=no&unapproved=no&sort='+sort);
-  return ((j&&j.results)||[]).map(r=>{
+async function tatQuery(q,code,sort,page){
+  const j=await getJson('https://tatoeba.org/en/api_v0/search?from='+code+'&to=rus&query='+encodeURIComponent(q)+'&orphans=no&unapproved=no&sort='+sort+(page>1?'&page='+page:''),5500);
+  if(!j)return null;
+  return (j.results||[]).map(r=>{
     const tr=[].concat(...(r.translations||[])).filter(y=>y&&y.lang==='rus'&&y.text);
     const ru=(tr.find(y=>y.isDirect)||tr[0]||{}).text||'';
     return{en:String(r.text||'').trim(),ru:String(ru).trim(),pen:0};
   });
 }
-async function fetchExamples(word,lang,irr,tr){
+/* the translator's own usage examples: quick, and there is almost always something for a common word */
+async function exGoogle(q,forms){
+  const j=await getJson('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=ex&q='+encodeURIComponent(q),5000);
+  if(!j)return null;
+  const out=[];
+  const walk=a=>{if(typeof a==='string'){if(/<b>/i.test(a))out.push(a);}else if(Array.isArray(a))a.forEach(walk);};
+  walk(j);
+  return out.map(x=>{
+    let e=x.replace(/<[^>]+>/g,'').replace(/&#39;|&quot;|&amp;/g,m=>({'&#39;':"'",'&quot;':'"','&amp;':'&'}[m])).replace(/\s+/g,' ').trim();
+    if(e)e=e.charAt(0).toUpperCase()+e.slice(1);
+    if(e&&!/[.!?]$/.test(e))e+='.';
+    return{en:e,ru:'',pen:6};
+  }).filter(x=>x.en&&usesForm(x.en,forms));
+}
+const RUC={};
+async function exRu2(en){if(en in RUC)return RUC[en];const r=await trSentence(en).catch(()=>'');if(r)RUC[en]=r;return r;}
+/* sources are queried together; `onList` is called each time the best three change, so the first examples appear in about a second */
+async function fetchExamples(word,lang,irr,tr,onList){
   const q=String(word||'').toLowerCase().trim();if(!q)return{list:[],failed:false};
   const stems=exStems(tr);
-  const k=lang+'|'+q+(irr?'|'+irr.forms:'')+'|'+stems.slice(0,6).join(',');if(k in EXC)return EXC[k];
+  const k=lang+'|'+q+(irr?'|'+irr.forms:'')+'|'+stems.slice(0,6).join(',');
+  if(k in EXC){if(onList)onList(EXC[k].list);return EXC[k];}
   const forms=irr?irr.forms.split(' '):exForms(q);
   const code=tatCode(lang);
-  let cand=[],net=false;
-  const take=r=>{if(r){net=true;cand=cand.concat(r);}};
-  if(lang==='en'&&code){
-    const base=irr?irr.base:q;
-    (await Promise.all([tatQuery(base,code,'relevance'),tatQuery(base,code,'words')].map(p=>p.catch(()=>null)))).forEach(take);
-    const good=()=>new Set(cand.filter(x=>usesForm(x.en,forms)&&exQuality(x,forms,stems)!=null).map(x=>x.en.toLowerCase())).size;
-    if(good()<3&&!irr){
-      const more=forms.filter(f=>f!==base).slice(0,3);
-      (await Promise.all(more.map(f=>tatQuery(f,code,'relevance').catch(()=>null)))).forEach(take);
-    }
-    if(good()<3){
-      const base2=irr?irr.base:q;
-      const w=await Promise.all([exWiki(base2,forms),exDict(base2,forms)].map(p=>p.catch(()=>null)));
-      w.forEach(a=>{if(a){net=true;a.forEach(x=>cand.push({en:x.en,ru:'',pen:12}));}});
-    }
-  }else if(code){
-    take(await tatQuery(q,code,'relevance').catch(()=>null));
-  }
+  const base=irr?irr.base:q;
+  let cand=[],net=false,last='';
   const pick=relax=>{
     const seen=new Set(),sc=[];
     cand.forEach(x=>{
@@ -4899,32 +4916,60 @@ async function fetchExamples(word,lang,irr,tr){
     });
     return sc.sort((a,b)=>a[0]-b[0]).map(a=>a[1]);
   };
-  let list=pick(false);if(list.length<2)list=pick(true);
-  list=list.slice(0,3);
-  /* a sentence without a human translation gets a machine one, so every example shows its Russian */
-  await Promise.all(list.filter(x=>!x.ru).map(async x=>{x.ru=await trSentence(x.en).catch(()=>'');}));
+  const best=()=>{let l=pick(0);if(l.length<3)l=l.concat(pick(1).filter(x=>!l.includes(x)));if(l.length<3)l=l.concat(pick(2).filter(x=>!l.includes(x)));return l.slice(0,3);};
+  const emit=()=>{
+    const l=best(),sig=l.map(x=>x.en).join('|');
+    if(sig===last)return;last=sig;
+    if(onList)onList(l);
+    l.filter(x=>!x.ru).forEach(x=>{exRu2(x.en).then(r=>{if(r&&!x.ru){x.ru=r;last='';emit();}});});
+  };
+  const take=r=>{if(r){net=true;cand=cand.concat(r);emit();}};
+  const jobs=[];
+  if(lang==='en'&&code){
+    jobs.push(tatQuery(base,code,'relevance').then(take).catch(()=>{}));
+    jobs.push(tatQuery(base,code,'relevance',2).then(take).catch(()=>{}));
+    jobs.push(exGoogle(base,forms).then(take).catch(()=>{}));
+    jobs.push(exWiki(base,forms).then(r=>take(r&&r.map(x=>({en:x.en,ru:'',pen:12})))).catch(()=>{}));
+    jobs.push(exDict(base,forms).then(r=>take(r&&r.map(x=>({en:x.en,ru:'',pen:12})))).catch(()=>{}));
+    await Promise.all(jobs);
+    if(best().length<3&&!irr){
+      await Promise.all(forms.filter(f=>f!==base).slice(0,3).map(f=>tatQuery(f,code,'relevance').then(take).catch(()=>{})));
+    }
+  }else if(code){
+    take(await tatQuery(q,code,'relevance').catch(()=>null));
+  }
+  const list=best();
+  await Promise.all(list.filter(x=>!x.ru).map(async x=>{x.ru=await exRu2(x.en);}));
   const out={list,failed:!list.length&&!net};
   if(list.length)EXC[k]=out;
   return out;
+}
+function exChipsHtml(list,cur){
+  return list.map(x=>`<button class="chip exs${cur.trim()===x.en?' on':''}" data-v="${esc(x.en)}" data-ru="${esc(x.ru||'')}" onclick="pickEx(this)">${esc(x.en)}${x.ru?`<small>${esc(x.ru)}</small>`:''}</button>`).join('');
 }
 async function showExamples(seq,en,irr,tr){
   const el=$('#'+TR.exch);if(!el)return;
   const base=irr?irr.base:en.replace(/^to\s+/i,'').trim();
   if(!base||base.split(/\s+/).length>4||!tatCode(TR.lang)){el.innerHTML='';return;}
+  const id=TR.exch,exId=TR.ex;
   el.innerHTML=`<div class="exhint">${t('Looking for examples…')}</div>`;
-  const r=await fetchExamples(base,TR.lang,irr,tr);
-  if(seq!==trSeq||!$('#'+TR.exch))return;
-  const cur=($('#'+TR.ex)||{}).value||'';
-  $('#'+TR.exch).innerHTML=r.list.length
-    ?`<div class="exhint">${t('Examples — tap to use:')}</div>`+r.list.map(x=>`<button class="chip exs${cur.trim()===x.en?' on':''}" data-v="${esc(x.en)}" data-ru="${esc(x.ru||'')}" onclick="pickEx(this)">${esc(x.en)}${x.ru?`<small>${esc(x.ru)}</small>`:''}</button>`).join('')
-    :`<div class="exhint">${t('No examples found for this word.')}</div>`;
+  const draw=list=>{
+    const box=$('#'+id);if(seq!==trSeq||!box||!list.length)return;
+    const cur=($('#'+exId)||{}).value||'';
+    box.innerHTML=`<div class="exhint">${t('Examples — tap to use:')}</div>`+exChipsHtml(list,cur);
+  };
+  const r=await fetchExamples(base,TR.lang,irr,tr,draw);
+  if(seq!==trSeq||!$('#'+id))return;
+  if(r.list.length)draw(r.list);
+  else $('#'+id).innerHTML=`<div class="exhint">${t('No examples found for this word.')}</div>`;
 }
 function pickEx(b){
   const i=$('#'+(TR.ex||'fEx'));if(!i)return;
   const on=b.classList.contains('on');
   document.querySelectorAll('#'+TR.exch+' .chip.exs').forEach(c=>c.classList.remove('on'));
   if(on){i.value='';i.dataset.en='';i.dataset.ru='';}
-  else{b.classList.add('on');i.value=b.dataset.v||'';i.dataset.en=i.value.trim();i.dataset.ru=b.dataset.ru||'';}
+  else{b.classList.add('on');i.value=b.dataset.v||'';i.dataset.en=i.value.trim();i.dataset.ru=b.dataset.ru||'';
+    if(!i.dataset.ru){const en=i.dataset.en;exRu2(en).then(r=>{if(r&&i.dataset.en===en){i.dataset.ru=r;if(TR.after)TR.after('ex');}});}}
   if(TR.after)TR.after('ex');
 }
 /* typing your own example: the translation follows by itself */
