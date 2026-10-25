@@ -3331,6 +3331,7 @@ function tsetsHtml(){
        <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}</div></div>
        <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'+
      `<div style="height:14px"></div>`:'')+
+   `<div id="tLearn"></div>`+(setTimeout(()=>tLearnDraw(sid),0),'')+
    (sets.filter(x=>x.name!==ARCH_NAME).length
     ?`<div class="subhead"><span class="t">${t('Lists')}</span></div>`+sets.filter(x=>x.name!==ARCH_NAME).map(s=>{
         const a=words.filter(w=>w.set_id===s.id&&!w.arch).length,lr=words.filter(w=>w.set_id===s.id&&w.arch).length;
@@ -3359,13 +3360,49 @@ function tsSearch(v){
     <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'
     :`<div class="empty"><p>${t('Nothing found')}</p></div>`;
 }
+
+/* ---------- teacher: what this student mixes up and how word formation goes (read from the profile, no SQL) ---------- */
+Object.assign(RU_DICT,{"Often mixed up":"Часто путает","sorted out":"разобрано","mixed up {n} times":"путает: {n}","texts done":"текстов пройдено"});
+function tLearnDraw(sid){
+  const el=$('#tLearn');if(!el||!TV||TV.sid!==sid)return;
+  const stu=(AUTH.students||[]).find(x=>x.id===sid),st=stu&&stu.stats;if(!st||typeof st!=='object'){el.innerHTML='';return;}
+  const ws=TV.words||[],byId=new Map(ws.map(w=>[w.id,w]));
+  const conf=st.conf&&typeof st.conf==='object'?Object.values(st.conf):[];
+  const act=conf.filter(p=>p&&!p.d&&(p.s||0)>=CF_SHOW&&byId.has(p.a)&&byId.has(p.b)).sort((a,b)=>(b.s||0)-(a.s||0)).slice(0,6);
+  const fixed=conf.filter(p=>p&&p.d).length;
+  let h='';
+  if(act.length||fixed){
+    h+=`<div class="subhead"><span class="t">${t('Often mixed up')}</span></div><div class="wlist">`+act.map(p=>{
+      const a=byId.get(p.a),b=byId.get(p.b);
+      return `<div class="item"><span class="chk" style="background:var(--bad-soft);color:var(--bad)">${p.n||p.s}</span>
+        <div class="t"><div class="en">${esc(a.en)} <span style="color:var(--fade)">↔</span> ${esc(b.en)}</div><div class="ru">${esc(a.ru||'')} · ${esc(b.ru||'')}</div></div></div>`;}).join('')+'</div>'
+      +(fixed?`<div class="hint" style="margin:6px 2px 0;font-size:13.5px">✓ ${t('sorted out')}: ${fixed}</div>`:'')+'<div style="height:14px"></div>';
+  }
+  const wf=st.wf&&typeof st.wf==='object'&&st.wf.d&&typeof st.wf.d==='object'?st.wf:null;
+  const lvs=wf?WF_LVS.map(x=>x[0]).filter(l=>wf.d[l]&&Object.keys(wf.d[l]).length):[];
+  if(lvs.length){
+    h+=`<div class="subhead"><span class="t">${t('Word formation')}</span></div><div id="tWf"><div class="hint" style="margin:6px 2px">${t('Loading…')}</div></div><div style="height:14px"></div>`;
+    el.innerHTML=h;
+    Promise.all(lvs.map(l=>wfLoad(l).then(()=>l))).then(()=>{
+      const box=$('#tWf');if(!box||!TV||TV.sid!==sid)return;
+      const rows0=[['neg','Negatives (un-, in-, dis-, -less)'],['noun','Nouns'],['adj','Adjectives'],['adv','Adverbs'],['verb','Verbs'],['num','Numerals'],['end','Plural and verb endings']];
+      box.innerHTML=lvs.map(l=>{
+        const d=wf.d[l],nt=Object.keys(d).length,sts=wfStats(l,d),rows=rows0.filter(r=>sts[r[0]][1]>0);
+        let a=0,n=0;Object.keys(d).forEach(i=>{const x=(WF.packs[l]||[])[+i];if(!x)return;const m=(+d[i])%128;x.g.forEach((g,k)=>{n++;a+=(m>>k)&1;});});
+        const lab=l==='a2'?'A2–B1':l==='b2'?'B1–B2':'B2–C1';
+        return `<div class="wfbars"><div class="h">${lab} · ${nt} ${wfPlural(nt)}${n?` · ${Math.round(a/n*100)}%`:''}</div>`+
+          rows.map(r=>{const [aa,nn]=sts[r[0]],p=Math.round(aa/nn*100);return `<div class="r${p<65&&nn>=6?' low':''}"><span>${t(r[1])}</span><div class="tr"><i style="width:${p}%"></i></div><span class="p">${p}%</span></div>`;}).join('')+'</div>';
+      }).join('');
+    }).catch(()=>{const box=$('#tWf');if(box)box.innerHTML='';});
+  }else el.innerHTML=h;
+}
 /* the student's own latest heartbeat, fetched fresh each time the card opens */
 async function tSeenRefresh(sid){
   try{
     const {data}=await sb.from('profiles').select('stats').eq('id',sid).maybeSingle();
     if(!data||!data.stats)return;
     const stu=(AUTH.students||[]).find(x=>x.id===sid);if(!stu)return;
-    stu.stats=data.stats;
+    stu.stats=data.stats;tLearnDraw(sid);
     if(view.name!=='tsets'||view.sid!==sid)return;
     const w=(TV&&TV.sid===sid?TV.words:[])||[];
     const last=Math.max(w.reduce((m,x)=>Math.max(m,+new Date(x.updated_at)),0),stuSeen(stu));
@@ -4619,8 +4656,8 @@ function wfCats(g){
   if(/plural|3rd|past|-ing form|\+\s*-?s\b/.test(m))c.push('end');
   return c;
 }
-function wfStats(lv){
-  const list=WF.packs[lv]||[],d=wfDone(lv),out={};WF_CATS.forEach(k=>out[k]=[0,0]);
+function wfStats(lv,dd){
+  const list=WF.packs[lv]||[],d=dd||wfDone(lv),out={};WF_CATS.forEach(k=>out[k]=[0,0]);
   Object.keys(d).forEach(i=>{const x=list[+i];if(!x)return;const mask=(+d[i])%128;
     x.g.forEach((g,k)=>{const ok=(mask>>k)&1;wfCats(g).forEach(c=>{out[c][1]++;out[c][0]+=ok;});});});
   return out;
