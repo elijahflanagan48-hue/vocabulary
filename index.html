@@ -2520,6 +2520,23 @@ const hdr=(title,back,right='')=>{
 /* ---------- views ---------- */
 /* search ignores case and accents (kenyer finds kenyér) */
 const fold=x=>String(x==null?'':x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+
+/* Russian <-> English name matching: "ясм" finds "Yasmina", "alex" finds "Алексей" */
+const XL_MAP={а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'i',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sh',ъ:'',ы:'i',ь:'',э:'e',ю:'yu',я:'ya'};
+function xlLoose(x){
+  let r=String(x==null?'':x).toLowerCase().replace(/ё/g,'е').normalize('NFD').replace(/[̀-ͯ]/g,'');
+  r=r.replace(/[а-я]/g,c=>XL_MAP[c]!==undefined?XL_MAP[c]:c);
+  r=r.replace(/ph/g,'f').replace(/kh/g,'h').replace(/ck/g,'k').replace(/x/g,'ks').replace(/[yj]/g,'i').replace(/c(?![h])/g,'k').replace(/w/g,'v').replace(/q/g,'k');
+  r=r.replace(/h/g,'').replace(/([a-z])\1+/g,'$1').replace(/[^a-z0-9 ]/g,'');
+  return r.replace(/\s+/g,' ').trim();
+}
+function nameHit(name,q){
+  const a=fold(name),b=fold(q);
+  if(!b)return true;
+  if(a.includes(b))return true;
+  const la=xlLoose(name),lb=xlLoose(q);
+  return !!lb&&la.includes(lb);
+}
 let LQ='';
 const sbox=(fn,id)=>`<div class="search"${id?` id="${id}"`:''}><svg viewBox="0 0 24 24"><path d="M21 20l-5.6-5.6a7 7 0 10-1.4 1.4L20 21zM5 10a5 5 0 1110 0 5 5 0 01-10 0z"/></svg><input type="search" value="${esc(LQ)}" placeholder="${t('Search')}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="${fn}(this.value)"></div>`;
 
@@ -3234,7 +3251,7 @@ VIEWS.students=async function(app){
   app.innerHTML=hdr(t('My students'),'',AUTH.students&&AUTH.students.length?`<button class="ic" aria-label="Edit" onclick="toggleStEdit()">${ic(stEdit?'check':'pen')}</button>`:'')+(stN>0?sbox('stSearch'):'')+`<div id="rl"></div>`+tabBar();
   const draw=d=>{
     if(!d.students.length)return `<div class="empty"><div class="big">${ic('users',26)}</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`;
-    const fq=fold(LQ),shown=fq?d.students.filter(s=>fold(s.display_name||'Student').includes(fq)):d.students;
+    const fq=fold(LQ),shown=fq?d.students.filter(s=>nameHit(s.display_name||'Student',LQ)):d.students;
     if(!shown.length)return `<div class="empty"><p>${t('Nothing found')}</p></div>`;
     return shown.map(s=>{
       const nm=s.display_name||'Student',inf=d.info&&d.info[s.id];
@@ -3338,7 +3355,7 @@ function tsSearch(v){
   const sets=TV.sets||[],nm=id=>{const x=sets.find(y=>y.id===id);return x&&x.name!==ARCH_NAME?x.name:'';};
   const hit=(TV.words||[]).filter(w=>fold(w.en+' '+w.ru+' '+(w.ex||'')).includes(q)).slice(0,300);
   res.innerHTML=hit.length?'<div class="wlist">'+hit.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
-    <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}<span class="src"> · ${w.arch?t('Archive')+(nm(w.set_id)?' · '+esc(nm(w.set_id)):''):esc(nm(w.set_id))}</span></div></div>
+    <div class="t"><div class="en">${esc(w.en)}${fqChip(w,tSetLang(w.set_id))}</div><div class="ru">${esc(w.ru||'')}<span class="src"> · ${w.arch?t('Archive')+(nm(w.set_id)?' · '+esc(nm(w.set_id)):''):esc(nm(w.set_id))}</span></div></div>
     <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'
     :`<div class="empty"><p>${t('Nothing found')}</p></div>`;
 }
@@ -3426,7 +3443,7 @@ function tDrawWords(anim){
        ${tSelMode
          ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
          :`<span class="numx">${numOf.get(w.id)}</span>`}
-       <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}${inArch&&setName2(w.set_id)?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
+       <div class="t"><div class="en">${esc(w.en)}${fqChip(w,tSetLang(w.set_id))}</div><div class="ru">${esc(w.ru||'')}${inArch&&setName2(w.set_id)?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
        ${(!tSelMode&&!inArch)?`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`:''}
        ${(tSelMode||markMode)?'':rowActsHtml()}
        ${tSelMode?'':`<button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button>`}</div>`;}).join('')+'</div>'
@@ -3639,6 +3656,7 @@ function tWordForm(id){
   trSetup({en:'tEn',ru:'tRu',ex:'tEx',st:'tTrSt',chips:'tChips',exch:'tExChips',lang:lg});
   ruTouched=!!w;
   sheet(`<h2>${w?t('Word'):t('New word')}</h2>
+   ${w?'<div class="tinfo" id="tInfo"></div>':''}
    ${toArch?`<div class="hint">${t('This word goes straight to the Archive.')}</div>
      <div class="field"><label>${t('List language')}</label><select class="inp" id="tArL" onchange="tArchLangChange(this.value)">${langOptions(lg)}</select></div>`:''}
    <div class="field"><label id="tWl">${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?w.en:'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
@@ -3653,7 +3671,19 @@ function tWordForm(id){
    ${w?`<div style="height:9px"></div><div class="row2">
      <button class="btn ghost" onclick="tToggleArch('${w.id}',${w.arch?'false':'true'})">${w.arch?ic('reset',18)+t('To learning'):ic('archive',18)+t('To Archive')}</button>
      <button class="btn danger ghost" onclick="tDelWord('${w.id}')">${t('Delete')}</button></div>`:''}`);
-  setTimeout(()=>$('#tEn')&&$('#tEn').focus(),60);
+  if(w)tInfoDraw(w.id,null);
+  else setTimeout(()=>$('#tEn')&&$('#tEn').focus(),60);
+}
+async function tInfoDraw(id,st){
+  const w=(TV.words||[]).find(x=>x.id===id),el=$('#tInfo');if(!w||!el)return;
+  const lg=tSetLang(w.set_id),en=lg==='en';
+  if(!st){st={d:null,fam:[]};if(en){dictLookup(w.en).then(x=>{st.d=x||null;tInfoDraw(id,st);}).catch(()=>{});famOf(w.en).then(x=>{st.fam=x||[];tInfoDraw(id,st);}).catch(()=>{});}}
+  const d=st.d,fam=st.fam;
+  const ipa=en&&d?ipaHtml(w.en,ipaStr(d)):(en&&w.ipa?ipaHtml(w.en,w.ipa):'');
+  const pos=d&&d.pos?(POS_DICT[d.pos]||''):'';
+  const fl=en?fqLine(w.en,lg):'';
+  const ex=exParse(w.ex);
+  el.innerHTML=(ipa?`<div class="ipa">${ipa}</div>`:'')+(fl||pos?`<div class="tags">${pos?`<span class="tag">${esc(pos)}</span>`:''}</div>`:'')+(fl?`<div class="fql" style="display:flex;align-items:center;gap:8px;margin:6px 0">${fl}</div>`:'')+ffNote(w)+(ex.en?`<div class="ex">${esc(ex.en)}${ex.ru?`<small style="display:block;opacity:.8;margin-top:4px">${esc(ex.ru)}</small>`:''}</div>`:'')+((fam&&fam.length)?`<div class="chips" style="margin-top:8px">${fam.map(m=>`<span class="chip fam">${esc(m.w)}<em>${t(POSL[m.p]||'')}</em></span>`).join('')}</div>`:'');
 }
 async function tSaveWord(id){
   const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim();let ex=exVal('tEx');{const p=exParse(ex);if(p.en&&!p.ru){const r=await Promise.race([trSentence(p.en).catch(()=>''),new Promise(z=>setTimeout(()=>z(''),2500))]);ex=exJoin(p.en,r);}}
