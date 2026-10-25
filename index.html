@@ -932,6 +932,10 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .vc .ffnote{margin:12px 0 0}
 .vc .lnk{background:none;border:0;color:var(--mut);font-size:13px;font-weight:600;padding:6px 2px;text-decoration:underline}
 .chip.exs.on{background:var(--pri);color:var(--on-pri)}
+.exlist .nm{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25}
+.exrow{cursor:pointer}
+.expill{flex:none;max-width:46%;padding:7px 13px;border-radius:14px;background:var(--surf2);color:var(--mut);font:inherit;font-weight:650;font-size:13.5px;border:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.expill.on{background:var(--pri-soft);color:var(--pri-d);border-color:transparent}
 </style>
 </head>
 <body>
@@ -2557,7 +2561,7 @@ function syncTabs(){
     nav.innerHTML=tabs.map(([n,i,l])=>`<button class="tab" data-tab="${n}" onclick="go('${n}')"><span class="ti"></span><span>${esc(l)}</span></button>`).join('');
     nav._on={};
   }
-  const act=n=>n===cur||(n==='students'&&(cur==='tsets'||cur==='twords'))||(n==='text'&&(cur==='read'||cur==='tedit'))||(n==='vocab'&&(cur==='library'||cur==='libset'));
+  const act=n=>n===cur||(n==='students'&&(cur==='tsets'||cur==='twords'||cur==='tsaccess'))||(n==='text'&&(cur==='read'||cur==='tedit'))||(n==='vocab'&&(cur==='library'||cur==='libset'||cur==='libfolder'));
   tabs.forEach(([n,i])=>{
     const b=nav.querySelector('[data-tab="'+n+'"]');if(!b)return;
     const on=act(n);
@@ -3332,6 +3336,7 @@ function tsetsHtml(){
        <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'+
      `<div style="height:14px"></div>`:'')+
    `<div id="tLearn"></div>`+(setTimeout(()=>tLearnDraw(sid),0),'')+
+   `<div class="subhead"><span class="t">${t('Exam lists')}</span></div>`+libCardHtml('target',t('Access to exam lists'),t('Choose which exam lists this student sees'),'',`go('tsaccess',{sid:'${sid}',sname:'${q1(sname)}'})`)+`<div style="height:14px"></div>`+
    (sets.filter(x=>x.name!==ARCH_NAME).length
     ?`<div class="subhead"><span class="t">${t('Lists')}</span></div>`+sets.filter(x=>x.name!==ARCH_NAME).map(s=>{
         const a=words.filter(w=>w.set_id===s.id&&!w.arch).length,lr=words.filter(w=>w.set_id===s.id&&w.arch).length;
@@ -6909,10 +6914,16 @@ let LIBX={list:[],subs:[],at:0,err:false,noTable:false,uid:''};
 let LV=null;
 try{const c=JSON.parse(localStorage.getItem(LIB_KEY)||'null');if(c&&Array.isArray(c.list)){LIBX.list=c.list;LIBX.uid=c.uid||'';}}catch(e){}
 const libTeacher=()=>!!(AUTH.profile&&AUTH.profile.role==='teacher');
-const libNorm=r=>({id:r.id,title:r.title||'',descr:r.descr||'',level:r.level||'',lang:r.lang||'en',words:Array.isArray(r.words)?r.words:[],version:r.version||1,status:r.status||'',token:r.token||'',teacher_id:r.teacher_id||'',teacher_name:r.teacher_name||''});
+const libNorm=r=>{
+  const o={id:r.id,title:r.title||'',descr:r.descr||'',level:r.level||'',lang:r.lang||'en',words:Array.isArray(r.words)?r.words:[],version:r.version||1,status:r.status||'',token:r.token||'',teacher_id:r.teacher_id||'',teacher_name:r.teacher_name||''};
+  /* a list from an exam folder is a normal library row whose description starts with ⟦list|folder|group|version⟧ */
+  const m=o.descr.match(/^⟦([a-z0-9_]+)\|([a-z0-9]+)\|([a-z0-9]+)\|(\d+)(?:\|([AS]):([0-9A-Za-z,]*))?⟧\s*/);
+  if(m){o.cat=m[1];o.cf=m[2];o.cg=m[3];o.cv=+m[4];o.cm=m[5]||'A';o.cl=(m[6]||'').split(',').filter(Boolean);o.descr=o.descr.slice(m[0].length);}
+  return o;
+};
 const libOk=()=>!!(AUTH.user&&LIBX.uid===AUTH.user.id);   /* a cached list belongs to the account that loaded it */
-const libMine=()=>libOk()?LIBX.list.filter(x=>libTeacher()&&x.teacher_id===AUTH.user.id):[];
-const libFromTeacher=()=>libOk()?LIBX.list.filter(x=>x.teacher_id!==AUTH.user.id):[];
+const libMine=()=>libOk()?LIBX.list.filter(x=>libTeacher()&&x.teacher_id===AUTH.user.id&&!x.cat):[];
+const libFromTeacher=()=>libOk()?LIBX.list.filter(x=>x.teacher_id!==AUTH.user.id&&examSeen(x)):[];
 function libSubsOf(id){return LIBX.subs.filter(s=>s.lib_id===id).length;}
 function libLocal(x){const sub=(S.libSubs||{})[x.id];return sub?{sub,set:S.sets.find(s=>s.id===sub.setId)||null}:{sub:null,set:null};}
 function libNewWords(x,set){const have=new Set(set.words.map(w=>fold(w.en)));return x.words.filter(w=>w.en&&!have.has(fold(w.en)));}
@@ -6945,6 +6956,245 @@ const libCardHtml=(icn,nm,meta,badge,on)=>`<div class="setcard" onclick="${on}">
 const libTitle=x=>x.builtin?t(x.title):x.title;
 const libDescr=x=>x.builtin?t(x.descr):x.descr;
 const libStatusTxt=s=>s==='link'?t('By link'):s==='students'?t('My students'):t('Draft');
+const EXAM_FOLDERS=[{"id":"ege","ru":"ЕГЭ","en":"Unified State Exam (EGE)","icon":"pen","dru":"Письменная часть: письмо другу и эссе по данным","den":"Written part: letter and data essay","groups":[["wr","Письмо","Writing"]],"n":5},{"id":"hse","ru":"ВШЭ","en":"HSE exams","icon":"book","dru":"Лингвотест, независимый и внутренний экзамены","den":"Linguatest, independent and internal exams","groups":[["lt","Лингвотест (поступление)","Linguatest (admission)"],["ne","Независимый экзамен","Independent exam"],["ie","Внутренний экзамен (1 курс)","Internal exam (year 1)"]],"n":12},{"id":"ielts","ru":"IELTS","en":"IELTS","icon":"target","dru":"Writing, Speaking, темы эссе и Academic Word List","den":"Writing, Speaking, essay topics and the Academic Word List","groups":[["t1","Writing Task 1","Writing Task 1"],["t2","Writing Task 2: структура","Writing Task 2: structure"],["t2t","Writing Task 2: темы","Writing Task 2: topics"],["sp","Speaking","Speaking"],["awl","Academic Word List","Academic Word List"]],"n":23},{"id":"cam","ru":"Cambridge FCE / CAE","en":"Cambridge FCE / CAE","icon":"cards","dru":"Use of English: сочетаемость, фразовые глаголы, предлоги, идиомы","den":"Use of English: collocations, phrasal verbs, prepositions, idioms","groups":[["coll","Сочетаемость слов","Collocations"],["pv","Фразовые глаголы","Phrasal verbs"],["prep","Зависимые предлоги","Dependent prepositions"],["kt","Key word transformation","Key word transformation"],["id","Идиомы","Idioms"]],"n":7}];
+const EXAM_IDS=["ege_letter", "ege_data", "ege_cmp", "ege_prob", "ege_op", "hse_lt_biz", "hse_lt_edu", "hse_lt_mail", "hse_lt_pres", "hse_ne_arg", "hse_ne_read", "hse_ne_int", "hse_ie_econ", "hse_ie_soc", "hse_ie_trans", "hse_ie_cult", "hse_ie_read", "ielts_t1a", "ielts_t1b", "ielts_t2l", "ielts_edu", "ielts_env", "ielts_tech", "ielts_health", "ielts_crime", "ielts_work", "ielts_glob", "ielts_media", "ielts_gov", "ielts_sp", "awl1", "awl2", "awl3", "awl4", "awl5", "awl6", "awl7", "awl8", "awl9", "awl10", "cam_coll1", "cam_coll2", "cam_pv1", "cam_pv2", "cam_prep", "cam_kt", "cam_idiom"];
+const EXAM_ALSO={"ielts_t1a": ["hse:ne"], "ielts_t1b": ["hse:ne"], "ielts_t2l": ["hse:ne"], "awl1": ["hse:ne"], "awl2": ["hse:ne"], "awl3": ["hse:ne"]};
+
+
+Object.assign(RU_DICT,{"Exam preparation":"Подготовка к экзаменам","Visible to students":"Видно ученикам","{a} of {b} visible to students":"{a} из {b} видны ученикам","Turned-on lists appear in your students’ Library. You can turn a list off at any time.":"Включённые списки появляются в Библиотеке учеников. Выбрать, кому их показывать, можно в любой момент.","Nothing here yet":"Здесь пока ничего нет","Your teacher has not opened any lists in this folder.":"Преподаватель пока не открыл ни одного списка в этой папке.","Couldn’t change — check your connection":"Не удалось изменить — проверьте соединение","Loading…":"Загрузка…","list":"список","lists2":"списка","lists":"списков",
+ "Off":"Выкл","Everyone":"Всем","Everyone except {n}":"Всем, кроме {n}","{n} students":"{n} уч.","Nobody":"Никому","All students":"Всем ученикам","Chosen students":"Выбранным ученикам","Who sees it":"Кому видно","Open for everyone":"Открыть всем","Close for everyone":"Закрыть для всех","Choose students…":"Выбрать учеников…","This applies to every list in the folder.":"Это применится ко всем спискам папки.","New students get a list automatically only in the “All students” mode.":"Новые ученики получают список сами только в режиме «Всем ученикам».","You have no students yet.":"У вас пока нет учеников.","Select all":"Выбрать всех","Clear selection":"Снять выбор","Exam lists":"Списки для экзаменов","Access to exam lists":"Доступ к спискам для экзаменов","Choose which exam lists this student sees":"Выберите, какие списки для экзаменов видит этот ученик","Open all":"Открыть всё","Close all":"Закрыть всё","{a} of {b} open":"{a} из {b} открыто","Open or close lists for {name}":"Откройте или закройте списки для {name}","Save":"Сохранить"});
+const EXM={ready:null,lists:null,synced:false};
+const exTxt=(r,e)=>((S.settings.lang||'ru')==='en'?e:r);
+const exFolder=id=>EXAM_FOLDERS.find(x=>x.id===id);
+function examLoad(){
+  if(!EXM.ready)EXM.ready=fetch('lib/exam.json?v=102').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{EXM.lists=j.lists||[];return true;}).catch(()=>{EXM.ready=null;return false;});
+  return EXM.ready;
+}
+/* ---- who sees a list ----
+   The teacher's row for a list carries a marker ⟦list|folder|group|version|M:ids⟧ in its description.
+   M = A: every student except the ids; M = S: only the ids (first 8 characters of a student's id).
+   status 'draft' = nobody. Students filter on their own id, so nothing about this needs new tables. */
+const sid8=id=>String(id||'').slice(0,8);
+const examMarkFor=(l,mode,ids)=>'⟦'+l.id+'|'+l.f+'|'+l.g+'|'+l.v+'|'+(mode==='some'?'S':'A')+':'+ids.join(',')+'⟧ ';
+const examIn=(l,f,g)=>(l.f===f&&(!g||l.g===g))||(l.also||[]).some(a=>a===f+':'+g||(!g&&a.split(':')[0]===f));
+function examRow(id){return libOk()&&libTeacher()?LIBX.list.find(x=>x.cat===id&&x.teacher_id===AUTH.user.id)||null:null;}
+function examCfg(id){const r=examRow(id);if(!r||r.status==='draft')return{mode:'off',ids:[]};return{mode:r.cm==='S'?'some':'all',ids:(r.cl||[]).slice()};}
+const examSees=(c,sid)=>{const k=sid8(sid);return c.mode==='all'?c.ids.indexOf(k)<0:c.mode==='some'?c.ids.indexOf(k)>=0:false;};
+/* a student's own view of a row from the teacher */
+function examSeen(x){
+  if(!x||!x.cat)return true;
+  const k=sid8(AUTH.user&&AUTH.user.id);
+  return x.cm==='S'?(x.cl||[]).indexOf(k)>=0:(x.cl||[]).indexOf(k)<0;
+}
+const examOn=id=>examCfg(id).mode!=='off';
+function examLabel(c){
+  if(c.mode==='off')return t('Off');
+  if(c.mode==='all')return c.ids.length?t('Everyone except {n}').replace('{n}',c.ids.length):t('Everyone');
+  return c.ids.length?t('{n} students').replace('{n}',c.ids.length):t('Off');
+}
+function examCount(f){return EXAM_IDS.filter(id=>{const r=examRow(id);return r&&r.cf===f&&r.status!=='draft';}).length;}
+function examStu(f,g){
+  const seen=new Set();
+  return libFromTeacher().filter(x=>x.cat&&(g?((x.cf===f&&x.cg===g)||(EXAM_ALSO[x.cat]||[]).indexOf(f+':'+g)>=0):x.cf===f)&&!seen.has(x.cat)&&seen.add(x.cat))
+    .sort((a,b)=>EXAM_IDS.indexOf(a.cat)-EXAM_IDS.indexOf(b.cat));
+}
+function examFolders(){
+  if(libTeacher())return EXAM_FOLDERS.map(F=>({F,meta:t('{a} of {b} visible to students').replace('{a}',examCount(F.id)).replace('{b}',F.n),on:examCount(F.id)>0}));
+  return EXAM_FOLDERS.filter(F=>examStu(F.id).length).map(F=>{
+    const rows=examStu(F.id),nw=rows.filter(x=>!libLocal(x).sub).length;
+    return {F,meta:nWords(rows.reduce((a,x)=>a+x.words.length,0))+' · '+rows.length+' '+plr(rows.length,t('list'),t('lists2'),t('lists')),badge:nw?`<span class="lbadge">${t('New!')}</span>`:''};
+  });
+}
+function examCards(){
+  const fl=examFolders();if(!fl.length)return '';
+  return `<div class="tbar" style="margin-top:18px"><span class="t">${t('Exam preparation')}</span></div>`+
+    fl.map(x=>libCardHtml(x.F.icon,exTxt(x.F.ru,x.F.en),x.meta,x.badge||'',`go('libfolder',{f:'${x.F.id}'})`)).join('');
+}
+/* write the chosen settings to the library table: items = [{l, mode:'off'|'all'|'some', ids:[id8,…]}] */
+async function examApply(items){
+  const now=new Date().toISOString(),ins=[],jobs=[];
+  items.forEach(({l,mode,ids})=>{
+    const r=examRow(l.id),on=mode!=='off';
+    const words=l.w.map(a=>({en:a[0],ru:a[1],ex:a[2]||''}));
+    ids=Array.from(new Set(ids)).sort();
+    if(!r){
+      if(!on)return;
+      ins.push({teacher_id:AUTH.user.id,lang:'en',words,version:1,title:l.title,descr:examMarkFor(l,mode,ids)+l.descr,level:l.level,status:'students',updated_at:now});
+      return;
+    }
+    if(!on){if(r.status!=='draft')jobs.push(sb.from('library_sets').update({status:'draft',updated_at:now}).eq('id',r.id).select('id'));return;}
+    const stale=(r.cv||0)<l.v,same=r.status==='students'&&(r.cm==='S')===(mode==='some')&&(r.cl||[]).slice().sort().join()===ids.join();
+    if(same&&!stale)return;
+    const row={title:l.title,level:l.level,descr:examMarkFor(l,mode,ids)+l.descr,status:'students',updated_at:now};
+    if(stale){row.words=words;row.version=(r.version||1)+1;}
+    jobs.push(sb.from('library_sets').update(row).eq('id',r.id).select('id'));
+  });
+  if(ins.length)jobs.push(sb.from('library_sets').insert(ins).select('id'));
+  const res=await Promise.all(jobs);
+  const bad=res.find(x=>x&&x.error);if(bad)throw bad.error;
+}
+async function examRun(fn){
+  if(!libTeacher()||!sb)return false;
+  if(!(await examLoad())){toast(t('No connection — try again when you’re online.'));return false;}
+  try{await ensureAuth();await fn();await libLoad(true);}
+  catch(e){toast(t('Couldn’t change — check your connection'));}
+  examRedraw();return true;
+}
+const examLists=ids=>ids.map(id=>(EXM.lists||[]).find(x=>x.id===id)).filter(Boolean);
+/* everyone / nobody / a chosen group, for several lists at once */
+function examSetMode(ids,mode,sids){return examRun(()=>examApply(examLists(ids).map(l=>({l,mode,ids:sids||[]}))));}
+/* one student in or out, for several lists at once; everyone else keeps what they had */
+function examForStudent(ids,sid,on){
+  const k=sid8(sid);
+  return examRun(()=>examApply(examLists(ids).map(l=>{
+    const c=examCfg(l.id);let mode=c.mode,a=c.ids.slice();
+    if(on){
+      if(mode==='off'){mode='some';a=[k];}
+      else if(mode==='some'){if(a.indexOf(k)<0)a.push(k);}
+      else a=a.filter(z=>z!==k);
+    }else{
+      if(mode==='some'){a=a.filter(z=>z!==k);if(!a.length)mode='off';}
+      else if(mode==='all'){if(a.indexOf(k)<0)a.push(k);}
+    }
+    return {l,mode,ids:a};
+  })));
+}
+function examRedraw(){
+  if(view.name==='libfolder')examDraw();
+  else if(view.name==='tsaccess')examAccDraw();
+  else if(view.name==='library')libDraw();
+  else if(view.name==='libset')render();
+}
+/* a list that was improved in a new version of the app: update the teacher's copy, students see "new words" */
+async function examSync(){
+  if(EXM.synced||!libTeacher()||!sb||!EXM.lists||!libOk())return;
+  const old=EXM.lists.filter(l=>{const r=examRow(l.id);return r&&r.status!=='draft'&&(r.cv||0)<l.v;});
+  EXM.synced=true;if(!old.length)return;
+  try{await ensureAuth();await examApply(old.map(l=>{const c=examCfg(l.id);return {l,mode:c.mode,ids:c.ids};}));await libLoad(true);examRedraw();}catch(e){EXM.synced=false;}
+}
+function examOpen(id,back){
+  const l=(EXM.lists||[]).find(x=>x.id===id);if(!l)return;
+  LV={src:'exam',back:back||'',set:{id:'x:'+l.id,cid:l.id,title:l.title,descr:l.descr,level:l.level,lang:'en',version:l.v,exam:true,
+    words:l.w.map(a=>({en:a[0],ru:a[1],ex:a[2]||''}))}};
+  go('libset');
+}
+/* ---- the chooser: nobody / everyone / chosen students, for one list or a whole folder ---- */
+let EXS=null;
+async function examSheet(ids,title,folder){
+  if(!libTeacher())return;
+  if(!(await examLoad()))return toast(t('No connection — try again when you’re online.'));
+  if(!(AUTH.students&&AUTH.students.length))await loadStudents();
+  const cs=ids.map(id=>examCfg(id)),c0=cs[0];
+  const same=cs.every(c=>c.mode===c0.mode&&c.ids.slice().sort().join()===c0.ids.slice().sort().join());
+  let mode='some',sel=new Set();
+  const all=(AUTH.students||[]).map(s=>sid8(s.id));
+  if(same){
+    if(c0.mode==='off')mode='off';
+    else if(c0.mode==='all'&&!c0.ids.length)mode='all';
+    else if(c0.mode==='all')sel=new Set(all.filter(k=>c0.ids.indexOf(k)<0));
+    else sel=new Set(c0.ids);
+  }
+  EXS={ids,title,folder:!!folder,mode,sel};
+  examSheetDraw();
+}
+function examSheetDraw(){
+  const X=EXS;if(!X)return;
+  const st=(AUTH.students||[]).slice().sort((a,b)=>String(a.display_name||'').localeCompare(String(b.display_name||'')));
+  const o=(v,l)=>`<button data-m="${v}" class="${X.mode===v?'on':''}" onclick="exsMode('${v}')">${l}</button>`;
+  sheet(`<h2>${esc(X.title)}</h2>
+   <div class="field"><label>${t('Who sees it')}</label><div class="sel-opt" id="exsM">${o('off',t('Nobody'))}${o('all',t('All students'))}${o('some',t('Chosen students'))}</div></div>
+   ${X.mode==='some'?(st.length?`<div class="tbar" style="margin-top:4px"><span class="t">${X.sel.size}/${st.length}</span><button class="lnk" onclick="exsAll()">${X.sel.size>=st.length?t('Clear selection'):t('Select all')}</button></div>
+    <div class="wlist" style="max-height:38vh;overflow:auto">${st.map(s=>{const on=X.sel.has(sid8(s.id));return `<div class="item" onclick="exsTog('${sid8(s.id)}')"><span class="cbox ${on?'on':''}">${on?ic('check',14,2.4):''}</span><div class="t"><div class="en">${esc(s.display_name||'Student')}</div></div></div>`;}).join('')}</div>`
+     :`<div class="hint" style="margin:8px 2px">${t('You have no students yet.')}</div>`):''}
+   <div class="hint" style="margin:10px 2px">${X.folder?t('This applies to every list in the folder.')+' ':''}${t('New students get a list automatically only in the “All students” mode.')}</div>
+   <button class="btn pri" id="exsGo" onclick="exsSave()">${t('Save')}</button>`);
+}
+function exsMode(m){if(!EXS)return;EXS.mode=m;examSheetDraw();}
+function exsTog(k){if(!EXS)return;if(EXS.sel.has(k))EXS.sel.delete(k);else EXS.sel.add(k);examSheetDraw();}
+function exsAll(){if(!EXS)return;const all=(AUTH.students||[]).map(s=>sid8(s.id));if(EXS.sel.size>=all.length)EXS.sel.clear();else all.forEach(k=>EXS.sel.add(k));examSheetDraw();}
+async function exsSave(){
+  const X=EXS;if(!X)return;
+  const b=$('#exsGo');if(b)b.disabled=true;
+  const mode=X.mode==='some'&&!X.sel.size?'off':X.mode;
+  closeSheet();
+  await examSetMode(X.ids,mode,Array.from(X.sel));
+  EXS=null;
+}
+VIEWS.libfolder=function(app){
+  const F=exFolder(view.f);if(!F)return go('library');
+  app.innerHTML=hdr(exTxt(F.ru,F.en),"go('library')")+'<div id="exBody" class="exlist"></div>'+tabBar();
+  examDraw();
+  if(sb&&AUTH.user)libLoad(true).then(()=>{if(view.name==='libfolder')examDraw();});
+  if(libTeacher())examLoad().then(ok=>{if(view.name==='libfolder'){examDraw();if(ok)libLoad().then(examSync);}});
+};
+const examFolderIds=F=>EXAM_IDS.filter(id=>(EXM.lists||[]).some(l=>l.id===id&&l.f===F.id));
+function examDraw(){
+  const box=$('#exBody'),F=exFolder(view.f);if(!box||!F)return;
+  const sec=s=>`<div class="tbar" style="margin-top:16px"><span class="t">${esc(s)}</span></div>`;
+  let h=`<div class="hint" style="margin:10px 2px 4px">${esc(exTxt(F.dru,F.den))}</div>`;
+  if(libTeacher()){
+    if(!EXM.lists){box.innerHTML=h+`<div class="hint" style="margin:14px 2px">${t('Loading…')}</div>`;return;}
+    const fid=JSON.stringify(examFolderIds(F)).replace(/"/g,'&quot;'),fn=esc(exTxt(F.ru,F.en)).replace(/'/g,"\\'");
+    h+=`<div class="hint" style="margin:6px 2px 10px">${t('Turned-on lists appear in your students’ Library. You can turn a list off at any time.')}</div>
+     <div class="row2" style="margin-bottom:8px"><button class="btn ghost" onclick="examSetMode(${fid},'all')">${t('Open for everyone')}</button><button class="btn ghost" onclick="examSetMode(${fid},'off')">${t('Close for everyone')}</button></div>
+     <button class="btn ghost" style="width:100%" onclick="examSheet(${fid},'${fn}',true)">${ic('users',18)}${t('Choose students…')}</button>`;
+    F.groups.forEach(g=>{
+      const ls=EXM.lists.filter(l=>examIn(l,F.id,g[0])).sort((a,b)=>EXAM_IDS.indexOf(a.id)-EXAM_IDS.indexOf(b.id));
+      if(!ls.length)return;
+      h+=sec(exTxt(g[1],g[2]))+ls.map(l=>{
+        const c=examCfg(l.id),r=examRow(l.id),n=r&&c.mode!=='off'?libSubsOf(r.id):0;
+        return `<div class="setcard exrow" onclick="examOpen('${l.id}','${F.id}')"><div class="t"><div class="nm">${esc(l.title)}</div>
+          <div class="meta">${nWords(l.w.length)} · ${esc(l.level)}${n?' · '+n+' '+t('added it'):''}</div></div>
+          <button class="expill ${c.mode!=='off'?'on':''}" aria-label="${t('Who sees it')}" onclick="event.stopPropagation();examSheet(['${l.id}'],'${esc(l.title).replace(/'/g,"\\'")}')">${esc(examLabel(c))}</button></div>`;
+      }).join('');
+    });
+  }else{
+    const any=examStu(F.id).length;
+    if(!any)h+=`<div class="empty"><div class="big">${ic('book',26)}</div><b>${t('Nothing here yet')}</b><p>${t('Your teacher has not opened any lists in this folder.')}</p></div>`;
+    F.groups.forEach(g=>{
+      const rows=examStu(F.id,g[0]);if(!rows.length)return;
+      h+=sec(exTxt(g[1],g[2]))+rows.map(x=>{
+        const {sub,set}=libLocal(x),nn=sub&&set&&x.version>sub.ver?libNewWords(x,set).length:0;
+        const badge=nn?`<span class="lbadge">+${nn}</span>`:(!sub?`<span class="lbadge">${t('New!')}</span>`:(set?`<span class="lbadge ok">✓</span>`:''));
+        return libCardHtml('cards',x.title,`${nWords(x.words.length)}${x.level?' · '+esc(x.level):''}`,badge,`libOpen('server','${x.id}','${F.id}')`);
+      }).join('');
+    });
+  }
+  box.innerHTML=h;
+}
+/* ---- the student's card: what this student sees ---- */
+function examAccCount(sid,F){return EXAM_IDS.filter(id=>(EXM.lists||[]).some(l=>l.id===id&&l.f===F.id)&&examSees(examCfg(id),sid)).length;}
+VIEWS.tsaccess=function(app){
+  const {sid,sname,f}=view,F=f?exFolder(f):null;
+  const up=F?`go('tsaccess',{sid:'${sid}',sname:'${q1(sname)}'})`:`go('tsets',{sid:'${sid}',sname:'${q1(sname)}'})`;
+  app.innerHTML=hdr(F?exTxt(F.ru,F.en):t('Exam lists'),up)+'<div id="exBody" class="exlist"></div>'+tabBar();
+  examAccDraw();
+  libLoad(true).then(()=>{if(view.name==='tsaccess')examAccDraw();});
+  examLoad().then(()=>{if(view.name==='tsaccess')examAccDraw();});
+};
+function examAccDraw(){
+  const box=$('#exBody');if(!box)return;
+  const {sid,sname,f}=view,F=f?exFolder(f):null;
+  if(!EXM.lists||!libOk()){box.innerHTML=`<div class="hint" style="margin:14px 2px">${t('Loading…')}</div>`;return;}
+  const sec=s=>`<div class="tbar" style="margin-top:16px"><span class="t">${esc(s)}</span></div>`;
+  if(!F){
+    box.innerHTML=`<div class="hint" style="margin:10px 2px 8px">${t('Open or close lists for {name}').replace('{name}',esc(sname))}</div>`+
+      EXAM_FOLDERS.map(x=>libCardHtml(x.icon,exTxt(x.ru,x.en),t('{a} of {b} open').replace('{a}',examAccCount(sid,x)).replace('{b}',x.n),'',`go('tsaccess',{sid:'${sid}',sname:'${q1(sname)}',f:'${x.id}'})`)).join('');
+    return;
+  }
+  const ids=JSON.stringify(examFolderIds(F)).replace(/"/g,'&quot;');
+  let h=`<div class="row2" style="margin:10px 0 4px"><button class="btn ghost" onclick="examForStudent(${ids},'${sid}',true)">${t('Open all')}</button><button class="btn ghost" onclick="examForStudent(${ids},'${sid}',false)">${t('Close all')}</button></div>`;
+  F.groups.forEach(g=>{
+    const ls=EXM.lists.filter(l=>examIn(l,F.id,g[0])).sort((a,b)=>EXAM_IDS.indexOf(a.id)-EXAM_IDS.indexOf(b.id));
+    if(!ls.length)return;
+    h+=sec(exTxt(g[1],g[2]))+ls.map(l=>{
+      const on=examSees(examCfg(l.id),sid);
+      return `<div class="setcard exrow" onclick="examForStudent(['${l.id}'],'${sid}',${on?'false':'true'})"><div class="t"><div class="nm">${esc(l.title)}</div><div class="meta">${nWords(l.w.length)} · ${esc(l.level)}</div></div>
+        <div class="sw ${on?'on':''}" role="switch" aria-checked="${on}"><i></i></div></div>`;
+    }).join('');
+  });
+  box.innerHTML=h;
+}
 /* the entry on the Vocabulary screen */
 function libEntry(){
   const u=libUpdates(),nw=libNewForMe();
@@ -6967,6 +7217,7 @@ function libDraw(){
   const sec=s=>`<div class="tbar" style="margin-top:18px"><span class="t">${s}</span></div>`;
   let h=`<div class="setcard" style="margin-top:14px;cursor:default"><div class="t"><div class="nm" style="font-size:15px">${t('Open by link')}</div>
     <div class="row" style="margin-top:8px;gap:8px"><input class="inp" id="libLink" placeholder="${t('Paste a link or code')}" ${NOASSIST} style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();libOpenInput();}"><button class="btn pri" style="width:auto;padding:0 18px" onclick="libOpenInput()">${t('Open')}</button></div></div></div>`;
+  h+=examCards();
   if(libTeacher()){
     h+=sec(t('My sets'));
     if(LIBX.noTable)h+=`<div class="rwdup" style="background:var(--bad-soft);color:var(--bad)">${t('The library tables are not set up yet — run the SQL from the instructions.')}</div>`;
@@ -6974,7 +7225,7 @@ function libDraw(){
     h+=m.length?m.map(x=>libCardHtml('cards',x.title,`${nWords(x.words.length)} · ${libStatusTxt(x.status)}${libSubsOf(x.id)?' · '+libSubsOf(x.id)+' '+t('added it'):''}`,'',`libOpen('server','${x.id}')`)).join('')
       :`<div class="hint" style="margin:10px 2px">${t('Publish one of your lists — students add it with one tap.')}</div><button class="btn pri" style="margin-top:6px" onclick="libPublish()">${ic('plus',18)}${t('Publish a list')}</button>`;
   }else{
-    const f=libFromTeacher();
+    const f=libFromTeacher().filter(x=>!x.cat);
     if(f.length){
       h+=sec(t('From your teacher'));
       h+=f.map(x=>{
@@ -6992,10 +7243,10 @@ function libDraw(){
   }).join('');
   box.innerHTML=h;
 }
-function libOpen(src,id){
+function libOpen(src,id,back){
   const x=src==='builtin'?LIB_BUILTIN.find(z=>z.id===id):LIBX.list.find(z=>z.id===id);
   if(!x)return;
-  LV={src,set:x};go('libset');
+  LV={src,set:x,back:back||''};go('libset');
 }
 async function libOpenInput(){
   const v=($('#libLink')||{}).value||'';
@@ -7030,7 +7281,7 @@ VIEWS.libset=function(app){
   const {sub,set}=libLocal(x);
   const nn=set?libNewWords(x,set).length:x.words.length;
   const upd=set&&x.version>sub.ver&&nn>0;
-  const back=LV.src==='link'?"go('library')":"go('library')";
+  const back=LV.back?"go('libfolder',{f:'"+LV.back+"'})":"go('library')";
   let act;
   if(!set)act=`<button class="btn pri" onclick="libAdd()">${ic('plus',18)}${t('Add to my lists')} (${x.words.length})</button>`;
   else if(upd)act=`<button class="btn pri" onclick="libAdd()">${ic('plus',18)}${t('Add new words')} (${nn})</button>`;
@@ -7042,6 +7293,7 @@ VIEWS.libset=function(app){
     ${libDescr(x)?`<p class="hint" style="margin:8px 2px 0">${esc(libDescr(x))}</p>`:''}
     ${mine?`<div class="rwdup" style="margin-top:12px;background:var(--surf2);color:var(--tx)">${t('Visible to')}: <b>${libStatusTxt(x.status)}</b>${libSubsOf(x.id)?' · '+libSubsOf(x.id)+' '+t('added it'):''}
       ${x.status==='link'?`<button class="btn ghost" style="margin-top:10px" onclick="libShare()">${ic('link',18)}${t('Share the link')}</button>`:''}</div>`:''}
+    ${LV.src==='exam'&&libTeacher()?`<div class="toggle" style="margin-top:8px" onclick="examSheet(['${x.cid}'],'${esc(x.title).replace(/'/g,"\\'")}')"><label>${t('Visible to students')}</label><button class="expill ${examOn(x.cid)?'on':''}">${esc(examLabel(examCfg(x.cid)))}</button></div>`:''}
     <div style="margin:14px 0 6px">${act}</div>
     ${x.builtin?`<div class="hint" style="margin:6px 2px 10px">${t('Forms checked against Wikipedia “List of English irregular verbs” (CC BY-SA 4.0).')}</div>`:''}
     <div class="libwords">${x.words.map(w=>`<div class="lw"><b>${esc(w.en)}</b><span>${esc(w.ru||'')}</span></div>`).join('')}</div>`+tabBar();
@@ -7059,7 +7311,7 @@ function libAdd(){
   (S.libSubs||(S.libSubs={}))[x.id]={setId:set.id,ver:x.version||1,at:Date.now()};
   S.settings.lastSet=set.id;
   save();
-  if(LV.src!=='builtin'&&sb&&AUTH.user&&!libTeacher())sb.from('library_subs').upsert({student_id:AUTH.user.id,lib_id:x.id,ver:x.version||1}).then(()=>{},()=>{});
+  if(LV.src!=='builtin'&&LV.src!=='exam'&&sb&&AUTH.user&&!libTeacher())sb.from('library_subs').upsert({student_id:AUTH.user.id,lib_id:x.id,ver:x.version||1}).then(()=>{},()=>{});
   toast(t('Added ✓')+': '+rows.length+(dupes.length?' · '+t('already had')+' '+dupes.length:''));
   render();
 }
