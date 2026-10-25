@@ -852,7 +852,7 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .wfb{display:flex;flex-direction:column;gap:2px;align-items:flex-end;text-align:right;padding-top:5px;font-size:11.5px;font-weight:750;letter-spacing:.07em;color:var(--mut);word-break:keep-all}
 .wfg{display:inline-block;white-space:nowrap;margin:0 2px;vertical-align:middle;line-height:1.5}
 .wfg i{font-style:normal;font-size:11px;font-weight:700;color:var(--fade);vertical-align:middle;margin-right:4px}
-.wfg input{display:inline-block;vertical-align:middle;font:inherit;font-size:17px;line-height:1.5;height:1.7em;color:var(--pri);font-weight:600;border:0;border-bottom:1.5px solid var(--line2);background:transparent;padding:0 2px;margin:0;border-radius:0;min-width:5.5ch;width:8ch;outline:none;-webkit-appearance:none;appearance:none;text-align:left}
+.wfg input{display:inline-block;vertical-align:middle;font:inherit;font-size:17px;line-height:1.5;height:1.7em;color:var(--pri);font-weight:600;border:0;border-bottom:1.5px solid var(--line2);background:transparent;padding:0 2px;margin:0;border-radius:0;min-width:5.5ch;width:8ch;outline:none;-webkit-appearance:none;appearance:none;text-align:left;text-transform:uppercase;letter-spacing:.04em;font-size:16px}
 .wfg input:focus{border-bottom:2px solid var(--pri)}
 .wfg.blank input{border-bottom-color:var(--bad)}
 .wfbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:none;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:var(--surf);border-top:1px solid var(--line);font-size:14px;color:var(--mut);box-shadow:0 -4px 16px rgba(15,26,46,.06)}
@@ -862,7 +862,7 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .wfbar button:disabled{color:var(--fade);opacity:.5}
 .wfbar .mid{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wfres{font-size:17px;line-height:2;color:var(--tx)}
-.wfa{display:inline;white-space:normal;border-bottom:2px solid var(--ok);font-weight:650;color:var(--ok);padding:0 1px}
+.wfa{text-transform:uppercase;letter-spacing:.03em;display:inline;white-space:normal;border-bottom:2px solid var(--ok);font-weight:650;color:var(--ok);padding:0 1px}
 .wfa.bad{border-bottom-color:var(--bad);color:var(--bad)}
 .wfa i{font-style:normal;font-size:10.5px;font-weight:800;color:#fff;background:var(--ok);border-radius:8px;padding:1px 6px;margin-right:4px;vertical-align:2px}
 .wfa.bad i{background:var(--bad)}
@@ -876,7 +876,7 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .wfgc .h .a{font-weight:750}
 .wfgc .ch{display:inline-block;font-size:12px;font-weight:650;color:var(--pri-d);background:var(--pri-soft);border-radius:8px;padding:2px 8px}
 .wfgc .ans{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
-.wfgc .ans span{font-size:15px;font-weight:600;border-radius:10px;padding:3px 10px}
+.wfgc .ans span{text-transform:uppercase;letter-spacing:.04em;font-size:15px;font-weight:600;border-radius:10px;padding:3px 10px}
 .wfgc .ans .no{background:var(--bad-soft);color:var(--bad)}
 .wfgc .ans .yes{background:var(--ok-soft);color:var(--ok)}
 .wfgc .why{margin-top:8px;color:var(--mut);font-size:14.5px;line-height:1.45}
@@ -890,6 +890,48 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .wfbars .r.low .tr i{background:var(--warn)}
 .wfnote{color:var(--mut);font-size:14.5px;line-height:1.45;margin:12px 4px}
 @media (max-width:380px){.wfx,.wfg input{font-size:16px}.wfb{font-size:10.5px}}
+/* ---- v98: word card ---- */
+.ipa{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 12px}
+.ipa:empty{display:none}
+.ipa button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--surf);color:var(--tx);border-radius:12px;padding:6px 9px;font-size:13px;max-width:100%}
+.ipa button b{font-size:11px;font-weight:800;color:var(--mut);letter-spacing:.04em}
+.ipa button svg{color:var(--pri);flex:none}
+.cardsec{margin:12px 0 4px}
+.cardsec .lab{font-size:12px;font-weight:800;letter-spacing:.07em;color:var(--mut);text-transform:uppercase;margin:0 2px 7px}
+.cardsec:empty{display:none}
+.chip.fam{display:inline-flex;align-items:center;gap:7px;background:var(--surf);border:1px solid var(--line2);color:var(--tx);font-weight:650}
+.chip.fam em{font-style:normal;font-size:11px;font-weight:800;color:var(--mut);letter-spacing:.03em}
+.chip.fam .p{color:var(--pri);font-weight:800;font-size:15px;line-height:1}
+.chip.fam.sel{background:var(--pri-soft);border-color:var(--pri);color:var(--pri-d)}
+.chip.fam.have{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+.chip.fam.have .p{color:var(--ok)}
+.chip.fam.busy{opacity:.6}
+.addbar{position:sticky;bottom:-22px;margin:12px -18px -22px;padding:12px 18px calc(22px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 80%,transparent)}
+.vtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.vtop .k{font-size:13px;font-weight:800;color:var(--mut);letter-spacing:.07em;text-transform:uppercase}
+.vtop .auto{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ok);font-weight:650}
+.vc{background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+.vc .big{font-size:34px;font-weight:800;letter-spacing:-.03em;margin:2px 0;overflow-wrap:anywhere;cursor:text}
+.vc .bigin{font-size:28px;font-weight:800;padding:8px 12px}
+.vc .ipa{margin:8px 0 4px}
+.vc .tags{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px;align-items:center}
+.vc .tag{font-size:12px;font-weight:700;border-radius:8px;padding:3px 8px;background:var(--pri-soft);color:var(--pri-d)}
+.vc .tag.w{background:var(--bad-soft);color:var(--bad)}
+.vc .tags .fqc{margin:0}
+.vc .bh{display:flex;align-items:center;justify-content:space-between;margin:16px 0 7px}
+.vc .bh h4{margin:0;font-size:12px;font-weight:800;letter-spacing:.07em;color:var(--mut);text-transform:uppercase}
+.vc .ac{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:var(--pri);background:var(--pri-soft);border-radius:9px;padding:5px 10px;border:0}
+.vc .tr{font-size:19px;font-weight:650;line-height:1.35;overflow-wrap:anywhere}
+.vc .ex{font-size:15.5px;line-height:1.5;margin:0 0 4px;overflow-wrap:anywhere}
+.vc .ex small{display:block;color:var(--mut);font-size:13.5px;margin-top:2px}
+.vc .none{color:var(--mut);font-size:14.5px}
+.vc .ed{background:var(--pri-soft);border-radius:14px;padding:10px;margin:0 -4px}
+.vc .ed .inp{padding:11px 12px;font-size:16px}
+.vc .ed .chip{background:var(--surf)}
+.vc .ed .chip.on,.vc .ed .chip.exs.on{background:var(--pri);color:var(--on-pri)}
+.vc .ffnote{margin:12px 0 0}
+.vc .lnk{background:none;border:0;color:var(--mut);font-size:13px;font-weight:600;padding:6px 2px;text-decoration:underline}
+.chip.exs.on{background:var(--pri);color:var(--on-pri)}
 </style>
 </head>
 <body>
@@ -3605,7 +3647,7 @@ function tWordForm(id){
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="tTrSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="tChips"></div>
-   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?(w.ex||''):'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"><div class="chips" id="tExChips" style="margin-top:8px"></div></div>
+   <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?exEn(w):'')}" data-en="${esc(w?exEn(w):'')}" data-ru="${esc(w?exRu(w):'')}" oninput="exTyped(this)" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"><div class="chips" id="tExChips" style="margin-top:8px"></div></div>
    <div class="err" id="tErr"></div>
    <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
    ${w?`<div style="height:9px"></div><div class="row2">
@@ -3614,7 +3656,7 @@ function tWordForm(id){
   setTimeout(()=>$('#tEn')&&$('#tEn').focus(),60);
 }
 async function tSaveWord(id){
-  const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim(),ex=($('#tEx').value||'').trim();
+  const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim();let ex=exVal('tEx');{const p=exParse(ex);if(p.en&&!p.ru){const r=await Promise.race([trSentence(p.en).catch(()=>''),new Promise(z=>setTimeout(()=>z(''),2500))]);ex=exJoin(p.en,r);}}
   const err=$('#tErr');
   if(!en){err.textContent=t('Enter a word');return;}
   const btn=$('#tSave');btn.disabled=true;btn.textContent=t('Saving…');
@@ -3643,7 +3685,7 @@ async function tSaveWord(id){
       TV.words.push(row);tDrawWords();
       toast(t('Added ✓'));
       btn.disabled=false;btn.textContent=t('Add');
-      ['tEn','tRu','tEx'].forEach(k=>{const e=$('#'+k);if(e)e.value='';});
+      ['tEn','tRu','tEx'].forEach(k=>{const e=$('#'+k);if(e){e.value='';e.dataset.en='';e.dataset.ru='';}});
       const ch=$('#tChips');if(ch)ch.innerHTML='';clearEx();
       const st=$('#tTrSt');if(st)st.textContent=t('Add the next word');
       ruTouched=false;const f=$('#tEn');if(f)f.focus();
@@ -3907,31 +3949,6 @@ async function delSet(){
 /* ---------- word form ---------- */
 let editId=null,ruTouched=false,trTimer=null,trSeq=0,formLang=DEF_LANG;
 let formArch=null;   /* set while a word is being typed straight into the Archive */
-function wordForm(id,opts){
-  const f=id?findWord(id):null;const w=f?f.w:null;editId=id||null;ruTouched=!!w;
-  formArch=(!id&&opts&&opts.arch)?{lang:opts.lang||langsUsed()[0]||newSetLang()}:null;
-  /* an existing word keeps its list's language; a new one lands in addTarget() */
-  formLang=f?setLangOf(f.s):(formArch?formArch.lang:targetLang());
-  trSetup({lang:formLang});
-  const ph=formLang==='en';   /* the English examples only help on an English list */
-  sheet(`<h2>${w?t('Word'):t('New word')}</h2>
-   ${formArch?`<div class="hint">${t('This word goes straight to the Archive.')}</div>`:''}
-   <div class="field"><label>${t('Word')} (${esc(langNameLc(formLang))})</label>
-     <input class="inp" id="fEn" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="${esc(w?.en||'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr();fqForm()"></div>
-   <div class="fqline" id="fFq">${fqLine(w?.en||'',formLang)}</div>
-   <div class="field"><label>${t('Translation')}</label>
-     <div class="row"><input class="inp" id="fRu" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="${esc(w?.ru||'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true;this.dataset.auto='0';syncChips()" style="flex:1">
-     <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
-   <div class="hint" id="trSt">${t('The translation fills in automatically as you type')}</div>
-   <div class="chips" id="chips"></div>
-   <div class="field"><label>${t('Example (optional)')}</label>
-     <input class="inp" id="fEx" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="${esc(w?.ex||'')}" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"><div class="chips" id="exChips" style="margin-top:8px"></div></div>
-   <button class="btn pri" onclick="saveWord()">${w?t('Save'):t('Add')}</button>
-   ${w?`<div style="height:9px"></div><div class="row2">
-     ${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('reset')}${t('To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('archive')}${t('To Archive')}</button>`}
-     <button class="btn danger ghost" onclick="delWord()">${t('Delete')}</button></div>`:''}`);
-  if(!w)setTimeout(()=>$('#fEn')&&$('#fEn').focus(),60);
-}
 /* which fields the translator writes into — the student form and the teacher form share it */
 let TR={en:'fEn',ru:'fRu',ex:'fEx',st:'trSt',chips:'chips',exch:'exChips',lang:DEF_LANG};
 function trSetup(cfg){TR=Object.assign({en:'fEn',ru:'fRu',ex:'fEx',st:'trSt',chips:'chips',exch:'exChips',lang:DEF_LANG},cfg||{});}
@@ -3993,34 +4010,7 @@ async function exDict(q,forms){
   })));
   return out;
 }
-/* up to three sentences: those with a Russian translation first */
-async function fetchExamples(word,lang,irr){
-  const q=String(word||'').toLowerCase().trim();if(!q)return{list:[],failed:false};
-  const k=lang+'|'+q+(irr?'|'+irr.forms:'');if(k in EXC)return EXC[k];
-  const forms=irr?irr.forms.split(' '):[q];
-  const jobs=[exTatoeba(irr?irr.base:q,lang,forms)];
-  if(lang==='en'){jobs.push(exWiki(irr?irr.base:q,forms));jobs.push(exDict(irr?irr.base:q,forms));}
-  const res=await Promise.all(jobs.map(x=>x.catch(()=>null)));
-  const all=[].concat(...res.map(x=>x||[])).sort((a,b)=>a.s-b.s);
-  const seen=new Set(),list=[];
-  all.forEach(x=>{const k2=x.en.toLowerCase();if(seen.has(k2)||list.length>=3)return;seen.add(k2);list.push(x);});
-  const out={list,failed:!list.length&&res.every(x=>x==null||!x.length)};
-  if(list.length)EXC[k]=out;
-  return out;
-}
 function clearEx(){const e=$('#'+TR.exch);if(e)e.innerHTML='';}
-async function showExamples(seq,en,irr){
-  const el=$('#'+TR.exch);if(!el)return;
-  const base=irr?irr.base:en.replace(/^to\s+/i,'').trim();
-  if(!base||base.split(/\s+/).length>4||!tatCode(TR.lang)){el.innerHTML='';return;}
-  el.innerHTML=`<div class="exhint">${t('Looking for examples…')}</div>`;
-  const r=await fetchExamples(base,TR.lang,irr);
-  if(seq!==trSeq||!$('#'+TR.exch))return;
-  $('#'+TR.exch).innerHTML=r.list.length
-    ?`<div class="exhint">${t('Examples — tap to use:')}</div>`+r.list.map(x=>`<button class="chip exs" data-v="${esc(x.en)}" onclick="pickEx(this)">${esc(x.en)}${x.ru?`<small>${esc(x.ru)}</small>`:''}</button>`).join('')
-    :`<div class="exhint">${t('No examples found for this word.')}</div>`;
-}
-function pickEx(b){const i=$('#'+(TR.ex||'fEx'));if(i){i.value=b.dataset.v||'';i.focus();}}
 /* tap = choose, tap again = unchoose, several can be combined; the first tap replaces the automatic guess */
 function pickChip(b){
   const ru=$('#'+TR.ru);if(!ru)return;
@@ -4029,6 +4019,7 @@ function pickChip(b){
   if(i>=0)list.splice(i,1);else list.push(v);
   ru.value=list.join(', ');ru.dataset.auto='0';ruTouched=true;
   syncChips();
+  if(TR.after)TR.after('ru');
 }
 function syncChips(){
   const ru=$('#'+TR.ru),ch=$('#'+TR.chips);if(!ru||!ch)return;
@@ -4056,23 +4047,8 @@ async function doTr(force){
     ch.innerHTML=groups.map(g=>(g.pos?`<div class="chpos">${esc(g.pos)}</div>`:'')+g.items.map(x=>`<button class="chip" data-v="${esc(x.v)}" onclick="pickChip(this)">${esc(x.v)}${x.h?`<small>${esc(x.h)}</small>`:''}</button>`).join('')).join('');
     syncChips();
   }
-  showExamples(seq,en,r.irr);
-}
-function saveWord(){
-  const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim(),ex=$('#fEx').value.trim();
-  if(!en)return toast(t('Enter a word'));if(!ru)return toast(t('Enter a translation'));
-  if(editId){const f=findWord(editId);if(f){Object.assign(f.w,{en,ru,ex});touch(f.w);}save();closeSheet();render();}
-  else if(formArch){
-    const dup=dupGroupsFor(formArch.lang,en);
-    if(dup){toast('“'+en+'” '+t('is already in the Archive'));return;}
-    const h=holderFor(formArch.lang),w=newWord(en,ru,ex);w.arch=true;w.box=3;w.mark=0;w.aat=archStamp();srStart(w);h.words.unshift(w);
-    save();render();toast(t('Added to the Archive ✓'));
-    $('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';clearEx();ruTouched=false;
-    $('#trSt').textContent=t('Add the next word');$('#fEn').focus();
-  }
-  else{const s=addTarget();S.settings.lastSet=s.id;s.words.unshift(newWord(en,ru,ex));save();render();toast(t('Added ✓'));
-    $('#fEn').value='';$('#fRu').value='';$('#fEx').value='';$('#chips').innerHTML='';clearEx();ruTouched=false;
-    $('#trSt').textContent=t('Add the next word');$('#fEn').focus();}
+  if(force&&TR.after)TR.after('ru');
+  showExamples(seq,en,r.irr,r);
 }
 function toggleArch(id){const f=findWord(id);if(!f)return;const w=f.w;w.arch=!w.arch;
   if(!w.arch){w.box=Math.min(w.box,2);w.due=0;w.rep=0;w.aat=0;}else{w.box=3;w.mark=0;w.aat=archStamp();srStart(w);}
@@ -4110,7 +4086,7 @@ function pdfSheet(spec){
    <button class="btn pri" id="pdfBtn" onclick="makePdf()">${t('Create PDF')}</button>`);
 }
 function pdfFromItems(title,lang,items){
-  return {title,lang,items:items.map((x,i)=>({n:x.n||i+1,en:x.w.en,ru:x.w.ru||'',ex:x.w.ex||''}))};
+  return {title,lang,items:items.map((x,i)=>({n:x.n||i+1,en:x.w.en,ru:x.w.ru||'',ex:exEn(x.w)}))};
 }
 function pdfList(){const s=curSet();if(!s)return;closeSheet();setTimeout(()=>pdfSheet(pdfFromItems(s.name,setLangOf(s),setSliceOf(s))),260);}
 function pdfArchive(){
@@ -4119,7 +4095,7 @@ function pdfArchive(){
 }
 function tPdf(){
   const base=TV.base||[],list=TV.list||[];
-  const items=list.map(w=>({n:base.indexOf(w)+1,w:{en:w.en,ru:w.ru,ex:w.ex}}));
+  const items=list.map(w=>({n:base.indexOf(w)+1,w:{en:w.en,ru:w.ru,ex:exEn(w)}}));
   const first=list[0];
   closeSheet();setTimeout(()=>pdfSheet(pdfFromItems((TV.setId==='archive'?t('Archive'):TV.setName)+' — '+(TV.sname||''),first?tSetLang(first.set_id):DEF_LANG,items)),260);
 }
@@ -4503,7 +4479,7 @@ function cfCard(lg){
 }
 /* the student's own example with the word lit up (or the gap), when the sentence really contains it */
 function cfFindIn(w){
-  const ex=String(w.ex||'').trim();if(!ex||ex.length>140)return null;
+  const ex=exEn(w);if(!ex||ex.length>140)return null;
   const ir=irregOf(w.en);
   const forms=ir?ir.forms.split(' '):[String(w.en||'').toLowerCase().trim().replace(/^to\s+/,'')];
   for(const f of forms){
@@ -4755,6 +4731,384 @@ VIEWS.wfprog=function(app){
   }).catch(()=>{const b=$('#wfpBody');if(b)b.innerHTML=`<div class="hint" style="margin:18px 2px">${t('Couldn’t load the texts — check the internet connection and try again.')}</div>`;});
 };
 
+/* ---------- v98: word card — transcription, word family, better examples ---------- */
+Object.assign(RU_DICT,{"Word":"Слово","false friend":"ложный друг","New word":"Новое слово","Saved automatically":"Сохраняется само","Edit":"Изменить","Done":"Готово","Another":"Другой","Add example":"Добавить пример","Example":"Пример","Word family":"Однокоренные слова","Tap to add":"нажмите, чтобы добавить","noun":"сущ.","verb":"гл.","adj.":"прил.","adv.":"нар.","n.":"сущ.","v.":"гл.","a.":"прил.","r.":"нар.","Pronunciation":"Произношение","Write your own example":"или напишите свой пример","Remove the example":"Убрать пример","Translating the example…":"Переводим пример…","Add the word":"Добавить слово","Adding related words…":"Добавляем однокоренные слова…","Added {n} related":"Добавлено однокоренных: {n}","Couldn’t translate: ":"Не удалось перевести: ","Options — tap to add or remove:":"Варианты: нажмите, чтобы добавить или убрать:","already in your lists":"уже в ваших списках"});
+/* an example is stored as «English ‖ Russian» in the same field, so no new column is needed and old words still work */
+const EXSEP='‖';
+const exParse=s=>{const p=String(s||'').split(EXSEP);return{en:(p[0]||'').trim(),ru:p.slice(1).join(' ').trim()};};
+const exEn=w=>exParse(w&&w.ex).en;
+const exRu=w=>exParse(w&&w.ex).ru;
+const exJoin=(en,ru)=>{en=String(en||'').trim();ru=String(ru||'').trim();return en?(ru?en+' '+EXSEP+' '+ru:en):'';};
+function exVal(id){const el=$('#'+id);if(!el)return '';const en=el.value.trim();return exJoin(en,en&&el.dataset.en===en?el.dataset.ru:'');}
+async function trSentence(x){
+  const j=await getJson('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&q='+encodeURIComponent(x),6000);
+  return ((j&&j[0])||[]).map(a=>a[0]).join('').trim();
+}
+const SPK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const CKS='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>';
+const PNS='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+const PLS='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+
+/* ---- pronunciation: the dictionary's transcription and real recordings, with the device voice as a fallback ---- */
+const DICT={};
+const cleanIpa=x=>String(x||'').replace(/^\s*[\/\[]|[\/\]]\s*$/g,'').trim();
+async function dictLookup(word){
+  const q=String(word||'').toLowerCase().trim();
+  if(!q||/\s/.test(q)||/[^a-z'-]/.test(q))return null;
+  if(q in DICT)return DICT[q];
+  const j=await getJson('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(q),7000);
+  if(!Array.isArray(j)||!j.length)return null;
+  const o={uk:'',us:'',auk:'',aus:'',any:'',aany:'',pos:''};
+  j.forEach(e=>{
+    if(!o.pos&&e.meanings&&e.meanings[0])o.pos=e.meanings[0].partOfSpeech||'';
+    [].concat(e.phonetics||[],e.phonetic?[{text:e.phonetic}]:[]).forEach(p=>{
+      const tx=cleanIpa(p.text),au=String(p.audio||'');
+      const kind=/-uk\.|\/uk\/|-gb\./i.test(au)?'uk':/-us\.|\/us\//i.test(au)?'us':'';
+      if(tx){if(kind==='uk'&&!o.uk)o.uk=tx;else if(kind==='us'&&!o.us)o.us=tx;if(!o.any)o.any=tx;}
+      if(au){if(kind==='uk'&&!o.auk)o.auk=au;else if(kind==='us'&&!o.aus)o.aus=au;if(!o.aany)o.aany=au;}
+    });
+  });
+  o.uk=o.uk||o.any;o.us=o.us||o.any;
+  DICT[q]=o;return o;
+}
+const ipaStr=o=>o&&(o.uk||o.us)?(o.uk&&o.us&&o.uk!==o.us?o.uk+' | '+o.us:(o.uk||o.us)):'';
+const ipaParts=s=>{const p=String(s||'').split('|').map(x=>cleanIpa(x));return{uk:p[0]||'',us:p[1]||p[0]||''};};
+function ipaHtml(en,ipa){
+  const p=ipaParts(ipa);if(!p.uk&&!p.us)return '';
+  const a=esc(en);
+  return `<button type="button" onclick="ipaPlay('${a.replace(/'/g,"\\'")}','uk')"><b>UK</b> /${esc(p.uk)}/ ${SPK}</button><button type="button" onclick="ipaPlay('${a.replace(/'/g,"\\'")}','us')"><b>US</b> /${esc(p.us)}/ ${SPK}</button>`;
+}
+function ipaPlay(word,kind){
+  const d=DICT[String(word).toLowerCase().trim()],url=d&&(kind==='uk'?d.auk:d.aus)||(d&&d.aany)||'';
+  const tag=kind==='uk'?'en-GB':'en-US';
+  const fb=()=>{try{speechSynthesis.cancel();}catch(e){}speakOnline(word,tag).then(ok=>{if(!ok)speak(word,'en');});};
+  if(!url||navigator.onLine===false){fb();return;}
+  try{if(_aud){try{_aud.pause();}catch(e){}}const a=new Audio(url);_aud=a;a.play().catch(fb);}catch(e){fb();}
+}
+
+/* ---- word family: a small built-in table, loaded the first time it is needed ---- */
+const FAM={ready:null,idx:null,fam:null};
+function famLoad(){
+  if(!FAM.ready)FAM.ready=fetch('lib/deriv.json?v=98').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{
+    FAM.fam=(j.f||[]).map(s=>s.split(' ').map(x=>{const i=x.lastIndexOf(':');return{w:x.slice(0,i),p:x.slice(i+1)};}));
+    FAM.idx={};FAM.fam.forEach((f,i)=>f.forEach(m=>{(FAM.idx[m.w]||(FAM.idx[m.w]=[])).push(i);}));
+    return true;
+  }).catch(()=>{FAM.ready=null;return false;});
+  return FAM.ready;
+}
+function famKeys(en){
+  const x=String(en||'').toLowerCase().trim().replace(/^to\s+/,'').replace(/[’]/g,"'");
+  if(!x||/\s/.test(x))return [];
+  const out=[x];
+  try{const li=lemIrr(x);if(li)out.push(li);lemCands(x).forEach(([c,s])=>{if(s)out.push(c);});}catch(e){}
+  return out;
+}
+async function famOf(en){
+  if(!(await famLoad()))return [];
+  const keys=famKeys(en),seen=new Set(keys),out=[];
+  keys.forEach(k=>(FAM.idx[k]||[]).forEach(i=>FAM.fam[i].forEach(m=>{if(!seen.has(m.w)){seen.add(m.w);out.push(m);}})));
+  return out.slice(0,10);
+}
+const POSL={n:'n.',v:'v.',a:'a.',r:'r.'};
+function haveWords(){const h=new Set();S.sets.forEach(s=>s.words.forEach(w=>h.add(fold(w.en))));return h;}
+function famHtml(list,sel,onclick){
+  if(!list.length)return '';
+  const have=haveWords();
+  return `<div class="lab">${t('Word family')}</div><div class="chips">`+list.map(m=>{
+    const h=have.has(fold(m.w)),on=sel&&sel.has(m.w);
+    return `<button type="button" class="chip fam ${h?'have':on?'sel':''}" data-w="${esc(m.w)}" ${h?'':`onclick="${onclick}(this)"`}><span class="p">${h||on?'✓':'+'}</span>${esc(m.w)}<em>${t(POSL[m.p]||'')}</em></button>`;
+  }).join('')+`</div>`;
+}
+async function trQuick(en){const r=await translate(en,'en');return r&&r.main?lcFirst(r.main,en):'';}
+
+/* ---- examples: simple, natural, with a Russian translation ---- */
+const EX_NAMES=new Set(['tom','mary','john','boston','australia','japan','tatoeba','bob','alice','ken','jack','mike','paul','anne','tony','jim','sam','kate']);
+const EX_BAD=/[0-9"“”()\[\]@#\/\\_*%&]|https?:|\.\.\./;
+function exForms(q){
+  const f=new Set([q]);
+  if(q.length>=3){f.add(q+'s');f.add(q+'es');f.add(q.endsWith('e')?q+'d':q+'ed');f.add(q.endsWith('e')?q.slice(0,-1)+'ing':q+'ing');
+    if(q.endsWith('y')){f.add(q.slice(0,-1)+'ies');f.add(q.slice(0,-1)+'ied');}}
+  return [...f];
+}
+/* lower = better. null = not good enough for a learner */
+function exQuality(x,forms,stems,relax){
+  const en=String(x.en||'').trim();
+  if(en.length<(relax?14:18)||en.length>(relax?120:95)||EX_BAD.test(en))return null;
+  if(!/^[A-Z]/.test(en)||!/[.!?]$/.test(en))return null;
+  const ws=(en.toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g)||[]);const n=ws.length;
+  if(n<(relax?3:4)||n>(relax?20:15))return null;
+  let s=Math.abs(n-9)*2,rare=0,mid=0,name=0;
+  ws.forEach(w=>{
+    if(forms.some(f=>w===f))return;
+    if(EX_NAMES.has(w)){name++;return;}
+    const b=fqBand(w.replace(/'(s|t|re|ve|ll|d|m)$/,''),'en');
+    if(b===5)rare++;else if(b===4)mid++;
+  });
+  if(rare>(relax?2:1))return null;
+  s+=rare*14+mid*3+name*3;
+  if(x.ru){
+    s-=14;
+    const low=x.ru.toLowerCase();
+    if(stems&&stems.length)s+=stems.some(st=>low.includes(st))?-24:10;
+  }
+  return s+(x.pen||0);
+}
+function exStems(r){
+  const vals=[];if(r){if(r.main)vals.push(r.main);(r.alts||[]).forEach(a=>vals.push(a));(r.groups||[]).forEach(g=>g.items.forEach(i=>vals.push(i.v)));}
+  const st=new Set();
+  vals.join(', ').split(/[,;]\s*|\s+/).forEach(v=>{v=v.toLowerCase().replace(/[^а-яё]/g,'');if(v.length>=4)st.add(v.slice(0,Math.max(4,Math.min(6,v.length-2))));});
+  return [...st];
+}
+async function tatQuery(q,code,sort){
+  const j=await getJson('https://tatoeba.org/en/api_v0/search?from='+code+'&to=rus&query='+encodeURIComponent(q)+'&orphans=no&unapproved=no&sort='+sort);
+  return ((j&&j.results)||[]).map(r=>{
+    const tr=[].concat(...(r.translations||[])).filter(y=>y&&y.lang==='rus'&&y.text);
+    const ru=(tr.find(y=>y.isDirect)||tr[0]||{}).text||'';
+    return{en:String(r.text||'').trim(),ru:String(ru).trim(),pen:0};
+  });
+}
+async function fetchExamples(word,lang,irr,tr){
+  const q=String(word||'').toLowerCase().trim();if(!q)return{list:[],failed:false};
+  const stems=exStems(tr);
+  const k=lang+'|'+q+(irr?'|'+irr.forms:'')+'|'+stems.slice(0,6).join(',');if(k in EXC)return EXC[k];
+  const forms=irr?irr.forms.split(' '):exForms(q);
+  const code=tatCode(lang);
+  let cand=[],net=false;
+  const take=r=>{if(r){net=true;cand=cand.concat(r);}};
+  if(lang==='en'&&code){
+    const base=irr?irr.base:q;
+    (await Promise.all([tatQuery(base,code,'relevance'),tatQuery(base,code,'words')].map(p=>p.catch(()=>null)))).forEach(take);
+    const good=()=>new Set(cand.filter(x=>usesForm(x.en,forms)&&exQuality(x,forms,stems)!=null).map(x=>x.en.toLowerCase())).size;
+    if(good()<3&&!irr){
+      const more=forms.filter(f=>f!==base).slice(0,3);
+      (await Promise.all(more.map(f=>tatQuery(f,code,'relevance').catch(()=>null)))).forEach(take);
+    }
+    if(good()<3){
+      const base2=irr?irr.base:q;
+      const w=await Promise.all([exWiki(base2,forms),exDict(base2,forms)].map(p=>p.catch(()=>null)));
+      w.forEach(a=>{if(a){net=true;a.forEach(x=>cand.push({en:x.en,ru:'',pen:12}));}});
+    }
+  }else if(code){
+    take(await tatQuery(q,code,'relevance').catch(()=>null));
+  }
+  const pick=relax=>{
+    const seen=new Set(),sc=[];
+    cand.forEach(x=>{
+      const key=x.en.toLowerCase();if(seen.has(key)||!usesForm(x.en,forms))return;
+      const s=exQuality(x,forms,stems,relax);if(s==null)return;seen.add(key);sc.push([s,x]);
+    });
+    return sc.sort((a,b)=>a[0]-b[0]).map(a=>a[1]);
+  };
+  let list=pick(false);if(list.length<2)list=pick(true);
+  list=list.slice(0,3);
+  /* a sentence without a human translation gets a machine one, so every example shows its Russian */
+  await Promise.all(list.filter(x=>!x.ru).map(async x=>{x.ru=await trSentence(x.en).catch(()=>'');}));
+  const out={list,failed:!list.length&&!net};
+  if(list.length)EXC[k]=out;
+  return out;
+}
+async function showExamples(seq,en,irr,tr){
+  const el=$('#'+TR.exch);if(!el)return;
+  const base=irr?irr.base:en.replace(/^to\s+/i,'').trim();
+  if(!base||base.split(/\s+/).length>4||!tatCode(TR.lang)){el.innerHTML='';return;}
+  el.innerHTML=`<div class="exhint">${t('Looking for examples…')}</div>`;
+  const r=await fetchExamples(base,TR.lang,irr,tr);
+  if(seq!==trSeq||!$('#'+TR.exch))return;
+  const cur=($('#'+TR.ex)||{}).value||'';
+  $('#'+TR.exch).innerHTML=r.list.length
+    ?`<div class="exhint">${t('Examples — tap to use:')}</div>`+r.list.map(x=>`<button class="chip exs${cur.trim()===x.en?' on':''}" data-v="${esc(x.en)}" data-ru="${esc(x.ru||'')}" onclick="pickEx(this)">${esc(x.en)}${x.ru?`<small>${esc(x.ru)}</small>`:''}</button>`).join('')
+    :`<div class="exhint">${t('No examples found for this word.')}</div>`;
+}
+function pickEx(b){
+  const i=$('#'+(TR.ex||'fEx'));if(!i)return;
+  const on=b.classList.contains('on');
+  document.querySelectorAll('#'+TR.exch+' .chip.exs').forEach(c=>c.classList.remove('on'));
+  if(on){i.value='';i.dataset.en='';i.dataset.ru='';}
+  else{b.classList.add('on');i.value=b.dataset.v||'';i.dataset.en=i.value.trim();i.dataset.ru=b.dataset.ru||'';}
+  if(TR.after)TR.after('ex');
+}
+/* typing your own example: the translation follows by itself */
+let _exT=0;
+function exTyped(inp){
+  clearTimeout(_exT);
+  _exT=setTimeout(async()=>{
+    const en=inp.value.trim();
+    if(en.length<8||inp.dataset.en===en&&inp.dataset.ru){if(TR.after)TR.after('ex');return;}
+    inp.dataset.en='';inp.dataset.ru='';
+    const ru=await trSentence(en).catch(()=>'');
+    if(inp.value.trim()===en){inp.dataset.en=en;inp.dataset.ru=ru;}
+    if(TR.after)TR.after('ex');
+  },900);
+}
+
+/* ---- the form for a new word ---- */
+let FAMSEL=new Set(),cardSeq=0,cardT=0;
+function cardSide(){
+  clearTimeout(cardT);
+  cardT=setTimeout(async()=>{
+    const en=($('#fEn')||{}).value;const seq=++cardSeq;
+    const ipa=$('#fIpa'),fam=$('#fFam');
+    if(!en||!en.trim()||formLang!=='en'){if(ipa)ipa.innerHTML='';if(fam)fam.innerHTML='';return;}
+    const x=en.trim();
+    const [d,list]=await Promise.all([dictLookup(x).catch(()=>null),famOf(x).catch(()=>[])]);
+    if(seq!==cardSeq||!$('#fEn')||$('#fEn').value.trim()!==x)return;
+    if(ipa)ipa.innerHTML=d?ipaHtml(x,ipaStr(d)):'';
+    if(fam)fam.innerHTML=famHtml(list,FAMSEL,'famToggle');
+  },420);
+}
+function famToggle(b){
+  const w=b.dataset.w;if(FAMSEL.has(w)){FAMSEL.delete(w);b.classList.remove('sel');b.querySelector('.p').textContent='+';}
+  else{FAMSEL.add(w);b.classList.add('sel');b.querySelector('.p').textContent='✓';}
+  const a=$('#fAdd');if(a)a.textContent=FAMSEL.size?t('Add the word')+' + '+FAMSEL.size:(editId?t('Save'):t('Add'));
+}
+function wordForm(id,opts){
+  if(id){const f=findWord(id);if(f)return wordView(id);}
+  editId=null;ruTouched=false;FAMSEL=new Set();
+  formArch=(opts&&opts.arch)?{lang:opts.lang||langsUsed()[0]||newSetLang()}:null;
+  formLang=formArch?formArch.lang:targetLang();
+  trSetup({lang:formLang});
+  const ph=formLang==='en';
+  sheet(`<h2>${t('New word')}</h2>
+   ${formArch?`<div class="hint">${t('This word goes straight to the Archive.')}</div>`:''}
+   <div class="field"><label>${t('Word')} (${esc(langNameLc(formLang))})</label>
+     <input class="inp" id="fEn" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr();fqForm();cardSide()"></div>
+   <div class="fqline" id="fFq"></div>
+   <div class="ipa" id="fIpa"></div>
+   <div class="field"><label>${t('Translation')}</label>
+     <div class="row"><input class="inp" id="fRu" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true;this.dataset.auto='0';syncChips()" style="flex:1">
+     <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
+   <div class="hint" id="trSt">${t('The translation fills in automatically as you type')}</div>
+   <div class="chips" id="chips"></div>
+   <div class="cardsec" id="fFam"></div>
+   <div class="field" style="margin-top:12px"><label>${t('Example (optional)')}</label>
+     <input class="inp" id="fEx" enterkeyhint="done" onkeydown="enterAdd(event,'student')" value="" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="exTyped(this)"><div class="chips" id="exChips" style="margin-top:8px"></div></div>
+   <div class="addbar"><button class="btn pri" id="fAdd" onclick="saveWord()">${t('Add')}</button></div>`);
+  setTimeout(()=>$('#fEn')&&$('#fEn').focus(),60);
+}
+function clearNewForm(){
+  ['fEn','fRu','fEx'].forEach(k=>{const e=$('#'+k);if(e){e.value='';e.dataset.en='';e.dataset.ru='';}});
+  ['chips','fIpa','fFam','fFq'].forEach(k=>{const e=$('#'+k);if(e)e.innerHTML='';});
+  clearEx();ruTouched=false;FAMSEL=new Set();
+  const a=$('#fAdd');if(a)a.textContent=t('Add');
+  const st=$('#trSt');if(st)st.textContent=t('Add the next word');
+  const f=$('#fEn');if(f)f.focus();
+}
+async function addFamily(set,list,lang,onDone){
+  let n=0,fail=[];
+  const have=haveWords();
+  const res=await Promise.all(list.filter(w=>!have.has(fold(w))).map(async w=>({w,ru:await trQuick(w).catch(()=>'')})));
+  res.forEach(r=>{if(!r.ru){fail.push(r.w);return;}const nw=newWord(r.w,r.ru,'');nw.pos=posNow();set.words.unshift(nw);n++;});
+  if(n){set.upd=Date.now();save();render();}
+  if(fail.length)toast(t('Couldn’t translate: ')+fail.join(', '));
+  else if(n)toast(t('Added {n} related').replace('{n}',n));
+  if(onDone)onDone(n);
+  return n;
+}
+async function saveWord(){
+  const en=$('#fEn').value.trim(),ru=$('#fRu').value.trim();
+  if(!en)return toast(t('Enter a word'));if(!ru)return toast(t('Enter a translation'));
+  let ex=exVal('fEx');
+  {const p=exParse(ex);if(p.en&&!p.ru){const r=await Promise.race([trSentence(p.en).catch(()=>''),new Promise(r=>setTimeout(()=>r(''),2500))]);ex=exJoin(p.en,r);}}
+  const d=formLang==='en'?DICT[en.toLowerCase()]:null,ipa=ipaStr(d);
+  const fam=[...FAMSEL];
+  const mk=()=>newWord(en,ru,ex,ipa);
+  let target;
+  if(formArch){
+    const dup=dupGroupsFor(formArch.lang,en);
+    if(dup){toast('“'+en+'” '+t('is already in the Archive'));return;}
+    const h=holderFor(formArch.lang),w=mk();w.arch=true;w.box=3;w.mark=0;w.aat=archStamp();srStart(w);h.words.unshift(w);
+    save();render();toast(t('Added to the Archive ✓'));clearNewForm();return;
+  }
+  target=addTarget();S.settings.lastSet=target.id;target.words.unshift(mk());save();render();toast(t('Added ✓'));
+  clearNewForm();
+  if(fam.length)addFamily(target,fam,formLang);
+}
+
+/* ---- tapping a word: a card to look at, with every part editable in place ---- */
+let VW={id:'',tr:false,ex:false,fam:[],tags:''};
+function wordView(id){
+  const f=findWord(id);if(!f)return;
+  editId=id;VW={id,tr:false,ex:false,fam:[],tags:''};
+  vwDraw(true);vwLoad();
+}
+const POS_DICT={noun:'существительное',verb:'глагол',adjective:'прилагательное',adverb:'наречие',pronoun:'местоимение',preposition:'предлог',conjunction:'союз',interjection:'междометие',exclamation:'междометие',determiner:'определитель',numeral:'числительное',article:'артикль'};
+function vwDraw(first){
+  const f=findWord(VW.id);if(!f){closeSheet();return;}
+  const w=f.w,lg=setLangOf(f.s),en=lg==='en';
+  const ex=exParse(w.ex);
+  const ff=ffOf(w);
+  const ipa=en?ipaHtml(w.en,w.ipa||''):'';
+  const tags=[VW.tags?`<span class="tag">${esc(VW.tags)}</span>`:'',fqChip(w,lg),ff?`<span class="tag w">${t('false friend')}</span>`:''].join('');
+  const trBlock=VW.tr
+    ?`<div class="ed"><input type="hidden" id="vEn" value="${esc(w.en)}"><div class="row"><input class="inp" id="vRu" enterkeyhint="done" value="${esc(w.ru||'')}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true;this.dataset.auto='0';syncChips();vwAuto('ru')" style="flex:1"><button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div>
+        <div class="hint" id="vTrSt"></div><div class="chips" id="vChips"></div></div>`
+    :`<div class="tr">${esc(w.ru||'—')}</div>`;
+  const exBlock=VW.ex
+    ?`<div class="ed"><input class="inp" id="vEx" enterkeyhint="done" value="${esc(ex.en)}" data-en="${esc(ex.en)}" data-ru="${esc(ex.ru)}" placeholder="${t('Write your own example')}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="exTyped(this)"><div class="chips" id="vExChips" style="margin-top:8px"></div>${ex.en?`<button class="lnk" onclick="vwRemoveEx()">${t('Remove the example')}</button>`:''}</div>`
+    :(ex.en?`<div class="ex">${esc(ex.en)}${ex.ru?`<small>${esc(ex.ru)}</small>`:''}</div>`:`<button class="ac" style="width:100%;justify-content:center;padding:11px" onclick="vwEx()">${PLS} ${t('Add example')}</button>`);
+  const famBlock=VW.fam.length?`<div class="bh"><h4>${t('Word family')}</h4></div>${famHtml(VW.fam,null,'vwFam').replace(/^<div class="lab">[^<]*<\/div>/,'')}`:'';
+  sheet(`<div class="vtop"><span class="k">${t('Word')}</span><span class="auto">${CKS} ${t('Saved automatically')}</span></div>
+   <div class="vc">
+    ${VW.word?`<input class="inp bigin" id="vWord" value="${esc(w.en)}" onblur="vwWordDone()" onkeydown="if(event.key==='Enter')this.blur()" autocapitalize="none" autocorrect="off" spellcheck="false">`:`<div class="big" onclick="vwWord()">${esc(w.en)}</div>`}
+    ${ipa?`<div class="ipa">${ipa}</div>`:''}
+    <div class="tags">${tags}</div>
+    <div class="bh"><h4>${t('Translation')}</h4><button class="ac" onclick="${VW.tr?'vwTrDone()':'vwTr()'}">${VW.tr?CKS+' '+t('Done'):PNS+' '+t('Edit')}</button></div>
+    ${trBlock}
+    <div class="bh"><h4>${t('Example')}</h4>${VW.ex?`<button class="ac" onclick="vwExDone()">${CKS} ${t('Done')}</button>`:(ex.en?`<button class="ac" onclick="vwEx()">${PLS} ${t('Another')}</button>`:'')}</div>
+    ${exBlock}
+    ${ffNote(w)}
+    ${famBlock}
+   </div>
+   <div class="row2">${w.arch?`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('reset')}${t('To learning')}</button>`:`<button class="btn ghost" onclick="toggleArch('${w.id}')">${ic('archive')}${t('To Archive')}</button>`}
+     <button class="btn danger ghost" onclick="delWord()">${t('Delete')}</button></div>`);
+  if(VW.tr){trSetup({en:'vEn',ru:'vRu',ex:'vEx',st:'vTrSt',chips:'vChips',exch:'vExChips',lang:lg,after:vwAfter});}
+  else if(VW.ex){trSetup({en:'vEn',ru:'vRu',ex:'vEx',st:'vTrSt',chips:'vChips',exch:'vExChips',lang:lg,after:vwAfter});}
+}
+async function vwLoad(){
+  const f=findWord(VW.id);if(!f)return;const w=f.w,lg=setLangOf(f.s);
+  if(lg!=='en')return;
+  const [d,fam]=await Promise.all([dictLookup(w.en).catch(()=>null),famOf(w.en).catch(()=>[])]);
+  if(VW.id!==w.id||!$('#scrim'))return;
+  VW.fam=fam;VW.tags=d&&d.pos?(POS_DICT[d.pos]||''):'';
+  if(d&&!w.ipa&&ipaStr(d)){w.ipa=ipaStr(d);touch(w);save();}
+  if(!VW.tr&&!VW.ex&&!VW.word)vwDraw();
+}
+function vwWord(){VW.word=true;vwDraw();setTimeout(()=>{const i=$('#vWord');if(i){i.focus();i.select();}},50);}
+function vwWordDone(){
+  const f=findWord(VW.id),i=$('#vWord');if(!f||!i){VW.word=false;return;}
+  const v=i.value.trim();VW.word=false;
+  if(v&&v!==f.w.en){f.w.en=v;f.w.ipa='';touch(f.w);save();render();VW.fam=[];VW.tags='';vwDraw();vwLoad();}else vwDraw();
+}
+function vwTr(){
+  VW.tr=true;VW.ex=false;vwDraw();ruTouched=true;
+  const f=findWord(VW.id);if(f)doTr(false);
+}
+function vwTrDone(){VW.tr=false;vwDraw();}
+function vwEx(){
+  VW.ex=true;VW.tr=false;vwDraw();
+  const f=findWord(VW.id);if(!f)return;
+  const seq=++trSeq;
+  showExamples(seq,f.w.en,irregOf(f.w.en)||null,{main:f.w.ru,alts:[]});
+  /* the translation options give a better match for the right meaning: use them when they arrive */
+  translate(f.w.en,'en').then(r=>{if(r&&seq===trSeq&&VW.ex&&$('#vExChips'))showExamples(seq,f.w.en,r.irr||null,r);}).catch(()=>{});
+}
+function vwExDone(){VW.ex=false;vwDraw();}
+function vwRemoveEx(){const f=findWord(VW.id);if(!f)return;f.w.ex='';touch(f.w);save();VW.ex=false;vwDraw();}
+let _vwT=0;
+function vwAuto(k){clearTimeout(_vwT);_vwT=setTimeout(()=>vwAfter(k),500);}
+function vwAfter(k){
+  const f=findWord(VW.id);if(!f)return;const w=f.w;
+  if(k==='ru'||!k){const v=(($('#vRu')||{}).value||'').trim();if(v&&v!==w.ru){w.ru=v;touch(w);save();render();}}
+  if(k==='ex'||!k){const v=exVal('vEx');if(v!==(w.ex||'')){w.ex=v;touch(w);save();}}
+}
+async function vwFam(b){
+  const f=findWord(VW.id);if(!f)return;const w=b.dataset.w;
+  b.classList.add('busy');
+  const n=await addFamily(f.s,[w],setLangOf(f.s));
+  b.classList.remove('busy');
+  if(n&&$('#scrim')&&VW.id===f.w.id&&!VW.tr&&!VW.ex)vwDraw();
+}
+
 /* ---------- questions engine ---------- */
 /* ---- wrong answers that are worth thinking about: same part of speech, similar form ---- */
 const ruChunks=w=>String(w.ru||'').toLowerCase().replace(/\(.*?\)/g,' ').split(/[;,\/]/).map(x=>x.trim()).filter(Boolean);
@@ -4902,7 +5256,7 @@ function startCards(review){
      `<div class="topbar"><div class="pbar"><i style="width:${i/deck.length*100}%"></i></div><span class="stat">${i+1}/${deck.length}</span></div>
       <div class="fc"><div class="card" id="cd">
         ${flip
-          ?`<div class="word">${esc(back)}</div>${w.ex?`<div class="ex">${esc(w.ex)}</div>`:''}`
+          ?`<div class="word">${esc(back)}</div>${exEn(w)?`<div class="ex">${esc(exEn(w))}${exRu(w)?`<small style="display:block;font-size:.85em;opacity:.8;margin-top:6px">${esc(exRu(w))}</small>`:''}</div>`:''}`
           :`<div class="word">${esc(front)}</div><div class="tip">${t('tap to flip')}</div>`}
       </div></div>
       <div class="row2"><button class="btn" id="no" style="color:var(--bad)">${ic('close',17)}${t("Don't know")}</button><button class="btn" id="yes" style="color:var(--ok)">${ic('check',17,2)}${t('Know')}</button></div>
