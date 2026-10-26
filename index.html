@@ -936,6 +936,7 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .exrow{cursor:pointer}
 .expill{flex:none;max-width:46%;padding:7px 13px;border-radius:14px;background:var(--surf2);color:var(--mut);font:inherit;font-weight:650;font-size:13.5px;border:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .expill.on{background:var(--pri-soft);color:var(--pri-d);border-color:transparent}
+.tcount{flex:none;font-size:15px;font-weight:750;font-variant-numeric:tabular-nums;color:var(--pri);background:var(--pri-soft);padding:5px 12px;border-radius:14px}
 </style>
 </head>
 <body>
@@ -1661,6 +1662,11 @@ function bestVoice(tag){
 /* a device without a proper voice for the language (typical for Windows with Russian only) reads English with a Russian
    voice — in that case, and on Windows when only old robotic voices exist, use an online voice instead */
 const IS_WIN=/Windows/i.test(navigator.userAgent||'');
+/* the ring/silent switch of a phone must not mute words: ask the system for the "playback" audio category while we speak */
+let _asT=0;
+function audSess(on){try{if(navigator.audioSession)navigator.audioSession.type=on?'playback':'auto';}catch(e){}}
+function audHold(ms){audSess(true);clearTimeout(_asT);_asT=setTimeout(()=>audSess(false),ms||20000);}
+const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let _aud=null;
 function speakOnline(txt,tag){
   try{
@@ -1668,19 +1674,21 @@ function speakOnline(txt,tag){
     const tl=base==='en'?(tag==='en-GB'?'en-GB':'en-US'):base;
     if(_aud){try{_aud.pause();}catch(e){}}
     const a=new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(txt));
-    _aud=a;a.volume=1;
+    _aud=a;a.volume=1;audHold();
     return a.play().then(()=>true).catch(()=>false);
   }catch(e){return Promise.resolve(false);}
 }
 function speakDevice(txt,tag,v){
+  audHold();
   const u=new SpeechSynthesisUtterance(txt);
   u.lang=(v&&v.lang)||tag;u.rate=.9;u.pitch=1;
   if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);
 }
 function speak(txt,lang){try{
+  audHold();
   const tag=ttsTag(lang);if(!tag)return;            /* Latin and the like: no voice to ask for */
   const v=bestVoice(tag);
-  const weak=!v||(IS_WIN&&vScore(v)<30&&!/online|natural/i.test(v.name||''));
+  const weak=!v||(IS_WIN&&vScore(v)<30&&!/online|natural/i.test(v.name||''))||(IS_IOS&&!navigator.audioSession);
   if(weak&&navigator.onLine!==false){
     speechSynthesis.cancel();
     speakOnline(txt,tag).then(ok=>{if(!ok&&v)speakDevice(txt,tag,v);else if(!ok)speakDevice(txt,tag,null);});
@@ -4865,6 +4873,7 @@ function ipaHtml(en,ipa){
   return `<button type="button" onclick="ipaPlay('${a.replace(/'/g,"\\'")}','uk')"><b>UK</b> /${esc(p.uk)}/ ${SPK}</button><button type="button" onclick="ipaPlay('${a.replace(/'/g,"\\'")}','us')"><b>US</b> /${esc(p.us)}/ ${SPK}</button>`;
 }
 function ipaPlay(word,kind){
+  audHold();
   const d=DICT[String(word).toLowerCase().trim()],url=d&&(kind==='uk'?d.auk:d.aus)||(d&&d.aany)||'';
   const tag=kind==='uk'?'en-GB':'en-US';
   const fb=()=>{try{speechSynthesis.cancel();}catch(e){}speakOnline(word,tag).then(ok=>{if(!ok)speak(word,'en');});};
@@ -5528,7 +5537,7 @@ function runTest(words,kinds,review,resume){
     return h;
   }
   function updateTop(){
-    const ca=countAns(),pb=$('.pbar i'),st=$('.topbar .stat');
+    const ca=countAns(),pb=$('.pbar i'),st=$('#tCount');
     if(pb)pb.style.width=(ca/total*100)+'%';
     if(st)st.textContent=ca+'/'+total;
     $$('.qdot').forEach((b,ix)=>{b.classList.toggle('on',answered(ix));b.classList.toggle('cur',ix===i);});
@@ -5581,8 +5590,8 @@ function runTest(words,kinds,review,resume){
     persist();
     const ca=countAns();
     const dots=qs.map((_,ix)=>`<button class="qdot ${answered(ix)?'on':''} ${ix===i?'cur':''}" data-ix="${ix}">${ix+1}</button>`).join('');
-    app.innerHTML=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()")+
-      `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div><span class="stat">${ca}/${total}</span></div>`+
+    app.innerHTML=hdr(t('Test'),"if(confirm(t('Exit this session?')))render()",`<span class="tcount" id="tCount" aria-label="${t('Answered')}">${ca}/${total}</span>`)+
+      `<div class="topbar"><div class="pbar"><i style="width:${ca/total*100}%"></i></div></div>`+
       `<div class="qpalbox"><div class="qpal${palOpen?' open':''}" id="qpal">${dots}</div><button class="qmore" id="qmore" aria-label="${palOpen?t('Collapse'):t('Show all questions')}">${palOpen?ic('up',18):ic('down',18)}</button></div>`+
       `<div id="tfeed">${qs.map((_,ix)=>`<section class="tq${answered(ix)?' done':''}${ix===i?' cur':''}" id="tq${ix}" data-ix="${ix}">${secInner(ix)}</section>`).join('')}</div>`+
       `<div id="tfin" class="tqfin"><button class="btn pri tfinbtn">${ic('check',18,2)}${t('Finish')}</button></div>`;
@@ -6813,6 +6822,7 @@ function rdSheet(){
   const first=idx[0];
   if(RS.from===first&&!/^I(\b|['’])/.test(phrase)&&!/^\p{Lu}{2,}/u.test(phrase))phrase=phrase.charAt(0).toLowerCase()+phrase.slice(1);
   RS.phrase=phrase;RS.sentence=sentence;RS.orig=phrase;RS.lem=null;
+  RS.rest=(par.slice(sr.s,a.s)+' '+par.slice(b.e,sr.e)).replace(/\s+/g,' ').replace(/\s+([,.;:!?])/g,'$1').trim();
   const seq=++RS.seq;
   const lo=Math.max(first,RS.from-6),hi=Math.min(idx[idx.length-1],RS.to+6);
   const strip=(lo>first?'<span class="pw gap">…</span>':'')+idx.filter(i=>i>=lo&&i<=hi).map(i=>`<button class="pw${i>=RS.from&&i<=RS.to?' on':''}" onclick="rdExt(${i})">${esc(tk[i].t)}</button>`).join('')+(hi<idx[idx.length-1]?'<span class="pw gap">…</span>':'');
@@ -6865,17 +6875,36 @@ async function rdTr(force){
     if(!SENT_CACHE[sentence])SENT_CACHE[sentence]=translate(sentence,lang);
     return SENT_CACHE[sentence];
   })();
+  /* the same sentence without the chosen words: what disappears from the Russian is the meaning that fits here */
+  const rest=RS.rest;
+  const restP=(rest&&rest.split(' ').length>=3)?(async()=>{
+    const k='R:'+rest;if(!SENT_CACHE[k])SENT_CACHE[k]=translate(rest,lang);return SENT_CACHE[k];
+  })():Promise.resolve(null);
   await doTr(force);
   {const h=$('#rSt');if(h&&RS.sentence===sentence)h.hidden=!/^⚠/.test(h.textContent);}
   const r=await sent;
   const box=$('#rSent');if(!box||!r||!r.main||RS.sentence!==sentence)return;
   box.innerHTML=`${esc(sentence)}<span class="rwru">${esc(r.main)}</span>`;
-  rdCtx(r.main);
+  let diff=null;
+  try{const rr=await Promise.race([restP,new Promise(z=>setTimeout(()=>z(null),4000))]);if(rr&&rr.main&&RS.sentence===sentence)diff=ctxDiff(r.main,rr.main);}catch(e){}
+  if(RS.sentence!==sentence)return;
+  rdCtx(r.main,diff);
+}
+/* the Russian words that are in the full translation but not in the translation of the sentence without the phrase */
+function ctxDiff(full,rest){
+  const tk=x=>(String(x).match(/\p{L}+/gu)||[]).map(z=>z.toLowerCase());
+  const f=tk(full),cnt={};tk(rest).forEach(w=>{cnt[w]=(cnt[w]||0)+1;});
+  const out=[];f.forEach(w=>{if(cnt[w]>0){cnt[w]--;}else out.push(w);});
+  const long=out.filter(w=>w.length>2);
+  if(!long.length||out.length>4)return null;
+  return out.join(' ');
 }
 /* the meaning that appears in the translated sentence is the one that fits this text */
-function rdCtx(ruSent){
+function rdCtx(ruSent,diff){
   const ru=$('#rRu'),ch=$('#rChips');if(!ru||!ch)return;
-  const toks=(String(ruSent).match(/\p{L}+/gu)||[]).map(x=>x.toLowerCase());
+  const all=(String(ruSent).match(/\p{L}+/gu)||[]).map(x=>x.toLowerCase());
+  const dtoks=diff?diff.split(' '):null;
+  const toks=dtoks||all;
   let first=null,any=false;
   ch.querySelectorAll('.chip').forEach(c=>{
     const v=(c.dataset.v||'').toLowerCase();
@@ -6885,9 +6914,22 @@ function rdCtx(ruSent){
     if(toks.some(x=>x.startsWith(st))){c.classList.add('ctx');any=true;if(!first)first=c;}
   });
   const hint=$('#rSt');
+  /* the dictionary has nothing that fits this sentence: offer the wording the sentence itself uses */
+  if(!any&&diff){
+    const cur=(ru.value||'').toLowerCase().replace(STEM_END,'');
+    const fits=cur.length>=3&&all.some(x=>x.startsWith(cur.slice(0,Math.max(4,Math.min(cur.length,5)))));
+    if(!ch.querySelector('.chip[data-ctx="1"]')){
+      const b=document.createElement('button');b.className='chip ctx';b.dataset.v=diff;b.dataset.ctx='1';b.setAttribute('onclick','pickChip(this)');
+      b.innerHTML=esc(diff)+'<small>'+esc(t('in this text'))+'</small>';ch.insertBefore(b,ch.firstChild);
+    }
+    if(ru.dataset.auto==='1'&&!fits){ru.value=diff;syncChips();}
+    if(hint)hint.textContent=t('Options — tap to use:')+' · '+t('green frame = fits the sentence');
+    return;
+  }
   if(any&&hint)hint.textContent=t('Options — tap to use:')+' · '+t('green frame = fits the sentence');
   if(first&&ru.dataset.auto==='1'){ru.value=first.dataset.v;syncChips();}
 }
+Object.assign(RU_DICT,{"in this text":"в этом тексте"});
 function rdAdd(){
   const T=RD.T,en=($('#rEn')||{}).value.trim(),ru=($('#rRu')||{}).value.trim(),ex=($('#rEx')||{}).value.trim();
   if(!en)return;if(!ru)return toast(t('Enter a translation'));
@@ -6961,6 +7003,7 @@ const EXAM_IDS=["ege_letter", "ege_data", "ege_cmp", "ege_prob", "ege_op", "ege_
 const EXAM_ALSO={"ielts_t1a": ["hse:ne", "hse:ie"], "ielts_t1b": ["hse:ne", "hse:ie"], "ielts_t2l": ["hse:ne"], "awl1": ["hse:ne"], "awl2": ["hse:ne"], "awl3": ["hse:ne"], "ielts_t1p": ["hse:ne", "hse:ie"]};
 
 
+Object.assign(RU_DICT,{"Answered":"Отвечено"});
 Object.assign(RU_DICT,{"Exam preparation":"Подготовка к экзаменам","Visible to students":"Видно ученикам","{a} of {b} visible to students":"{a} из {b} видны ученикам","Turned-on lists appear in your students’ Library. You can turn a list off at any time.":"Включённые списки появляются в Библиотеке учеников. Выбрать, кому их показывать, можно в любой момент.","Nothing here yet":"Здесь пока ничего нет","Your teacher has not opened any lists in this folder.":"Преподаватель пока не открыл ни одного списка в этой папке.","Couldn’t change — check your connection":"Не удалось изменить — проверьте соединение","Loading…":"Загрузка…","list":"список","lists2":"списка","lists":"списков",
  "Off":"Выкл","Everyone":"Всем","Everyone except {n}":"Всем, кроме {n}","{n} students":"{n} уч.","Nobody":"Никому","All students":"Всем ученикам","Chosen students":"Выбранным ученикам","Who sees it":"Кому видно","Open for everyone":"Открыть всем","Close for everyone":"Закрыть для всех","Choose students…":"Выбрать учеников…","This applies to every list in the folder.":"Это применится ко всем спискам папки.","New students get a list automatically only in the “All students” mode.":"Новые ученики получают список сами только в режиме «Всем ученикам».","You have no students yet.":"У вас пока нет учеников.","Select all":"Выбрать всех","Clear selection":"Снять выбор","Exam lists":"Списки для экзаменов","Access to exam lists":"Доступ к спискам для экзаменов","Choose which exam lists this student sees":"Выберите, какие списки для экзаменов видит этот ученик","Open all":"Открыть всё","Close all":"Закрыть всё","{a} of {b} open":"{a} из {b} открыто","Open or close lists for {name}":"Откройте или закройте списки для {name}","Save":"Сохранить"});
 const EXM={ready:null,lists:null,synced:false};
@@ -7388,14 +7431,16 @@ async function libDelete(id){
   setTimeout(()=>libOpenToken(m[1]),1200);
 })();
 
-const TEACH_VIEWS=['students','tsets','twords'];
-function viewSave(){try{localStorage.setItem(VKEY,JSON.stringify({v:view,at:Date.now(),y:0}));}catch(e){}}
+const TEACH_VIEWS=['students','tsets','twords','tsaccess'];
+function viewSave(){try{
+  const lv=(view.name==='libset'&&LV&&LV.src!=='link'&&LV.set)?{src:LV.src,id:LV.set.id,cid:LV.set.cid||'',back:LV.back||''}:null;
+  localStorage.setItem(VKEY,JSON.stringify({v:view,at:Date.now(),y:0,lv}));}catch(e){}}
 function viewLoad(){
   try{
     const o=JSON.parse(localStorage.getItem(VKEY)||'null');
     if(!o||!o.v||!o.v.name||Date.now()-(o.at||0)>12*36e5)return null;
     const n=o.v.name;
-    const known=['today','vocab','me','archive','hard','text'].indexOf(n)>=0||(n==='read'&&findText(o.v.id))||TEACH_VIEWS.indexOf(n)>=0||(n==='set'&&S.sets.some(s=>s.id===o.v.id));
+    const known=['today','vocab','me','archive','hard','text','library','wf'].indexOf(n)>=0||(n==='libfolder'&&EXAM_FOLDERS.some(x=>x.id===o.v.f))||(n==='libset'&&o.lv&&o.lv.id)||(n==='read'&&findText(o.v.id))||TEACH_VIEWS.indexOf(n)>=0||(n==='set'&&S.sets.some(s=>s.id===o.v.id));
     if(!known)return null;
     if(TEACH_VIEWS.indexOf(n)>=0){const c=JSON.parse(localStorage.getItem(PKEY)||'null');if(!c||c.role!=='teacher')return null;}
     return o;
@@ -7408,7 +7453,20 @@ function bootView(){
     if(!sb)return false;
     PENDV=o;setTimeout(restorePending,7000);return 'wait';
   }
+  if(o.v.name==='libset'){
+    const lv=o.lv;
+    if(lv.src==='builtin'){const x=LIB_BUILTIN.find(z=>z.id===lv.id);if(x){LV={src:'builtin',set:x,back:lv.back||''};view=Object.assign({},o.v);VSCROLL=o.y||0;return true;}}
+    view={name:'library'};libSetRestore(lv);return true;
+  }
   view=Object.assign({},o.v);VSCROLL=o.y||0;return true;
+}
+/* a list that comes from the server (or the exam catalogue) needs its data first: show the library, then open the list */
+function libSetRestore(lv){
+  let n=0;const iv=setInterval(()=>{
+    n++;if(view.name!=='library'||n>30){clearInterval(iv);return;}
+    if(lv.src==='exam'){clearInterval(iv);examLoad().then(ok=>{if(ok&&view.name==='library')examOpen(lv.cid,lv.back);});return;}
+    if(libOk()&&LIBX.list.some(z=>z.id===lv.id)){clearInterval(iv);libOpen(lv.src,lv.id,lv.back);}
+  },400);
 }
 function restorePending(){
   if(!PENDV)return;
