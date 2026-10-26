@@ -6967,7 +6967,7 @@ const EXM={ready:null,lists:null,synced:false};
 const exTxt=(r,e)=>((S.settings.lang||'ru')==='en'?e:r);
 const exFolder=id=>EXAM_FOLDERS.find(x=>x.id===id);
 function examLoad(){
-  if(!EXM.ready)EXM.ready=fetch('lib/exam.json?v=103').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{EXM.lists=j.lists||[];return true;}).catch(()=>{EXM.ready=null;return false;});
+  if(!EXM.ready)EXM.ready=fetch('lib/exam.json?v=104').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{EXM.lists=j.lists||[];return true;}).catch(()=>{EXM.ready=null;return false;});
   return EXM.ready;
 }
 /* ---- who sees a list ----
@@ -7068,9 +7068,20 @@ function examRedraw(){
 /* a list that was improved in a new version of the app: update the teacher's copy, students see "new words" */
 async function examSync(){
   if(EXM.synced||!libTeacher()||!sb||!EXM.lists||!libOk())return;
-  const old=EXM.lists.filter(l=>{const r=examRow(l.id);return r&&r.status!=='draft'&&(r.cv||0)<l.v;});
-  EXM.synced=true;if(!old.length)return;
-  try{await ensureAuth();await examApply(old.map(l=>{const c=examCfg(l.id);return {l,mode:c.mode,ids:c.ids};}));await libLoad(true);examRedraw();}catch(e){EXM.synced=false;}
+  const key=c=>c.mode+':'+c.ids.slice().sort().join();
+  const items=[];
+  EXM.lists.forEach(l=>{const r=examRow(l.id);if(r&&r.status!=='draft'&&(r.cv||0)<l.v){const c=examCfg(l.id);items.push({l,mode:c.mode,ids:c.ids});}});
+  /* a list that is new in the app joins a folder whose existing lists all have one and the same audience */
+  EXAM_FOLDERS.forEach(F=>{
+    const mine=EXM.lists.filter(l=>l.f===F.id);
+    const have=mine.filter(l=>examRow(l.id)),fresh=mine.filter(l=>!examRow(l.id));
+    if(!have.length||!fresh.length)return;
+    const cs=have.map(l=>examCfg(l.id));
+    if(cs[0].mode==='off'||!cs.every(c=>key(c)===key(cs[0])))return;
+    fresh.forEach(l=>items.push({l,mode:cs[0].mode,ids:cs[0].ids}));
+  });
+  EXM.synced=true;if(!items.length)return;
+  try{await ensureAuth();await examApply(items);await libLoad(true);examRedraw();}catch(e){EXM.synced=false;}
 }
 function examOpen(id,back){
   const l=(EXM.lists||[]).find(x=>x.id===id);if(!l)return;
