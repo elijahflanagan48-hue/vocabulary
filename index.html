@@ -937,6 +937,31 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .expill{flex:none;max-width:46%;padding:7px 13px;border-radius:14px;background:var(--surf2);color:var(--mut);font:inherit;font-weight:650;font-size:13.5px;border:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .expill.on{background:var(--pri-soft);color:var(--pri-d);border-color:transparent}
 .tcount{flex:none;font-size:15px;font-weight:750;font-variant-numeric:tabular-nums;color:var(--pri);background:var(--pri-soft);padding:5px 12px;border-radius:14px}
+
+#app .tbar{position:sticky;top:var(--hh,60px);z-index:9;background:var(--bg);margin:0 -2px 6px;padding:8px 2px}
+html[data-bg]:not([data-bg="none"]):not([data-bg="stars"]) #app .tbar,html[data-dbg]:not([data-dbg="none"]) #app .tbar{background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.selcnt{flex:1;text-align:center;font-size:13.5px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums}
+.item .cbox+.numx{margin-left:-4px}
+.reader .w{-webkit-user-select:text;user-select:text}
+.reader{-webkit-user-select:text;user-select:text}
+.reader .hl1{background:rgba(255,213,0,.45);border-radius:4px}
+.reader .hl2{background:rgba(52,199,89,.34);border-radius:4px}
+.reader .hl3{background:rgba(255,105,150,.34);border-radius:4px}
+.reader .hg{border-radius:0;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.rdsel{position:fixed;left:0;right:0;bottom:0;z-index:31;max-width:680px;margin:0 auto;background:var(--surf);border-radius:20px 20px 0 0;
+  box-shadow:0 -8px 30px rgba(15,26,46,.18);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.rdsel .sb-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rdsel .sb{display:flex;align-items:center;gap:6px;height:42px;padding:0 14px;border-radius:13px;background:var(--pri);color:var(--on-pri);font-weight:700;font-size:14.5px;border:0}
+.rdsel .sb.ghost{background:var(--pri-soft);color:var(--pri-d)}
+.rdsel .sb-mk{display:flex;align-items:center;gap:6px;height:42px;padding:0 10px;border-radius:13px;background:var(--surf2);color:var(--mut)}
+.rdsel .hlb{width:28px;height:28px;border-radius:50%;border:2px solid var(--line2);padding:0;display:flex;align-items:center;justify-content:center;background:transparent}
+.rdsel .hlb i{width:18px;height:18px;border-radius:50%;display:block}
+.rdsel .hlb.c1 i{background:#ffd500}.rdsel .hlb.c2 i{background:#34c759}.rdsel .hlb.c3 i{background:#ff6996}
+.rdsel .sb-tr{margin-top:10px;max-height:34vh;overflow:auto}
+.rdsel .sb-ru{font-size:17px;line-height:1.5;font-weight:600;color:var(--tx);white-space:pre-line}
+.rdsel .sb-ru.dim{color:var(--fade);font-weight:500}
+.rdpop .rwtr{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0 2px 8px}
+.rdpop.more .rwtr{-webkit-line-clamp:unset}
 </style>
 </head>
 <body>
@@ -2507,7 +2532,9 @@ function go(name,p={}){
     clearTimeout(go._t);go._t=setTimeout(()=>a.classList.remove('stag'),700);}}
 /* true while a study screen (learn / cards / test / match / daily session) is on screen */
 let studyBusy=false;
-function render(){if(inl)inlineCommit();studyBusy=false;tabWanted=false;(VIEWS[view.name]||VIEWS.today)($('#app'));syncTabs();}
+function hhSync(){try{const h=document.querySelector('header');if(h)document.documentElement.style.setProperty('--hh',h.offsetHeight+'px');}catch(e){}}
+addEventListener('resize',hhSync);
+function render(){if(inl)inlineCommit();studyBusy=false;tabWanted=false;(VIEWS[view.name]||VIEWS.today)($('#app'));syncTabs();hhSync();}
 /* background refreshes (sync, tab focus) must never throw the student out of a session,
    and must be invisible: identical markup is not touched, scroll position is kept */
 let softMode=false;
@@ -2663,7 +2690,7 @@ set(app){
   const s=curSet();if(!s)return go('vocab');
   const pool=active(s),items=setSliceOf(s);
   const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
+   ?`<div class="tbar selt"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><span class="selcnt">${t('Selected')}: ${selIds.size}</span><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
    :(pool.length?`<div class="tbar"><span class="t">${t('Learning')} · ${items.length}</span><button class="lnk" onclick="toggleMarkMode()">${ic('pen',15,2)}${t('Marker')}</button><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   app.innerHTML=hdr(s.name,"go('vocab')",`<button class="ic" aria-label="Menu" onclick="setMenu()">${ic('more')}</button>`)+
    (pool.length&&!selMode?rangeBarHtml(rctx()):'')+
@@ -2677,7 +2704,7 @@ set(app){
 archive(app){
   const lang=view.lang||null,total=archCount(lang),items=archSlice(lang);
   const tbar=selMode
-   ?`<div class="tbar"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
+   ?`<div class="tbar selt"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><span class="selcnt">${t('Selected')}: ${selIds.size}</span><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
    :(items.length?`<div class="tbar"><span class="t">${t('Learned')} · ${items.length}</span>${dupGroups().length?`<button class="lnk" onclick="dupSheet()">${t('Duplicates')} · ${dupGroups().length}</button>`:''}<button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   /* pick the slice first, then the mode — practice runs on exactly what is shown */
   const rangeBar=(total>1&&!selMode)
@@ -3132,7 +3159,7 @@ function wordRows(items,qs,showSrc){
     const picked=selIds.has(w.id);
     const tricky=(w.bad||0)>=2&&(w.bad||0)>(w.ok||0);
     const left=selMode
-      ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
+      ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>${n?`<span class="numx">${n}</span>`:''}`
       :(n?`<span class="numx">${n}</span>`
         :w.arch?'<span class="chk">'+ic('check',14,2.2)+'</span>'
         :tricky?`<span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>`
@@ -3482,7 +3509,7 @@ function tDrawWords(anim){
   const shown=fq?list.filter(w=>fold(w.en+' '+w.ru+' '+(w.ex||'')).includes(fq)):list;
   const sb=$('#tsb');if(sb)sb.style.display=(base.length&&!tSelMode)?'':'none';
   const tbar=tSelMode
-   ?`<div class="tbar"><button class="lnk" onclick="tSelAll()">${tSelIds.size>=list.length&&list.length?t('Clear selection'):t('Select all')}</button><button class="lnk" onclick="tToggleSel()">${t('Cancel')}</button></div>`
+   ?`<div class="tbar selt"><button class="lnk" onclick="tSelAll()">${tSelIds.size>=list.length&&list.length?t('Clear selection'):t('Select all')}</button><span class="selcnt">${t('Selected')}: ${tSelIds.size}</span><button class="lnk" onclick="tToggleSel()">${t('Cancel')}</button></div>`
    :(list.length?`<div class="tbar"><span class="t">${inArch?t('Learned'):t('Learning')} · ${list.length}</span>${inArch?'':`<button class="lnk" onclick="toggleMarkMode()">${ic('pen',15,2)}${t('Marker')}</button>`}${(inArch&&tDupGroups().length)?`<button class="lnk" onclick="tDupSheet()">${t('Duplicates')} · ${tDupGroups().length}</button>`:''}<button class="lnk" onclick="tToggleSel()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   paint(el,(tSelMode?'':rangeBarHtml(rctx())+(list.length?tModesTop():''))+(list.length
     ?tbar+markHint()+
@@ -3491,7 +3518,7 @@ function tDrawWords(anim){
        return `<div class="item ${picked&&tSelMode?'pick':''}" data-id="${w.id}"${(!inArch&&!fq&&!tSelMode&&!markMode)?' data-dr="1"':''}${(!inArch&&w.mark)?` data-m="${w.mark}"`:''} onclick="${markMode?'':tSelMode?`tPick('${w.id}')`:`tWordForm('${w.id}')`}">
        ${(!inArch&&!fq&&!tSelMode&&!markMode)?`<span class="dgrip" aria-label="${t('Drag to reorder')}">${ic('grip',16)}</span>`:''}
        ${tSelMode
-         ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>`
+         ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span><span class="numx">${numOf.get(w.id)}</span>`
          :`<span class="numx">${numOf.get(w.id)}</span>`}
        <div class="t"><div class="en">${esc(w.en)}${fqChip(w,tSetLang(w.set_id))}</div><div class="ru">${esc(w.ru||'')}${inArch&&setName2(w.set_id)?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
        ${(!tSelMode&&!inArch)?`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`:''}
@@ -6574,7 +6601,7 @@ async function txFiles(fl){
     const body=bodies.join('\n\n').trim();
     if(!body){closeSheet();setTimeout(()=>sheet(`<h2>${t('Reading the text…')}</h2><p style="color:var(--mut);margin:0 0 14px">${t('No text found in the picture.')}</p><button class="btn pri" onclick="closeSheet()">OK</button>`),220);return;}
     const conf=Math.round(parts.reduce((a,r)=>a+r.conf,0)/parts.length);
-    TD={id:null,title,body,lang,conf,imgs:urls,ocr:true};
+    TD={id:null,title,body:txNorm(body),lang,conf,imgs:urls,ocr:true};
     closeSheet();go('tedit');
   }catch(e){
     if(OCRCANCEL)return;
@@ -6602,7 +6629,7 @@ VIEWS.tedit=function(app){
       ${imgs.length?`<button class="lnk" id="tdImgB" onclick="tdShowImg()">${t('Show the original')}</button><div id="tdImgs" class="tdimgs" hidden>${imgs.map(u=>`<img src="${u}" alt="">`).join('')}</div>`:''}</div>`:'')+
    `<div class="field" style="margin-top:14px"><label>${t('Title')}</label><input class="inp" id="tdTitle" value="${esc(TD.title||'')}" oninput="TD.title=this.value" autocapitalize="sentences"></div>
     <div class="field"><label>${t('Text')}</label><textarea class="inp tdbody" id="tdBody" oninput="TD.body=this.value;tdGrow(this)" spellcheck="false" autocapitalize="sentences">${esc(TD.body||'')}</textarea>
-    <div class="hint">${t('An empty line starts a new paragraph. A line starting with “## ” is a subheading.')}</div></div>
+    <div class="hint">${t('Enter starts a new paragraph. A line starting with “## ” is a subheading.')}</div></div>
     <div class="field"><label>${t('Language of the text')}</label><select class="inp" onchange="TD.lang=this.value">${langOptions(TD.lang)}</select></div>
     <button class="btn pri" onclick="tdSave(true)">${ic('book',19)}${t('Read')}</button>
     <div style="height:9px"></div>
@@ -6610,17 +6637,25 @@ VIEWS.tedit=function(app){
     ${TD.id?`<div style="height:9px"></div><button class="btn danger ghost" onclick="tdDel()">${t('Delete')}</button>`:''}`;
   setTimeout(()=>{const b=$('#tdBody');if(b)tdGrow(b);},30);
 };
+/* in the editor every Enter is a paragraph break (bullet lines stay together) */
+function tdNorm(s){
+  const out=[];let prevBul=false;
+  String(s||'').replace(/\r\n?/g,'\n').split('\n').map(l=>l.replace(/[ \t\u00a0]+/g,' ').trim()).forEach(l=>{
+    if(!l)return;const bul=/^[•·▪●◦■□○*–—-]\s/.test(l);
+    if(bul&&prevBul)out[out.length-1]+='\n'+l;else out.push(l);prevBul=bul;});
+  return out.join('\n\n');
+}
 function tdGrow(el){el.style.height='auto';el.style.height=Math.max(260,el.scrollHeight+4)+'px';}
 function tdShowImg(){const b=$('#tdImgs'),l=$('#tdImgB');if(!b)return;b.hidden=!b.hidden;if(l)l.textContent=b.hidden?t('Show the original'):t('Hide the original');}
 function tdBack(){if(TD&&TD.id)go('read',{id:TD.id});else go('text');}
 function tdSave(read){
   if(!TD)return;
-  const body=txNorm(TD.body);
+  const body=tdNorm(TD.body);
   if(!body)return toast(t('Paste or type the text here…'));
   let title=(TD.title||'').trim();
   if(!title)title=txTitleOf(body).title;
   let x=TD.id&&findText(TD.id);
-  if(x){Object.assign(x,{title,body,lang:TD.lang,upd:Date.now()});}
+  if(x){const hl=hlRemap(x.hl,body);Object.assign(x,{title,body,lang:TD.lang,upd:Date.now()});if(hl&&hl.length)x.hl=hl;else delete x.hl;}
   else{x={id:uid(),title,body,lang:TD.lang,created:Date.now(),upd:Date.now(),added:[]};texts().push(x);}
   save();TD=null;
   if(read)go('read',{id:x.id});else{go('text');toast(t('Saved ✓'));}
@@ -6636,10 +6671,13 @@ function tEdit(id){const x=findText(id);if(!x)return;TD={id:x.id,title:x.title,b
 const RD={T:null,pars:[],map:null,added:null};
 function rdParHtml(text,pi){
   let out='',last=0;
+  const H=((RD.T&&RD.T.hl)||[]).filter(h=>h.p===pi);
+  const hc=(a,b)=>{const h=H.find(h=>a>=h.s&&b<=h.e);return h?h.c:0;};
   for(const m of text.matchAll(WORD_RE)){
-    out+=esc(text.slice(last,m.index));
+    if(m.index>last){const g=text.slice(last,m.index),c=H.length?hc(last,m.index):0;out+=c?`<span class="hg hl${c}">${esc(g)}</span>`:esc(g);}
     const w=m[0],f=fold(w);
-    const cls=RD.added.has(f)?' ad':(knownOf(f,RD.map)===2?' lr':(knownOf(f,RD.map)===1?' kn':''));
+    const hcl=H.length?hc(m.index,m.index+w.length):0;
+    const cls=(RD.added.has(f)?' ad':(knownOf(f,RD.map)===2?' lr':(knownOf(f,RD.map)===1?' kn':'')))+(hcl?' hl'+hcl:'');
     out+=`<span class="w${cls}" data-p="${pi}" data-s="${m.index}">${esc(w)}</span>`;
     last=m.index+w.length;
   }
@@ -6749,6 +6787,7 @@ async function lemmaOf(phrase,lang){
 /* ---- tapping a word opens a small card at the bottom; the text stays readable above it ---- */
 const RS={p:0,tokens:[],from:0,to:0,sents:[],phrase:'',sentence:'',seq:0,orig:'',lem:null,more:false};
 function rdTap(e){
+  rdSelOff();
   const el=e.target.closest&&e.target.closest('.w');
   if(!el||!el.dataset||el.dataset.p==null){rdClose();return;}
   const p=+el.dataset.p,s=+el.dataset.s,text=RD.pars[p].text;
@@ -6765,7 +6804,129 @@ function rdExt(i){
   rdSheet();
 }
 const SENT_CACHE={};
+/* ---- a selected piece of text: translate it or mark it ---- */
+let RSEL=null,_selT=0,_selKeep=0;
+function rdSelRead(){
+  const sel=getSelection();
+  if(!sel||!sel.rangeCount||sel.isCollapsed)return null;
+  const art=$('#rdArt');if(!art)return null;
+  const r=sel.getRangeAt(0);
+  if(!art.contains(r.commonAncestorContainer))return null;
+  const byP={};
+  art.querySelectorAll('.w').forEach(el=>{
+    let hit=false;try{hit=r.intersectsNode(el);}catch(e){}
+    if(!hit)return;
+    const p=+el.dataset.p,s=+el.dataset.s,e=s+el.textContent.length;
+    const o=byP[p]||(byP[p]={p,s,e});o.s=Math.min(o.s,s);o.e=Math.max(o.e,e);
+  });
+  const segs=Object.values(byP).sort((a,b)=>a.p-b.p);
+  if(!segs.length)return null;
+  const text=segs.map(g=>RD.pars[g.p].text.slice(g.s,g.e)).join('\n\n');
+  const hl=(RD.T&&RD.T.hl)||[];
+  const over=segs.some(g=>hl.some(h=>h.p===g.p&&h.s<g.e&&h.e>g.s));
+  let few=false;
+  if(segs.length===1){const tk=tokensOf(RD.pars[segs[0].p].text).filter(k=>k.s>=segs[0].s&&k.e<=segs[0].e);few=tk.length>=1&&tk.length<=6;}
+  return{segs,text,over,few,key:segs.map(g=>g.p+':'+g.s+'-'+g.e).join('|'),pinned:false};
+}
+function rdSelOff(){
+  RSEL=null;const b=$('#rdSelBar');if(b)b.remove();
+  const sp=$('#rdSpace');if(sp&&!$('#rdPop'))sp.style.height='0px';
+}
+function rdSelBar(){
+  let bar=$('#rdSelBar');
+  if(!RSEL||$('#rdPop')){if(bar)bar.remove();return;}
+  if(!bar){bar=document.createElement('div');bar.id='rdSelBar';bar.className='rdsel';bar.setAttribute('onpointerdown','_selKeep=Date.now()+900');document.body.appendChild(bar);}
+  bar.innerHTML=`<div class="sb-row"><button class="sb" onclick="rdSelTr()">${ic('globe',18)}${t('Translate')}</button>
+    <span class="sb-mk" aria-label="${t('Marker')}">${ic('pen',16,2)}${[1,2,3].map(c=>`<button class="hlb c${c}" aria-label="${t('Marker')} ${c}" onclick="rdHl(${c})"><i></i></button>`).join('')}</span>
+    ${RSEL.over?`<button class="sb ghost" onclick="rdHl(0)">${ic('close',16)}${t('Remove marker')}</button>`:''}
+    ${RSEL.few?`<button class="sb ghost" onclick="rdSelAdd()">${ic('plus',18)}${t('To list')}</button>`:''}</div>
+    <div class="sb-tr" id="sbTr" hidden></div>`;
+  const sp=$('#rdSpace');if(sp)sp.style.height=(bar.offsetHeight+12)+'px';
+}
+function chunkText(text,max){
+  const out=[];
+  text.split(/\n{2,}/).forEach(par=>{
+    let cur='';
+    par.split(/(?<=[.!?…])\s+/).forEach(sn=>{
+      if(cur&&(cur+' '+sn).length>max){out.push(cur);cur='';}
+      cur=cur?cur+' '+sn:sn;
+      while(cur.length>max){out.push(cur.slice(0,max));cur=cur.slice(max);}
+    });
+    if(cur)out.push(cur);out.push('\n');
+  });
+  out.pop();return out;
+}
+async function rdSelTr(){
+  const sel=RSEL;if(!sel)return;sel.pinned=true;
+  const box=$('#sbTr');if(!box)return;
+  box.hidden=false;box.innerHTML=`<div class="sb-ru dim">${t('Translating…')}</div>`;
+  const sp=$('#rdSpace'),bar=$('#rdSelBar');if(sp&&bar)sp.style.height=(bar.offsetHeight+12)+'px';
+  const parts=chunkText(sel.text,800);let res='';
+  for(const c of parts){
+    if(c==='\n'){res+='\n\n';continue;}
+    const k='S:'+c;if(!SENT_CACHE[k])SENT_CACHE[k]=translate(c,RD.T.lang);
+    const r=await SENT_CACHE[k];res+=(r&&r.main?r.main:'…')+' ';
+    if(RSEL!==sel)return;
+  }
+  if(RSEL!==sel||!$('#sbTr'))return;
+  $('#sbTr').innerHTML=`<div class="sb-ru">${esc(res.trim())}</div>`;
+  const b2=$('#rdSelBar');if(sp&&b2)sp.style.height=(b2.offsetHeight+12)+'px';
+}
+function rdHl(c){
+  const sel=RSEL,T=RD.T;if(!sel||!T)return;
+  let hl=(T.hl||[]).map(h=>Object.assign({},h));
+  const out=[];
+  hl.forEach(h=>{
+    const g=sel.segs.find(g=>g.p===h.p&&h.s<g.e&&h.e>g.s);
+    if(!g){out.push(h);return;}
+    const txt=RD.pars[h.p].text;
+    [[h.s,Math.min(h.e,g.s)],[Math.max(h.s,g.e),h.e]].forEach(([a,b])=>{
+      while(a<b&&/\s/.test(txt[a]))a++;while(b>a&&/\s/.test(txt[b-1]))b--;
+      if(b-a>=2)out.push(Object.assign({},h,{s:a,e:b,x:txt.slice(a,b)}));
+    });
+  });
+  if(c)sel.segs.forEach(g=>out.push({p:g.p,s:g.s,e:g.e,x:RD.pars[g.p].text.slice(g.s,g.e),c}));
+  T.hl=out;T.upd=Date.now();save();
+  try{getSelection().removeAllRanges();}catch(e){}
+  rdSelOff();rdRefresh();
+}
+function rdSelAdd(){
+  const sel=RSEL;if(!sel||sel.segs.length!==1)return;
+  const g=sel.segs[0],text=RD.pars[g.p].text,tk=tokensOf(text);
+  const a=tk.findIndex(k=>k.s>=g.s),idx=tk.map((k,i)=>i).filter(i=>tk[i].s>=g.s&&tk[i].e<=g.e);
+  if(a<0||!idx.length)return;
+  try{getSelection().removeAllRanges();}catch(e){}
+  rdSelOff();
+  RS.p=g.p;RS.tokens=tk;RS.sents=sentRanges(text);RS.from=idx[0];RS.to=idx[idx.length-1];rdSheet();
+}
+/* markers follow their text after the text is edited */
+function hlRemap(hl,newBody){
+  if(!hl||!hl.length)return[];
+  const np=parsePars(newBody).map(p=>p.text),out=[];
+  hl.forEach(h=>{
+    let best=null;
+    const order=[h.p].concat(np.map((_,i)=>i).filter(i=>i!==h.p));
+    for(const i of order){
+      if(i>=np.length)continue;let k,from=0,bd=1e9;
+      while((k=np[i].indexOf(h.x,from))>=0){const d=Math.abs(k-h.s);if(d<bd){bd=d;best={p:i,s:k};}from=k+1;}
+      if(best)break;
+    }
+    if(best)out.push(Object.assign({},h,{p:best.p,s:best.s,e:best.s+h.x.length}));
+  });
+  return out;
+}
+document.addEventListener('selectionchange',()=>{
+  if(view.name!=='read')return;
+  clearTimeout(_selT);
+  _selT=setTimeout(()=>{
+    if(view.name!=='read')return;
+    const x=rdSelRead();
+    if(x){if(!RSEL||RSEL.key!==x.key){RSEL=x;rdSelBar();}}
+    else if(RSEL&&!RSEL.pinned&&Date.now()>_selKeep)rdSelOff();
+  },220);
+});
 function rdClose(now){
+  rdSelOff();
   const pop=$('#rdPop');
   document.querySelectorAll('.reader .w.cur').forEach(x=>x.classList.remove('cur'));
   const sp=$('#rdSpace');if(sp)sp.style.height='0px';
@@ -6839,9 +7000,9 @@ function rdSheet(){
     <button class="ic rp-b rp-g" aria-label="Translate" onclick="rdTr(true)">${ic('globe',20)}</button></div>
    <div class="hint rp-st" id="rSt">${t('Translating…')}</div>
    <div class="chips rp-chips" id="rChips"></div>
+   <div class="rwtr" id="rSent">${esc(sentence)}</div>
    <div class="rp-more">
     <div class="rwstrip">${strip}</div>
-    <div class="rwtr" id="rSent">${esc(sentence)}</div>
     <div class="field" style="margin-top:12px"><label>${t('Example (from the text)')}</label><input class="inp" id="rEx" value="${esc(sentence)}" ${NOASSIST} onkeydown="enterAdd(event,'reader')"></div>
     ${ls.length>1?`<div class="field"><label>${t('List')}</label><select class="inp" id="rList">${ls.map(s=>`<option value="${s.id}"${s.id===def?' selected':''}>${esc(s.name)}</option>`).join('')}</select></div>`:''}
    </div>
@@ -6929,7 +7090,7 @@ function rdCtx(ruSent,diff){
   if(any&&hint)hint.textContent=t('Options — tap to use:')+' · '+t('green frame = fits the sentence');
   if(first&&ru.dataset.auto==='1'){ru.value=first.dataset.v;syncChips();}
 }
-Object.assign(RU_DICT,{"in this text":"в этом тексте"});
+Object.assign(RU_DICT,{"in this text":"в этом тексте","Translate":"Перевести","Remove marker":"Снять маркер","To list":"В список","Selected":"Выбрано","Enter starts a new paragraph. A line starting with “## ” is a subheading.":"Enter начинает новый абзац. Строка, начинающаяся с «## », — подзаголовок."});
 function rdAdd(){
   const T=RD.T,en=($('#rEn')||{}).value.trim(),ru=($('#rRu')||{}).value.trim(),ex=($('#rEx')||{}).value.trim();
   if(!en)return;if(!ru)return toast(t('Enter a translation'));
