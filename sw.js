@@ -1,8 +1,8 @@
-const CACHE = 'vocab-v113';
+const CACHE = 'vocab-v114';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v3.png', './icon-512-v3.png', './icon-mask-512-v3.png', './favicon-32-v3.png', './favicon-192-v3.png',
-  './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
+  './lib/supabase-2.45.4.js', './lib/591.supabase.js', './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const OCR_CACHE = 'noeon-ocr-v1';
-const EXTERNAL = ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'];
+const EXTERNAL = [];
 /* how long the app waits for the network before opening the saved copy */
 const WAIT_MS = 3000;
 

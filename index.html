@@ -9,12 +9,13 @@
 <meta name="apple-mobile-web-app-title" content="NOEON">
 <meta name="theme-color" content="#f3f6fb">
 <title>NOEON Words</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: data: https:; font-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://*.supabase.co wss://*.supabase.co https://translate.googleapis.com https://api.dictionaryapi.dev https://tatoeba.org https://en.wiktionary.org https://api.mymemory.translated.net blob: data:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32-v3.png">
 <link rel="icon" type="image/png" sizes="192x192" href="favicon-192-v3.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180-v3.png">
 <meta name="description" content="NOEON Words — личный словарь для изучения английских слов: карточки, тесты и интервальные повторения.">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="lib/supabase-2.45.4.js"></script>
 <script>(function(){try{var s=(JSON.parse(localStorage.getItem('vocab.v2')||'{}').settings)||{};var m=s.theme||'auto',dark;if(m==='dark')dark=true;else if(m==='light')dark=false;else{var h=new Date().getHours();dark=h<7||h>=19;}document.documentElement.setAttribute('data-theme',dark?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
 @font-face{font-family:Madefor;src:url(wixt-lat.woff2)format('woff2');font-weight:100 900;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -1294,6 +1295,8 @@ function migrate(d){ // v1 -> v2
   (d.sets||[]).forEach(s=>s.words.forEach(w=>{w.arch=(w.box||0)>=3;w.added=w.added||Date.now();}));
   d.v=2;return d;
 }
+const okId=x=>typeof x==='string'&&/^[\w.:-]{1,80}$/.test(x);
+const okLang=x=>typeof x==='string'&&/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$/.test(x);
 function fix(d){
   d=d||DB();
   _lgIdx=null;
@@ -1311,7 +1314,7 @@ function fix(d){
   /* older saves have no upd — stamp them once so an existing streak gets pushed */
   if(!d.stats.upd&&(d.stats.streak||d.stats.best||d.stats.day))d.stats.upd=Date.now();
   /* a list with no language is English — that is all there was before */
-  d.sets=(d.sets||[]).map(s=>({id:s.id,name:s.name,lang:LANG_MAP[s.lang]?s.lang:DEF_LANG,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).map((w,wi)=>({
+  d.sets=(d.sets||[]).filter(s=>s&&okId(s.id)).map(s=>({id:s.id,name:s.name,lang:LANG_MAP[s.lang]?s.lang:DEF_LANG,upd:s.upd||Date.now(),synced:!!s.synced,words:(s.words||[]).filter(w=>w&&okId(w.id)).map((w,wi)=>({
     id:w.id,pos:w.pos!=null?w.pos:wi,mark:w.mark||0,en:w.en,ru:w.ru,ex:w.ex||'',ipa:w.ipa||'',box:w.box||0,arch:!!w.arch,ok:w.ok||0,bad:w.bad||0,added:w.added||Date.now(),aat:w.aat||0,
     due:w.due||0,rep:w.rep||0,fs:w.fs||0,fd:w.fd||0,fl:w.fl||0,fx:w.fx||0,upd:w.upd||Date.now(),synced:!!w.synced
   }))}));
@@ -1345,7 +1348,8 @@ function rescueHolders(){
 const save=()=>{rescueHolders();_lgIdx=null;persist();cloudKick();};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const q1=s=>String(s??'').replace(/[\\']/g,'\\$&');
+const q1=s=>esc(String(s??'').replace(/[\\']/g,'\\$&').replace(/[\r\n\u2028\u2029]+/g,' '));
+
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 /* spacing never decides a mark: invisible characters, non-breaking/odd spaces, runs of spaces, and spaces around a hyphen all fold away */
 const norm=s=>String(s).toLowerCase().replace(/[\u200b-\u200f\u2060\ufeff\u00ad]/g,'').replace(/[\u2010-\u2015\u2212]/g,'-')
@@ -2221,7 +2225,7 @@ async function fetchPaged(table,ownerId){
   for(;;){
     const {data,error}=await sb.from(table).select('*').eq('owner_id',ownerId).eq('deleted',false).range(from,from+PAGE-1);
     if(error)return {rows,complete:false};
-    rows=rows.concat(data||[]);
+    rows=rows.concat((data||[]).filter(r=>okId(r.id)&&(table==='sets'||okId(r.set_id))).map(r=>{if(table==='sets'&&!okLang(r.lang))r.lang='en';return r;}));
     if(!data||data.length<PAGE)return {rows,complete:true};
     from+=PAGE;
     if(from>100000)return {rows,complete:false};   /* never loop forever */
@@ -4952,7 +4956,7 @@ const ipaParts=s=>{const p=String(s||'').split('|').map(x=>cleanIpa(x));return{u
 function ipaHtml(en,ipa){
   const p=ipaParts(ipa);if(!p.uk&&!p.us)return '';
   const a=esc(en);
-  return `<button type="button" onclick="ipaPlay('${a.replace(/'/g,"\\'")}','uk')"><b>UK</b> /${esc(p.uk)}/ ${SPK}</button><button type="button" onclick="ipaPlay('${a.replace(/'/g,"\\'")}','us')"><b>US</b> /${esc(p.us)}/ ${SPK}</button>`;
+  return `<button type="button" onclick="ipaPlay('${q1(en)}','uk')"><b>UK</b> /${esc(p.uk)}/ ${SPK}</button><button type="button" onclick="ipaPlay('${q1(en)}','us')"><b>US</b> /${esc(p.us)}/ ${SPK}</button>`;
 }
 function ipaPlay(word,kind){
   audHold();
@@ -7173,7 +7177,7 @@ let LV=null;
 try{const c=JSON.parse(localStorage.getItem(LIB_KEY)||'null');if(c&&Array.isArray(c.list)){LIBX.list=c.list;LIBX.uid=c.uid||'';}}catch(e){}
 const libTeacher=()=>!!(AUTH.profile&&AUTH.profile.role==='teacher');
 const libNorm=r=>{
-  const o={id:r.id,title:r.title||'',descr:r.descr||'',level:r.level||'',lang:r.lang||'en',words:Array.isArray(r.words)?r.words:[],version:r.version||1,status:r.status||'',token:r.token||'',teacher_id:r.teacher_id||'',teacher_name:r.teacher_name||''};
+  const o={id:okId(r.id)?r.id:'',title:r.title||'',descr:r.descr||'',level:r.level||'',lang:okLang(r.lang)?r.lang:'en',words:Array.isArray(r.words)?r.words:[],version:r.version||1,status:r.status||'',token:/^[A-Za-z0-9]{1,64}$/.test(r.token||'')?r.token:'',teacher_id:r.teacher_id||'',teacher_name:r.teacher_name||''};
   /* a list from an exam folder is a normal library row whose description starts with ⟦list|folder|group|version⟧ */
   const m=o.descr.match(/^⟦([a-z0-9_]+)\|([a-z0-9]+)\|([a-z0-9]+)\|(\d+)(?:\|([AS]):([0-9A-Za-z,]*))?⟧\s*/);
   if(m){o.cat=m[1];o.cf=m[2];o.cg=m[3];o.cv=+m[4];o.cm=m[5]||'A';o.cl=(m[6]||'').split(',').filter(Boolean);o.descr=o.descr.slice(m[0].length);}
@@ -7404,7 +7408,7 @@ function examDraw(){
   let h=`<div class="hint" style="margin:10px 2px 4px">${esc(exTxt(F.dru,F.den))}</div>`;
   if(libTeacher()){
     if(!EXM.lists){box.innerHTML=h+`<div class="hint" style="margin:14px 2px">${t('Loading…')}</div>`;return;}
-    const fid=JSON.stringify(examFolderIds(F)).replace(/"/g,'&quot;'),fn=esc(exTxt(F.ru,F.en)).replace(/'/g,"\\'");
+    const fid=JSON.stringify(examFolderIds(F)).replace(/"/g,'&quot;'),fn=q1(exTxt(F.ru,F.en));
     h+=`<div class="hint" style="margin:6px 2px 10px">${t('Turned-on lists appear in your students’ Library. You can turn a list off at any time.')}</div>
      <div class="row2" style="margin-bottom:8px"><button class="btn ghost" onclick="examSetMode(${fid},'all')">${t('Open for everyone')}</button><button class="btn ghost" onclick="examSetMode(${fid},'off')">${t('Close for everyone')}</button></div>
      <button class="btn ghost" style="width:100%" onclick="examSheet(${fid},'${fn}',true)">${ic('users',18)}${t('Choose students…')}</button>`;
@@ -7415,7 +7419,7 @@ function examDraw(){
         const c=examCfg(l.id),r=examRow(l.id),n=r&&c.mode!=='off'?libSubsOf(r.id):0;
         return `<div class="setcard exrow" onclick="examOpen('${l.id}','${F.id}')"><div class="t"><div class="nm">${esc(l.title)}</div>
           <div class="meta">${nWords(l.w.length)} · ${esc(l.level)}${n?' · '+n+' '+t('added it'):''}</div></div>
-          <button class="expill ${c.mode!=='off'?'on':''}" aria-label="${t('Who sees it')}" onclick="event.stopPropagation();examSheet(['${l.id}'],'${esc(l.title).replace(/'/g,"\\'")}')">${esc(examLabel(c))}</button></div>`;
+          <button class="expill ${c.mode!=='off'?'on':''}" aria-label="${t('Who sees it')}" onclick="event.stopPropagation();examSheet(['${l.id}'],'${q1(l.title)}')">${esc(examLabel(c))}</button></div>`;
       }).join('');
     });
   }else{
@@ -7563,7 +7567,7 @@ VIEWS.libset=function(app){
     ${libDescr(x)?`<p class="hint" style="margin:8px 2px 0">${esc(libDescr(x))}</p>`:''}
     ${mine?`<div class="rwdup" style="margin-top:12px;background:var(--surf2);color:var(--tx)">${t('Visible to')}: <b>${libStatusTxt(x.status)}</b>${libSubsOf(x.id)?' · '+libSubsOf(x.id)+' '+t('added it'):''}
       ${x.status==='link'?`<button class="btn ghost" style="margin-top:10px" onclick="libShare()">${ic('link',18)}${t('Share the link')}</button>`:''}</div>`:''}
-    ${LV.src==='exam'&&libTeacher()?`<div class="toggle" style="margin-top:8px" onclick="examSheet(['${x.cid}'],'${esc(x.title).replace(/'/g,"\\'")}')"><label>${t('Visible to students')}</label><button class="expill ${examOn(x.cid)?'on':''}">${esc(examLabel(examCfg(x.cid)))}</button></div>`:''}
+    ${LV.src==='exam'&&libTeacher()?`<div class="toggle" style="margin-top:8px" onclick="examSheet(['${x.cid}'],'${q1(x.title)}')"><label>${t('Visible to students')}</label><button class="expill ${examOn(x.cid)?'on':''}">${esc(examLabel(examCfg(x.cid)))}</button></div>`:''}
     <div style="margin:14px 0 6px">${act}</div>
     ${x.builtin?`<div class="hint" style="margin:6px 2px 10px">${t('Forms checked against Wikipedia “List of English irregular verbs” (CC BY-SA 4.0).')}</div>`:''}
     <div class="libwords">${x.words.map(w=>`<div class="lw"><b>${esc(w.en)}</b><span>${esc(w.ru||'')}</span></div>`).join('')}</div>`+tabBar();
