@@ -962,6 +962,52 @@ html[data-bg]:not([data-bg="none"]):not([data-bg="stars"]) #app .tbar,html[data-
 .rdsel .sb-ru.dim{color:var(--fade);font-weight:500}
 .rdpop .rwtr{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:0 2px 8px}
 .rdpop.more .rwtr{-webkit-line-clamp:unset}
+
+.anseg{display:flex;background:var(--line);border-radius:12px;padding:3px;margin:2px 0 12px;font-size:13.5px;font-weight:700}
+.anseg span{flex:1;text-align:center;padding:8px 4px;border-radius:10px;color:var(--mut);cursor:pointer}
+.anseg span.on{background:var(--surf);color:var(--pri);box-shadow:0 1px 3px rgba(15,26,46,.12)}
+.annav{display:flex;align-items:center;justify-content:space-between;margin:0 0 8px}.annav b{font-size:15px}.annav b::first-letter{text-transform:uppercase}
+.annav .ic[disabled]{opacity:.3}
+.ancard{margin-bottom:10px;background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:14px;text-align:left;color:var(--tx)}
+.anbig{font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.anup{font-size:13px;font-weight:700;color:var(--ok)}
+.ant{font-size:12px;font-weight:650;color:var(--fade)}
+.anstats{display:flex;justify-content:space-around;text-align:center;gap:6px}
+.ancal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}
+.ancal>span{font-size:11px;color:var(--fade);font-weight:600}
+.ancal i,.anleg i,.wd i,.dots i{border-radius:7px;display:block;background:var(--line)}
+.ancal i{aspect-ratio:1;position:relative}.ancal i.e{background:none}
+.ancal i b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-style:normal;color:var(--mut)}
+.ancal i.fut{opacity:.4}.ancal i.today{outline:2px solid var(--tx);outline-offset:1px}
+.l1{background:color-mix(in srgb,var(--pri) 22%,var(--line))!important}.l2{background:color-mix(in srgb,var(--pri) 48%,var(--line))!important}
+.l3{background:color-mix(in srgb,var(--pri) 74%,var(--line))!important}.l4{background:var(--pri)!important}
+.ancal i.l3 b,.ancal i.l4 b{color:#fff}
+.anleg{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:10px;font-size:11px;color:var(--fade)}
+.anleg i{width:13px;height:13px;border-radius:4px}.anleg .sq{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px}
+.sq.b1{background:var(--pri)}.sq.b2{background:color-mix(in srgb,var(--pri) 30%,var(--line))}
+.ansvg .ar{fill:color-mix(in srgb,var(--pri) 16%,transparent)}.ansvg .ln{fill:none;stroke:var(--pri);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}.ansvg .dt{fill:var(--pri)}
+.ansvg2 .b1{fill:var(--pri)}.ansvg2 .b2{fill:color-mix(in srgb,var(--pri) 30%,var(--line))}
+.anax{display:flex;justify-content:space-between;font-size:11px;color:var(--fade);margin-top:2px}
+.anhero{background:var(--grad);color:#fff;border-radius:18px;padding:16px 18px;margin-bottom:10px}
+.anh1{font-size:26px;font-weight:800;letter-spacing:-.02em}.anh2{font-size:13px;opacity:.9;margin-top:2px;min-height:1em}
+.wdays{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
+.wd{display:flex;flex-direction:column;align-items:center;gap:3px}.wd i{width:100%;height:34px}
+.wd small{font-size:11px;color:var(--fade)}.wd em{font-style:normal;font-size:11px;font-weight:700;color:var(--mut);min-height:13px}
+.antag{display:inline-block;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:var(--surf);color:var(--mut);border-radius:9px;padding:3px 9px;margin:6px 6px 0 0}
+.anw,.anr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.anw:first-of-type,.anr:first-child{border-top:0}
+.anw .n,.anr .n{flex:1;min-width:0}.anw small,.anr small{display:block;color:var(--fade);font-size:12px;margin-top:1px}
+.anbar{height:6px;width:64px;border-radius:4px;background:var(--line);overflow:hidden;flex:none}.anbar i{display:block;height:100%;background:var(--bad)}
+.pill{font-size:12px;font-weight:800;border-radius:8px;padding:3px 8px;flex:none}.pill.pb{background:var(--bad-soft);color:var(--bad)}.pill.po{background:var(--ok-soft);color:var(--ok)}.pill.pw{background:#fff1d6;color:var(--warn)}
+.dots{display:flex;gap:3px;flex:none}.dots i{width:10px;height:22px;border-radius:3px}
+.anchips{margin:0 0 10px}
+.anmxw{overflow-x:auto;padding:10px}
+.anmx{display:grid;gap:5px;align-items:center;min-width:max-content}
+.anmx b{font-size:10.5px;line-height:1.15;color:var(--mut);text-align:center;font-weight:650;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.anmx .anrn{font-size:12.5px;font-weight:650;position:sticky;left:0;background:var(--surf);padding-right:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.anmx .c{height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:750;cursor:pointer}
+.anmx .c.none{background:var(--line);color:var(--fade);cursor:default}
+.anmx .c.zero{background:var(--bad-soft);color:var(--bad)}.anmx .c.lo{background:#fdeed6;color:var(--warn)}
+.anmx .c.mid{background:var(--pri-soft);color:var(--pri)}.anmx .c.hi{background:var(--ok-soft);color:var(--ok)}
 </style>
 </head>
 <body>
@@ -1519,7 +1565,7 @@ function startSession(force){
         const r=srAnswer(w,ok);
         if(ok){w.ok=(w.ok||0)+1;}else{w.bad=(w.bad||0)+1;if(r==='relearn')back++;}
         if(ok)good++;
-        touch(w);bumpStudy(w.id);save();
+        touch(w);bumpStudy(w.id,!!ok);save();
         return next();
       }else{
         const r=award(w,ok);
@@ -1652,7 +1698,8 @@ function rollDay(){
   if(!(st.day===y&&st.met))st.streak=0;
   st.day=k;st.ids=[];st.met=false;st.upd=Date.now();
 }
-function bumpStudy(id){
+function bumpStudy(id,ok){
+  if(ok!==undefined)actLog(!!ok);
   rollDay();const st=S.stats;
   if(st.ids.indexOf(id)<0)st.ids.push(id);
   const goal=st.goal||10;
@@ -1820,7 +1867,7 @@ function confetti(n){
 /* box 4 = mastered, but the student chose to keep the word in the list */
 const KEPT=4;
 function award(w,correct){
-  touch(w);bumpStudy(w.id);
+  touch(w);bumpStudy(w.id,!!correct);
   if(correct){
     w.ok++;
     if((w.box||0)>=KEPT)return '';                 /* already kept on purpose — don't ask again */
@@ -1997,7 +2044,7 @@ function permBlocked(e){const m=errText(e);return m.indexOf('row-level')>=0||m.i
 const dayNum=k=>{if(!k)return 0;const p=String(k).split('-');return (+p[0]||0)*10000+(+p[1]||0)*100+(+p[2]||0);};
 
 let SEEN=0,_seenT=0;
-function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,seen:SEEN||0,conf:st.conf||{},wf:st.wf||{}};}
+function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,seen:SEEN||0,conf:st.conf||{},wf:st.wf||{},act:st.act||{}};}
 /* a student's device tells the teacher it was opened: at most once every ~2 minutes while visible */
 function pingSeen(){
   try{
@@ -2038,6 +2085,11 @@ function mergeStats(r){
     if(r.wf.d&&typeof r.wf.d==='object')Object.keys(r.wf.d).forEach(lv=>{const a=r.wf.d[lv];if(!a||typeof a!=='object')return;const b=lw.d[lv]||(lw.d[lv]={});
       Object.keys(a).forEach(i=>{const v=+a[i]||0;if(v>(+b[i]||0)){b[i]=v;ch=true;}});});
     if(r.wf.lv&&(+r.wf.u||0)>(+lw.u||0)&&r.wf.lv!==lw.lv){lw.lv=r.wf.lv;lw.u=+r.wf.u;ch=true;}
+  }
+  if(r.act&&typeof r.act==='object'&&!Array.isArray(r.act)){
+    const la=actAll();
+    Object.keys(r.act).forEach(k=>{const b=r.act[k];if(!Array.isArray(b))return;const a=la[k],b0=+b[0]||0,b1=+b[1]||0;
+      if(!a){la[k]=[b0,b1];ch=true;}else if(b0>a[0]||b1>a[1]){a[0]=Math.max(a[0],b0);a[1]=Math.max(a[1],b1);ch=true;}});
   }
   if((l.best||0)<(l.streak||0)){l.best=l.streak;ch=true;}
   if(ch)l.upd=Math.max(l.upd||0,r.upd||0,Date.now());   /* re-sync the merged truth */
@@ -2655,7 +2707,7 @@ today(app){
    (standalone||S.settings.hideBanner||!total?'':
      `<div class="banner"><span class="ib">${ic('phone',19)}</span><div><b>${t('Add to Home Screen.')}</b> ${t("In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.")}</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
    hero+testBanner()+(total?cfCard(plan.lg||targetLang()):'')+
-   (total?dayStrip()+wordsCard()+`<button class="rowlink" onclick="modesSheet()"><span>${ic('grid',19)}${t('Choose a mode')}</span>${ic('right',18)}</button>`:'')+
+   (total?anTodayCard()+dayStrip()+wordsCard()+`<button class="rowlink" onclick="modesSheet()"><span>${ic('grid',19)}${t('Choose a mode')}</span>${ic('right',18)}</button>`:'')+
    tabBar();
   celSoon(900);
 },
@@ -2747,6 +2799,7 @@ me(app){
   app.innerHTML=hdr(t('Profile'),'',themeBtn())+acct+
    (u?`<button class="rowlink" onclick="nameSheet()"><span>${ic('pen',19)}${t('Your name')}</span><em>${esc((p&&p.display_name)||'—')}</em></button>`:'')+
    `<div class="subhead"><span class="t">${t('Learning plan')}</span></div>
+    <button class="rowlink" onclick="go('progress',{tab:'cal'})"><span>${ic('trend',19)}${t('My progress')}</span>${ic('right',18)}</button>
     <button class="rowlink" onclick="srSheet()"><span>${ic('repeat',19)}${t('Review schedule')}</span><em>${srCfg().on?srDays().join('/'):t('off')}</em></button>
     <button class="rowlink" onclick="goalSheet()"><span>${ic('target',19)}${t('Daily goal')}</span><em>${nWords(S.stats.goal||10)}</em></button>
     <div class="subhead" style="margin-top:16px"><span class="t">${t('Interface')}</span></div>`+
@@ -3287,7 +3340,7 @@ function paint(el,html,anim){
 }
 VIEWS.students=async function(app){
   const stN=(TC.students&&TC.students.students.length)||(AUTH.students||[]).length;
-  app.innerHTML=hdr(t('My students'),'',AUTH.students&&AUTH.students.length?`<button class="ic" aria-label="Edit" onclick="toggleStEdit()">${ic(stEdit?'check':'pen')}</button>`:'')+(stN>0?sbox('stSearch'):'')+`<div id="rl"></div>`+tabBar();
+  app.innerHTML=hdr(t('My students'),'',AUTH.students&&AUTH.students.length?`<button class="ic" aria-label="Analytics" onclick="go('tan',{tab:'words'})">${ic('trend')}</button><button class="ic" aria-label="Edit" onclick="toggleStEdit()">${ic(stEdit?'check':'pen')}</button>`:'')+(stN>0?sbox('stSearch'):'')+`<div id="rl"></div>`+tabBar();
   const draw=d=>{
     if(!d.students.length)return `<div class="empty"><div class="big">${ic('users',26)}</div><b>${t('No students linked yet')}</b><p>${t('Open Account and share your code. Once a student enters it, their lists appear here.')}</p></div>`;
     const fq=fold(LQ),shown=fq?d.students.filter(s=>nameHit(s.display_name||'Student',LQ)):d.students;
@@ -4630,7 +4683,7 @@ function startConf(key){
       app.querySelectorAll('.cftwo .btn').forEach(b=>b.onclick=()=>{
         if(ans)return;ans=true;
         const pick=b.dataset.k==='a'?A:B,ok=pick===q.x;
-        bumpStudy(q.x.id);
+        bumpStudy(q.x.id,ok);
         speak(q.x.en,lg);
         const right=app.querySelector(`.cftwo [data-k="${q.x===A?'a':'b'}"]`);
         right.classList.remove('ghost');right.classList.add('tfy');
@@ -7592,7 +7645,273 @@ async function libDelete(id){
   setTimeout(()=>libOpenToken(m[1]),1200);
 })();
 
-const TEACH_VIEWS=['students','tsets','twords','tsaccess'];
+/* ================= analytics (v110) =================
+   student: calendar, learned-words chart, week summary.  teacher: hard-for-everyone, weekly report, lists matrix. */
+const AN_FROM=new Date(2024,0,1);
+function dIdx(d){d=d||new Date();return Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-AN_FROM)/DAY);}
+function idxDate(i){return new Date(2024,0,1+(+i));}
+function actAll(){const st=S.stats;if(!st.act||typeof st.act!=='object'||Array.isArray(st.act))st.act={};return st.act;}
+/* one answer: [answers, correct] for the day */
+function actLog(ok){
+  const a=actAll(),k=dIdx(),v=a[k]||(a[k]=[0,0]);v[0]++;if(ok)v[1]++;
+  const ks=Object.keys(a);
+  if(ks.length>200)ks.map(Number).sort((x,y)=>x-y).slice(0,ks.length-180).forEach(x=>delete a[x]);
+}
+const anLoc=()=>S.settings.lang==='en'?'en-GB':'ru-RU';
+function anMon(off){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+(off||0)*7);return d;}
+const anLvl=(n,g)=>n<=0?0:n<g*.5?1:n<g?2:n<g*2?3:4;
+const anDn=i=>new Date(2024,0,1+i).toLocaleDateString(anLoc(),{weekday:'short'});
+function anRange(m){
+  const e=new Date(m);e.setDate(m.getDate()+6);const f=(d,o)=>d.toLocaleDateString(anLoc(),o);
+  return m.getMonth()===e.getMonth()?m.getDate()+'–'+f(e,{day:'numeric',month:'long'}):f(m,{day:'numeric',month:'short'})+' – '+f(e,{day:'numeric',month:'short'});
+}
+/* the same shape for me and for a student of the teacher */
+function anData(sid){
+  if(!sid){
+    const ws=S.sets.flatMap(s=>s.words.map(w=>({en:w.en,ru:w.ru||'',arch:!!w.arch,aat:+w.aat||0,ok:w.ok||0,bad:w.bad||0,added:+w.added||0,upd:+w.upd||0})));
+    return{own:true,name:'',words:ws,act:actAll(),goal:S.stats.goal||10,streak:S.stats.streak||0,best:S.stats.best||0};
+  }
+  const s=(AUTH.students||[]).find(x=>x.id===sid)||{},st=s.stats||{},c=TC.owner[sid]||{words:[],sets:[]};
+  const ok=st.day===dayKey()||st.day===dayKey(new Date(Date.now()-DAY));
+  const act=(st.act&&typeof st.act==='object'&&!Array.isArray(st.act))?st.act:{};
+  return{own:false,sid,name:s.display_name||'Student',words:(c.words||[]).map(w=>({en:w.en,ru:w.ru||'',arch:!!w.arch,aat:+w.aat||0,ok:w.ok||0,bad:w.bad||0,added:0,upd:+new Date(w.updated_at)||0,set_id:w.set_id})),
+    act,goal:st.goal||10,streak:ok?(st.streak||0):0,best:st.best||0};
+}
+function anWeekOf(D,off){
+  const m=anMon(off),days=[];let a=0,c=0;
+  for(let i=0;i<7;i++){const d=new Date(m);d.setDate(m.getDate()+i);const v=D.act[dIdx(d)]||[0,0];days.push(v[0]);a+=v[0];c+=v[1];}
+  const end=new Date(m);end.setDate(m.getDate()+7);
+  const learned=D.words.filter(w=>w.arch&&w.aat>=+m&&w.aat<+end).length;
+  const touched=D.words.filter(w=>w.upd>=+m&&w.upd<+end).length;
+  return{m,end,days,a,c,act:days.filter(x=>x>0).length,learned,touched};
+}
+function anTab(k){view.tab=k;viewSave();render();scrollTo(0,0);}
+function anNav(key,d){view[key]=Math.min(0,(view[key]||0)+d);viewSave();render();}
+const anSeg=(tabs,cur,fn)=>`<div class="anseg">${tabs.map(([k,l])=>`<span class="${cur===k?'on':''}" onclick="${fn}('${k}')">${t(l)}</span>`).join('')}</div>`;
+const anNavBar=(label,key,off)=>`<div class="annav"><button class="ic" aria-label="Back" onclick="anNav('${key}',-1)">${ic('left',18)}</button><b>${label}</b><button class="ic" aria-label="Next" ${off>=0?'disabled':''} onclick="anNav('${key}',1)">${ic('right',18)}</button></div>`;
+
+/* ---- the student's own screen ---- */
+VIEWS.progress=function(app){app.innerHTML=anProgressHtml(anData(null),"go('me')",false);};
+function anProgressHtml(D,back,teach){
+  const tab=view.tab||'cal';
+  return hdr(teach?D.name:t('My progress'),back,'')+anSeg([['cal','Calendar'],["words","Chart"],['week','Week']],tab,'anTab')+
+    (tab==='cal'?anCalHtml(D):tab==='words'?anWordsHtml(D):anWeekHtml(D));
+}
+function anCalHtml(D){
+  const off=Math.min(0,view.m||0),now=new Date(),m0=new Date(now.getFullYear(),now.getMonth()+off,1);
+  const first=(m0.getDay()+6)%7,dim=new Date(m0.getFullYear(),m0.getMonth()+1,0).getDate(),today=dIdx();
+  let cells='',days=0,ans=0;
+  for(let i=0;i<first;i++)cells+='<i class="e"></i>';
+  for(let d=1;d<=dim;d++){
+    const dt=new Date(m0.getFullYear(),m0.getMonth(),d),ix=dIdx(dt),v=D.act[ix],n=v?v[0]:0;
+    if(n>0){days++;ans+=n;}
+    cells+=`<i class="l${anLvl(n,D.goal)}${ix===today?' today':''}${ix>today?' fut':''}" title="${n}"><b>${d}</b></i>`;
+  }
+  const keys=Object.keys(D.act).filter(k=>D.act[k]&&D.act[k][0]>0).map(Number);
+  const since=keys.length?idxDate(Math.min(...keys)):null;
+  const title=m0.toLocaleDateString(anLoc(),{month:'long',year:'numeric'});
+  return anNavBar(esc(title),'m',off)+
+   `<div class="ancard"><div class="ancal">${[0,1,2,3,4,5,6].map(i=>`<span>${anDn(i)}</span>`).join('')}${cells}</div>
+     <div class="anleg"><span>${t('less')}</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>${t('more')}</span></div></div>
+    <div class="ancard anstats"><div><div class="anbig">${D.streak||0}</div><div class="ant">${t('streak')}</div></div><div><div class="anbig">${D.best||0}</div><div class="ant">${t('best')}</div></div><div><div class="anbig">${days}</div><div class="ant">${t('active days')}</div></div><div><div class="anbig">${ans}</div><div class="ant">${t('answers')}</div></div></div>
+    <div class="hint" style="margin:4px 4px 0">${since?t('The calendar is kept since')+' '+since.toLocaleDateString(anLoc(),{day:'numeric',month:'long'})+'.':(D.own?t('Days you study will appear here. Recording starts with this version.'):t('No days recorded yet — they appear after the student updates the app.'))}</div>`;
+}
+function anWordsHtml(D){
+  const N=12,mons=[];for(let i=N-1;i>=0;i--)mons.push(anMon(-i));
+  const ends=mons.map(m=>{const e=new Date(m);e.setDate(m.getDate()+7);return +e;}),t0=+mons[0];
+  const total=D.words.filter(w=>w.arch).length;
+  const base=D.words.filter(w=>w.arch&&(!w.aat||w.aat<t0)).length;
+  const per=mons.map((m,i)=>D.words.filter(w=>w.arch&&w.aat>=+m&&w.aat<ends[i]).length);
+  const added=mons.map((m,i)=>D.words.filter(w=>w.added>=+m&&w.added<ends[i]).length);
+  let c=base;const cum=per.map(x=>c+=x);
+  const W=300,H=110,vmin=Math.max(0,cum[0]-Math.max(2,per[0])),vmax=Math.max(cum[N-1],vmin+5);
+  const X=i=>(i*(W/(N-1))).toFixed(1),Y=v=>(H-8-(v-vmin)/(vmax-vmin)*(H-22)).toFixed(1);
+  const pts=cum.map((v,i)=>X(i)+' '+Y(v)),line='M'+pts.join(' L'),area=line+` L${W} ${H} L0 ${H}Z`;
+  const hasAdd=added.some(x=>x>0),mx=Math.max(1,...per,...added);
+  const bw=W/N,bars=mons.map((m,i)=>{
+    const h1=per[i]/mx*60,h2=added[i]/mx*60,x=i*bw+2;
+    return (hasAdd?`<rect x="${(x).toFixed(1)}" y="${(64-h2).toFixed(1)}" width="${(bw/2-2).toFixed(1)}" height="${h2.toFixed(1)}" rx="2" class="b2"/>`:'')+
+      `<rect x="${(x+(hasAdd?bw/2-1:0)).toFixed(1)}" y="${(64-h1).toFixed(1)}" width="${(hasAdd?bw/2-2:bw-4).toFixed(1)}" height="${h1.toFixed(1)}" rx="2" class="b1"/>`;}).join('');
+  const lab=d=>d.toLocaleDateString(anLoc(),{day:'numeric',month:'short'});
+  const m4=cum[N-1]-cum[N-5];
+  return `<div class="ancard"><div class="ant">${t('Learned in total')}</div><div class="anbig">${total} <span class="anup">${m4>0?'+'+m4+' '+t('in 4 weeks'):''}</span></div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" class="ansvg" role="img" aria-label="${t('Learned words')}"><path d="${area}" class="ar"/><path d="${line}" class="ln"/><circle cx="${X(N-1)}" cy="${Y(cum[N-1])}" r="3.5" class="dt"/></svg>
+    <div class="anax"><span>${lab(mons[0])}</span><span>${lab(mons[Math.floor(N/2)])}</span><span>${lab(mons[N-1])}</span></div></div>
+   <div class="ancard"><div class="ant">${t('By week')}</div>
+    <svg viewBox="0 0 ${W} 66" width="100%" class="ansvg2">${bars}</svg>
+    <div class="anleg" style="justify-content:flex-start;gap:12px"><span><i class="sq b1"></i> ${t('learned')}</span>${hasAdd?`<span><i class="sq b2"></i> ${t('added')}</span>`:''}</div>
+    <div class="hint" style="margin:6px 2px 0">${t('This week')}: ${t('learned')} ${per[N-1]}${hasAdd?', '+t('added')+' '+added[N-1]:''}</div></div>`;
+}
+function anWeekHtml(D){
+  const off=Math.min(0,view.w||0),W=anWeekOf(D,off),P=anWeekOf(D,off-1);
+  const acc=W.a?Math.round(W.c/W.a*100):null;
+  const delta=P.a>0?Math.round((W.a-P.a)/P.a*100):null;
+  const hard=D.words.filter(w=>!w.arch&&(w.bad||0)>=2&&(w.bad||0)>(w.ok||0)).sort((a,b)=>(b.bad-b.ok)-(a.bad-a.ok)).slice(0,5);
+  const has=Object.keys(D.act).length>0;
+  const bars=W.days.map((n,i)=>`<div class="wd"><i class="l${anLvl(n,D.goal)}"></i><small>${anDn(i)}</small><em>${n||''}</em></div>`).join('');
+  return anNavBar(esc(anRange(W.m)),'w',off)+
+   `<div class="anhero"><div class="anh1">${W.act} ${t('of 7 days')}</div><div class="anh2">${D.streak?t('streak')+' '+D.streak:''}${delta!==null&&W.a&&off<0?(D.streak?' · ':'')+(delta>=0?'+':'')+delta+'% '+t('vs previous week'):''}</div></div>
+    <div class="ancard anstats"><div><div class="anbig">${has?W.a:'—'}</div><div class="ant">${t('answers')}</div></div><div><div class="anbig">${W.learned}</div><div class="ant">${t('learned')}</div></div><div><div class="anbig">${acc===null?'—':acc+'%'}</div><div class="ant">${t('accuracy')}</div></div></div>
+    <div class="ancard"><div class="wdays">${bars}</div></div>`+
+   (hard.length?`<div class="ancard"><div class="ant">${t('Hardest words')}</div><div>${hard.map(w=>`<span class="antag">${esc(w.en)}</span>`).join('')}</div>${D.own&&off===0?`<button class="btn pri" style="margin-top:12px" onclick="go('hard')">${t('Review tricky words')}</button>`:''}</div>`:'')+
+   (has?'':`<div class="hint" style="margin:4px 4px 0">${D.own?t('Answers per day are recorded since this version.'):t('No days recorded yet — they appear after the student updates the app.')}</div>`);
+}
+/* Sunday and Monday: a card on Today */
+function anTodayCard(){
+  const d=new Date().getDay();if(d!==0&&d!==1)return '';
+  const off=d===0?0:-1,W=anWeekOf(anData(null),off);if(!W.a)return '';
+  return `<button class="rowlink" onclick="go('progress',{tab:'week',w:${off}})"><span>${ic('trend',19)}${t(d===0?'Week summary':'Last week summary')}</span><em>${W.act} ${t('of 7 days')} · ${W.a}</em></button>`;
+}
+
+/* ---- the teacher: Analytics ---- */
+const TAN={seq:0,at:0,open:new Set(),quiet:false,rows:[]};
+VIEWS.tan=function(app){
+  app.innerHTML=hdr(t('Analytics'),"go('students')",`<button class="ic" aria-label="Refresh" onclick="TAN.at=0;render()">${ic('sync')}</button>`)+
+    anSeg([['words','Words'],['week','Week'],['lists','Lists']],view.tab||'words','anTab')+`<div id="anBody">${skel(4)}</div>`;
+  tanRun();
+};
+async function tanRun(){
+  const my=++TAN.seq;
+  let ss=AUTH.students||[];
+  if(!ss.length){try{await loadStudents();}catch(e){}ss=AUTH.students||[];}
+  if(my!==TAN.seq||view.name!=='tan')return;
+  const cached=ss.length&&ss.every(s=>TC.owner[s.id]);
+  if(cached)tanDraw();
+  if(Date.now()-TAN.at>60000&&sb){
+    TAN.at=Date.now();topLoad(true);
+    try{
+      const ids=ss.map(s=>s.id);
+      const p1=ids.length?sb.from('profiles').select('id,display_name,stats').in('id',ids).then(r=>{if(!r.error&&r.data)r.data.forEach(p=>{const s=ss.find(x=>x.id===p.id);if(s)s.stats=p.stats;});},()=>{}):Promise.resolve();
+      const p2=Promise.all(ss.map(async s=>{const r=await fetchOwner(s.id);if(r.ok||!TC.owner[s.id])TC.owner[s.id]={sets:r.sets,words:r.words};}));
+      await Promise.all([p1,p2]);
+    }catch(e){}
+    topLoad(false);
+  }
+  if(my===TAN.seq&&view.name==='tan')tanDraw();
+}
+function tanDraw(){
+  const b=$('#anBody');if(!b)return;
+  const ss=AUTH.students||[];
+  if(!ss.length){b.innerHTML=`<div class="empty"><div class="big">${ic('users',26)}</div><b>${t('No students linked yet')}</b></div>`;return;}
+  const tab=view.tab||'words';
+  b.innerHTML=tab==='week'?tanWeek(ss):tab==='lists'?tanLists(ss):tanWords(ss);
+}
+function tanWords(ss){
+  const map=new Map();
+  ss.forEach(s=>{
+    const c=TC.owner[s.id];if(!c)return;
+    const sn=id=>(c.sets.find(x=>x.id===id)||{}).name||'';
+    c.words.forEach(w=>{
+      if(!w.en)return;
+      const k=fold(w.en);let e=map.get(k);
+      if(!e)map.set(k,e={en:w.en,ru:{},have:new Set(),bad:new Map(),list:{}});
+      e.have.add(s.id);
+      if(!w.arch&&(w.bad||0)>=2&&(w.bad||0)>(w.ok||0))e.bad.set(s.id,(w.bad||0)-(w.ok||0));
+      const r=(w.ru||'').trim();if(r&&r!=='—')e.ru[r]=(e.ru[r]||0)+1;
+      const l=sn(w.set_id);if(l&&l!==ARCH_NAME)e.list[l]=(e.list[l]||0)+1;
+    });
+  });
+  const need=Math.min(2,ss.length);
+  const rows=[...map.values()].filter(e=>e.bad.size>=need&&e.bad.size/e.have.size>=.5)
+    .sort((a,b)=>b.bad.size-a.bad.size||(b.bad.size/b.have.size-a.bad.size/a.have.size)||a.en.localeCompare(b.en)).slice(0,40);
+  TAN.rows=rows;
+  const top=o=>Object.keys(o).sort((x,y)=>o[y]-o[x])[0]||'';
+  const nm=id=>((ss.find(s=>s.id===id)||{}).display_name||'Student');
+  if(!rows.length)return `<div class="empty"><div class="big">${ic('check',26)}</div><b>${t('No shared trouble spots')}</b><p>${t('Words that most of your students keep missing will appear here.')}</p></div>`;
+  return `<div class="ancard"><div class="ant">${t('Most students keep missing')} · ${ss.length} ${plr(ss.length,t('student'),t('student2'),t('students'))}</div>`+
+   rows.map((e,i)=>{
+     const open=TAN.open.has(i),pct=Math.round(e.bad.size/e.have.size*100);
+     return `<div class="r anw" onclick="tanOpen(${i})"><div class="n"><b>${esc(e.en)}</b><small>${esc(top(e.ru))}${top(e.list)?' · '+esc(top(e.list)):''}</small>
+       ${open?`<div class="anwho">${[...e.bad.keys()].map(id=>`<span class="antag">${esc(nm(id))}</span>`).join('')}</div>`:''}</div>
+       <div class="anbar"><i style="width:${pct}%"></i></div><span class="pill pb">${e.bad.size}/${e.have.size}</span></div>`;}).join('')+
+   `</div><button class="btn pri" onclick="tanMakeSet()">${ic('plus',18)}${t('Make a list for the lesson')} (${Math.min(30,rows.length)})</button>`;
+}
+function tanOpen(i){if(TAN.open.has(i))TAN.open.delete(i);else TAN.open.add(i);tanDraw();}
+function tanMakeSet(){
+  const rows=TAN.rows.slice(0,30);if(!rows.length)return;
+  const top=o=>Object.keys(o).sort((x,y)=>o[y]-o[x])[0]||'—';
+  const nm=t('Hard for everyone')+' · '+new Date().toLocaleDateString(anLoc(),{day:'numeric',month:'short'});
+  const set={id:uid(),name:nm,lang:'en',words:[],upd:Date.now(),synced:false};
+  set.words=rows.map((e,i)=>{const w=newWord(e.en,top(e.ru),'');w.pos=posNow(i,rows.length);return w;});
+  S.sets.push(set);save();toast(t('List created')+' ✓');go('set',{id:set.id});
+}
+function tanWeek(ss){
+  const off=Math.min(0,view.w||0);
+  const rows=ss.map(s=>{
+    const D=anData(s.id),W=anWeekOf(D,off),P=anWeekOf(D,off-1);
+    const keys=Object.keys(D.act).filter(k=>D.act[k]&&D.act[k][0]>0).map(Number);
+    const hasAct=keys.length>0;
+    const lastW=D.words.reduce((m,w)=>Math.max(m,w.upd||0),0);
+    const idle=hasAct?dIdx()-Math.max(...keys):(Math.max(lastW,stuSeen(s))?Math.floor((Date.now()-Math.max(lastW,stuSeen(s)))/DAY):null);
+    return{s,D,W,P,hasAct,idle};
+  }).sort((a,b)=>b.W.a-a.W.a||b.W.touched-a.W.touched||String(a.s.display_name).localeCompare(String(b.s.display_name)));
+  const anyAct=rows.some(r=>r.hasAct);
+  const shown=(TAN.quiet&&off===0)?rows.filter(r=>r.idle===null||r.idle>=3):rows;
+  TAN.report=rows;
+  const trend=r=>{
+    if(!r.hasAct)return '';
+    if(r.W.a===0&&r.P.a>0)return '<span class="pill pb">!</span>';
+    if(!r.W.a)return '';
+    if(!r.P.a||(r.W.a-r.P.a)/r.P.a>.15)return '<span class="pill po">▲</span>';
+    if((r.W.a-r.P.a)/r.P.a<-.15)return '<span class="pill pb">▼</span>';
+    return '<span class="pill pw">▬</span>';
+  };
+  return anNavBar(esc(anRange(anMon(off))),'w',off)+
+   (anyAct?'':`<div class="hint" style="margin:0 4px 10px">${t('Days and answers are recorded since the student updates the app. Until then only changed words are shown.')}</div>`)+
+   (off===0?`<div class="anchips"><button class="chip ${TAN.quiet?'on':''}" onclick="TAN.quiet=!TAN.quiet;tanDraw()">${t('Missed 3+ days')}</button></div>`:'')+
+   (shown.length?`<div class="ancard" style="padding:2px 12px">`+shown.map(r=>{
+     const nm=r.s.display_name||'Student';
+     const meta=r.hasAct?`${r.W.a} ${t('answers')} · ${t('learned')} ${r.W.learned}${(off===0&&r.idle!==null&&r.idle>=3)?` · <span style="color:var(--bad)">${t('away')} ${r.idle} ${plr(r.idle,t('day'),t('day2'),t('days'))}</span>`:''}`:`${r.W.touched} ${t('words changed')} · ${t('learned')} ${r.W.learned}`;
+     return `<div class="r anr" onclick="go('tprog',{sid:'${r.s.id}',tab:'week',w:${off}})"><div class="n"><b>${esc(nm)}</b><small>${meta}</small></div>
+       <div class="dots">${r.W.days.map(n=>`<i class="l${anLvl(n,r.D.goal)}"></i>`).join('')}</div>${trend(r)}</div>`;}).join('')+`</div>`
+    :`<div class="empty"><p>${t('Nobody missed 3 days')}</p></div>`)+
+   `<button class="btn" style="margin-top:12px" onclick="tanCopy()">${t('Copy the report for chat')}</button>`;
+}
+function tanCopy(){
+  const off=Math.min(0,view.w||0),m=anMon(off),rows=TAN.report||[];
+  let tx='NOEON Words · '+anRange(m)+'\n';
+  rows.forEach(r=>{
+    const nm=r.s.display_name||'Student';
+    tx+='\n'+nm+': '+(r.hasAct?`${r.W.act} ${t('of 7 days')}, ${r.W.a} ${t('answers')}, ${t('learned')} ${r.W.learned}`:`${t('learned')} ${r.W.learned}`);
+    if(off===0&&r.idle!==null&&r.idle>=3)tx+=` — ${t('away')} ${r.idle} ${plr(r.idle,t('day'),t('day2'),t('days'))}`;
+  });
+  const done=()=>toast(t('Copied ✓'));
+  try{navigator.clipboard.writeText(tx).then(done,()=>tanCopyFb(tx,done));}catch(e){tanCopyFb(tx,done);}
+}
+function tanCopyFb(tx,done){const a=document.createElement('textarea');a.value=tx;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();try{document.execCommand('copy');done();}catch(e){}a.remove();}
+function tanLists(ss){
+  const cnt={};
+  ss.forEach(s=>{const c=TC.owner[s.id];if(!c)return;new Set(c.sets.filter(x=>x.name&&x.name!==ARCH_NAME).map(x=>x.name)).forEach(n=>cnt[n]=(cnt[n]||0)+1);});
+  const names=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b)).slice(0,8);
+  if(!names.length)return `<div class="empty"><p>${t('No lists yet')}</p></div>`;
+  const cell=(s,n)=>{
+    const c=TC.owner[s.id];if(!c)return '<div class="c none">—</div>';
+    const st=c.sets.filter(x=>x.name===n);if(!st.length)return '<div class="c none">—</div>';
+    const ids=new Set(st.map(x=>x.id)),ws=c.words.filter(w=>ids.has(w.set_id));
+    if(!ws.length)return '<div class="c none">0</div>';
+    const p=Math.round(ws.filter(w=>w.arch).length/ws.length*100);
+    const cl=p>=70?'hi':p>=30?'mid':p>0?'lo':'zero';
+    return `<div class="c ${cl}" onclick="go('twords',{sid:'${s.id}',sname:'${q1(s.display_name||'Student')}',setId:'${st[0].id}',setName:'${q1(n)}'})">${p}%</div>`;
+  };
+  return `<div class="ancard anmxw"><div class="anmx" style="grid-template-columns:92px repeat(${names.length},minmax(58px,1fr))"><span class="anh"></span>${names.map(n=>`<b title="${esc(n)}">${esc(n)}</b>`).join('')}`+
+    ss.map(s=>`<span class="anrn">${esc(s.display_name||'Student')}</span>`+names.map(n=>cell(s,n)).join('')).join('')+`</div></div>
+    <div class="hint" style="margin:6px 4px 0">${t('Share of learned words in each list. Tap a cell to open the list.')}</div>`;
+}
+/* one student, seen by the teacher: the same three screens */
+VIEWS.tprog=function(app){
+  const sid=view.sid;
+  const s=(AUTH.students||[]).find(x=>x.id===sid);
+  if(!s){
+    app.innerHTML=hdr(t('Analytics'),"go('tan',{tab:'week'})",'')+skel(3);
+    if(!VIEWS.tprog._t){VIEWS.tprog._t=1;loadStudents().then(()=>{VIEWS.tprog._t=0;if(view.name==='tprog'&&(AUTH.students||[]).some(x=>x.id===sid))render();},()=>{VIEWS.tprog._t=0;});}
+    return;
+  }
+  app.innerHTML=anProgressHtml(anData(sid),"go('tan',{tab:'week'})",true);
+  if(!TC.owner[sid]&&!VIEWS.tprog._f){VIEWS.tprog._f=1;fetchOwner(sid).then(r=>{VIEWS.tprog._f=0;TC.owner[sid]={sets:r.sets,words:r.words};if(view.name==='tprog'&&view.sid===sid)render();},()=>{VIEWS.tprog._f=0;});}
+};
+Object.assign(RU_DICT,{"Analytics":"Аналитика","Words":"Слова","Week":"Неделя","Lists":"Списки","My progress":"Мой прогресс","Calendar":"Календарь","Learned words":"Выученные слова","Chart":"График","less":"меньше","more":"больше","streak":"серия","best":"лучшая","active days":"дней занятий","answers":"ответов","accuracy":"точность","learned":"выучено","The calendar is kept since":"Календарь ведётся с","Days you study will appear here. Recording starts with this version.":"Здесь появятся дни, когда вы занимались. Запись ведётся с этой версии.","No days recorded yet — they appear after the student updates the app.":"Дней пока нет — они появятся после обновления приложения у ученика.","Learned in total":"Выучено всего","in 4 weeks":"за 4 недели","By week":"По неделям","This week":"На этой неделе","of 7 days":"из 7 дней","vs previous week":"к прошлой неделе","Hardest words":"Сложнее всего","Review tricky words":"Повторить сложные слова","Answers per day are recorded since this version.":"Ответы по дням записываются с этой версии.","Week summary":"Итоги недели","Last week summary":"Итоги прошлой недели","student":"ученик","student2":"ученика","students":"учеников","No shared trouble spots":"Общих трудных слов нет","Words that most of your students keep missing will appear here.":"Здесь появятся слова, на которых ошибается большинство учеников.","Most students keep missing":"Ошибается большинство","Make a list for the lesson":"Собрать набор для урока","Hard for everyone":"Трудные для всех","List created":"Набор создан","Days and answers are recorded since the student updates the app. Until then only changed words are shown.":"Дни и ответы записываются с момента обновления приложения у ученика. Пока показаны только изменённые слова.","Missed 3+ days":"Пропустили 3+ дня","away":"нет","words changed":"слов изменено","Nobody missed 3 days":"Никто не пропускал 3 дня","Copy the report for chat":"Скопировать отчёт для чата","Copied ✓":"Скопировано ✓","Share of learned words in each list. Tap a cell to open the list.":"Доля выученных слов в каждом списке. Нажмите на ячейку, чтобы открыть список.","Refresh":"Обновить","added":"добавлено"});
+
+const TEACH_VIEWS=['students','tsets','twords','tsaccess','tan','tprog'];
 function viewSave(){try{
   const lv=(view.name==='libset'&&LV&&LV.src!=='link'&&LV.set)?{src:LV.src,id:LV.set.id,cid:LV.set.cid||'',back:LV.back||''}:null;
   localStorage.setItem(VKEY,JSON.stringify({v:view,at:Date.now(),y:0,lv}));}catch(e){}}
@@ -7601,7 +7920,7 @@ function viewLoad(){
     const o=JSON.parse(localStorage.getItem(VKEY)||'null');
     if(!o||!o.v||!o.v.name||Date.now()-(o.at||0)>12*36e5)return null;
     const n=o.v.name;
-    const known=['today','vocab','me','archive','hard','text','library','wf'].indexOf(n)>=0||(n==='libfolder'&&EXAM_FOLDERS.some(x=>x.id===o.v.f))||(n==='libset'&&o.lv&&o.lv.id)||(n==='read'&&findText(o.v.id))||TEACH_VIEWS.indexOf(n)>=0||(n==='set'&&S.sets.some(s=>s.id===o.v.id));
+    const known=['today','vocab','me','archive','hard','text','library','wf','progress'].indexOf(n)>=0||(n==='libfolder'&&EXAM_FOLDERS.some(x=>x.id===o.v.f))||(n==='libset'&&o.lv&&o.lv.id)||(n==='read'&&findText(o.v.id))||TEACH_VIEWS.indexOf(n)>=0||(n==='set'&&S.sets.some(s=>s.id===o.v.id));
     if(!known)return null;
     if(TEACH_VIEWS.indexOf(n)>=0){const c=JSON.parse(localStorage.getItem(PKEY)||'null');if(!c||c.role!=='teacher')return null;}
     return o;
