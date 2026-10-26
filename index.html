@@ -7922,7 +7922,6 @@ const pushSupported=()=>('serviceWorker' in navigator)&&('PushManager' in window
 const isStandalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
 function pushState(){
   if(!AUTH.user)return 'nouser';
-  if(AUTH.profile&&AUTH.profile.role==='teacher')return 'teacher';
   if(IS_IOS&&!isStandalone())return 'install';
   if(!pushSupported())return 'unsupported';
   if(Notification.permission==='denied')return 'denied';
@@ -8008,7 +8007,6 @@ function pushSheet(msg){
   const err=msg?`<div class="err" style="min-height:0">${esc(msg)}</div>`:'';
   let h;
   if(st==='nouser')h=`<p class="hint">${t('Sign in to get reminders.')}</p><button class="btn pri" onclick="closeSheet();authSheet()">${t('Sign in / Sign up')}</button>`;
-  else if(st==='teacher')h=`<p class="hint">${t('Reminders for teachers will come later.')}</p>`;
   else if(st==='install')h=`<p class="hint">${t('On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.')}</p>`;
   else if(st==='unsupported')h=`<p class="hint">${t('This browser does not support notifications.')}</p>`;
   else if(st==='denied')h=`<p class="hint">${t('Notifications are blocked. Allow them in the browser or phone settings.')}</p>`;
@@ -8025,7 +8023,7 @@ function pushSheet(msg){
   sheet(lead+h+`<button class="btn ghost" style="margin-top:9px" onclick="closeSheet()">${t('Close')}</button>`);
 }
 function pushRow(){
-  const st=pushState();if(st==='nouser'||st==='teacher')return '';
+  const st=pushState();if(st==='nouser')return '';
   return `<button class="rowlink" onclick="pushSheet()"><span>${ic('sound',19)}${t('Reminders')}</span><em>${st==='on'?t('on'):t('off')}</em></button>`;
 }
 /* a tap on a notification (or ?go=… in the address) opens the right screen */
