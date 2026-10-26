@@ -1,4 +1,4 @@
-const CACHE = 'vocab-v112';
+const CACHE = 'vocab-v113';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v3.png', './icon-512-v3.png', './icon-mask-512-v3.png', './favicon-32-v3.png', './favicon-192-v3.png',
   './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const OCR_CACHE = 'noeon-ocr-v1';
@@ -103,7 +103,7 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data ? e.data.text() : '' }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'NOEON Words', {
+  e.waitUntil(self.registration.showNotification(d.title == null ? 'NOEON Words' : d.title, {
     body: d.body || '',
     icon: './icon-180-v3.png',
     badge: './favicon-192-v3.png',
