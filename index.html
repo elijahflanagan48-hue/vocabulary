@@ -2417,6 +2417,7 @@ async function loadStudents(){
 }
 async function doSignOut(){
   liveStop();
+  try{await pushDrop();}catch(e){}
   try{await sb.auth.signOut();}catch(e){}
   try{localStorage.removeItem(PKEY);localStorage.removeItem('vocab.stc');}catch(e){}
   AUTH={user:null,profile:null,ready:true,students:[]};TC.students=null;TC.owner={};
@@ -2802,6 +2803,7 @@ me(app){
     <button class="rowlink" onclick="go('progress',{tab:'cal'})"><span>${ic('trend',19)}${t('My progress')}</span>${ic('right',18)}</button>
     <button class="rowlink" onclick="srSheet()"><span>${ic('repeat',19)}${t('Review schedule')}</span><em>${srCfg().on?srDays().join('/'):t('off')}</em></button>
     <button class="rowlink" onclick="goalSheet()"><span>${ic('target',19)}${t('Daily goal')}</span><em>${nWords(S.stats.goal||10)}</em></button>
+    ${pushRow()}
     <div class="subhead" style="margin-top:16px"><span class="t">${t('Interface')}</span></div>`+
    settingsHtml()+
    `<div class="subhead" style="margin-top:16px"><span class="t">${t('Data')}</span></div>
@@ -7911,6 +7913,135 @@ VIEWS.tprog=function(app){
 };
 Object.assign(RU_DICT,{"Analytics":"Аналитика","Words":"Слова","Week":"Неделя","Lists":"Списки","My progress":"Мой прогресс","Calendar":"Календарь","Learned words":"Выученные слова","Chart":"График","less":"меньше","more":"больше","streak":"серия","best":"лучшая","active days":"дней занятий","answers":"ответов","accuracy":"точность","learned":"выучено","The calendar is kept since":"Календарь ведётся с","Days you study will appear here. Recording starts with this version.":"Здесь появятся дни, когда вы занимались. Запись ведётся с этой версии.","No days recorded yet — they appear after the student updates the app.":"Дней пока нет — они появятся после обновления приложения у ученика.","Learned in total":"Выучено всего","in 4 weeks":"за 4 недели","By week":"По неделям","This week":"На этой неделе","of 7 days":"из 7 дней","vs previous week":"к прошлой неделе","Hardest words":"Сложнее всего","Review tricky words":"Повторить сложные слова","Answers per day are recorded since this version.":"Ответы по дням записываются с этой версии.","Week summary":"Итоги недели","Last week summary":"Итоги прошлой недели","student":"ученик","student2":"ученика","students":"учеников","No shared trouble spots":"Общих трудных слов нет","Words that most of your students keep missing will appear here.":"Здесь появятся слова, на которых ошибается большинство учеников.","Most students keep missing":"Ошибается большинство","Make a list for the lesson":"Собрать набор для урока","Hard for everyone":"Трудные для всех","List created":"Набор создан","Days and answers are recorded since the student updates the app. Until then only changed words are shown.":"Дни и ответы записываются с момента обновления приложения у ученика. Пока показаны только изменённые слова.","Missed 3+ days":"Пропустили 3+ дня","away":"нет","words changed":"слов изменено","Nobody missed 3 days":"Никто не пропускал 3 дня","Copy the report for chat":"Скопировать отчёт для чата","Copied ✓":"Скопировано ✓","Share of learned words in each list. Tap a cell to open the list.":"Доля выученных слов в каждом списке. Нажмите на ячейку, чтобы открыть список.","Refresh":"Обновить","added":"добавлено"});
 
+/* ================= reminders (v111): Web Push ================= */
+const PUSHK='noeon_push';
+const PUSH_DEF={on:false,daily:true,dh:21,period:'week',up:''};
+function pushPrefs(){try{return Object.assign({},PUSH_DEF,JSON.parse(localStorage.getItem(PUSHK)||'{}'));}catch(e){return Object.assign({},PUSH_DEF);}}
+function pushSet(p){try{localStorage.setItem(PUSHK,JSON.stringify(p));}catch(e){}}
+const pushSupported=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+const isStandalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
+function pushState(){
+  if(!AUTH.user)return 'nouser';
+  if(AUTH.profile&&AUTH.profile.role==='teacher')return 'teacher';
+  if(IS_IOS&&!isStandalone())return 'install';
+  if(!pushSupported())return 'unsupported';
+  if(Notification.permission==='denied')return 'denied';
+  return(pushPrefs().on&&Notification.permission==='granted')?'on':'off';
+}
+let PUSHKEY=null;
+async function pushCall(body){
+  if(!sb)throw new Error('offline');
+  const {data,error}=await sb.functions.invoke('push',{body});
+  if(error)throw error;
+  return data||{};
+}
+async function pushKey(){
+  if(PUSHKEY)return PUSHKEY;
+  const d=await pushCall({action:'key'});
+  if(!d.key)throw new Error('no key');
+  return PUSHKEY=d.key;
+}
+function pushB64(s){
+  const p='='.repeat((4-s.length%4)%4),b=(s+p).replace(/-/g,'+').replace(/_/g,'/'),r=atob(b),o=new Uint8Array(r.length);
+  for(let i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o;
+}
+const pushTz=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';}catch(e){return 'UTC';}};
+const pushLang=()=>S.settings.lang==='en'?'en':'ru';
+const pushServerPrefs=p=>({daily:!!p.daily,dh:p.dh,wh:20,period:p.period,lang:pushLang()});
+async function pushSub(create){
+  const reg=await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub&&create)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushB64(await pushKey())});
+  return sub;
+}
+async function pushUpload(sub){
+  const p=pushPrefs(),sig=sub.endpoint+'|'+pushTz()+'|'+JSON.stringify(pushServerPrefs(p));
+  await pushCall({action:'subscribe',sub:sub.toJSON(),tz:pushTz(),prefs:pushServerPrefs(p),ua:navigator.userAgent});
+  p.up=sig;pushSet(p);
+}
+/* on start / sign-in: the browser may have renewed the subscription, the time zone may have changed */
+async function pushResync(){
+  try{
+    if(pushState()!=='on')return;
+    const sub=await pushSub(true);if(!sub)return;
+    const p=pushPrefs(),sig=sub.endpoint+'|'+pushTz()+'|'+JSON.stringify(pushServerPrefs(p));
+    if(p.up!==sig)await pushUpload(sub);
+  }catch(e){}
+}
+function pushFail(e){
+  const m=String((e&&(e.message||e.name))||e||'');
+  if(/permission|denied/i.test(m))return t('Notifications are blocked. Allow them in the browser or phone settings.');
+  if(/offline|Failed to fetch|NetworkError/i.test(m))return t('No connection — try again when you’re online.');
+  return t('The notification server is not set up yet. See the setup instructions.');
+}
+async function pushEnable(){
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted')return pushSheet(perm==='denied'?t('Notifications are blocked. Allow them in the browser or phone settings.'):'');
+    const sub=await pushSub(true);
+    const p=pushPrefs();p.on=true;pushSet(p);
+    await pushUpload(sub);
+    pushSheet();toast(t('Reminders on')+' ✓');
+  }catch(e){const p=pushPrefs();p.on=false;pushSet(p);pushSheet(pushFail(e));}
+}
+async function pushDrop(){
+  const p=pushPrefs();if(!p.on)return;
+  p.on=false;p.up='';pushSet(p);
+  try{const sub=await pushSub(false);if(sub){try{await pushCall({action:'unsubscribe',endpoint:sub.endpoint});}catch(e){}await sub.unsubscribe();}}catch(e){}
+}
+async function pushOff(){await pushDrop();pushSheet();}
+async function pushOpt(k,v){
+  const p=pushPrefs();p[k]=v;pushSet(p);
+  pushSheet();
+  try{const sub=await pushSub(false);if(sub){await pushCall({action:'update',endpoint:sub.endpoint,tz:pushTz(),prefs:pushServerPrefs(p)});p.up=sub.endpoint+'|'+pushTz()+'|'+JSON.stringify(pushServerPrefs(p));pushSet(p);}}
+  catch(e){pushSheet(pushFail(e));}
+}
+async function pushTest(){
+  try{
+    const d=await pushCall({action:'test',lang:pushLang()});
+    toast(d.sent>0?t('Sent — check your notifications'):t('No device is subscribed yet'));
+  }catch(e){pushSheet(pushFail(e));}
+}
+function pushSheet(msg){
+  const st=pushState(),p=pushPrefs();
+  const lead=`<h2>${t('Reminders')}</h2>`;
+  const err=msg?`<div class="err" style="min-height:0">${esc(msg)}</div>`:'';
+  let h;
+  if(st==='nouser')h=`<p class="hint">${t('Sign in to get reminders.')}</p><button class="btn pri" onclick="closeSheet();authSheet()">${t('Sign in / Sign up')}</button>`;
+  else if(st==='teacher')h=`<p class="hint">${t('Reminders for teachers will come later.')}</p>`;
+  else if(st==='install')h=`<p class="hint">${t('On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.')}</p>`;
+  else if(st==='unsupported')h=`<p class="hint">${t('This browser does not support notifications.')}</p>`;
+  else if(st==='denied')h=`<p class="hint">${t('Notifications are blocked. Allow them in the browser or phone settings.')}</p>`;
+  else if(st==='off')h=`<p class="hint">${t('We remind you at 21:00 if today’s goal is still open, and send your weekly summary with the charts.')}</p>${err}<button class="btn pri" onclick="pushEnable()">${ic('sound',18)}${t('Turn on reminders')}</button>`;
+  else h=`${err}
+   <div class="field"><label>${t('Daily reminder')}</label>
+    <div class="sel-opt"><button class="${p.daily?'on':''}" onclick="pushOpt('daily',true)">${t('On')}</button><button class="${p.daily?'':'on'}" onclick="pushOpt('daily',false)">${t('Off')}</button></div>
+    ${p.daily?`<div class="hint">${t('Comes only if you have not reached today’s goal yet. Time:')}</div><div class="sel-opt">${[18,19,20,21,22,23].map(x=>`<button class="${p.dh===x?'on':''}" onclick="pushOpt('dh',${x})">${x}:00</button>`).join('')}</div>`:''}</div>
+   <div class="field"><label>${t('Summary with analytics')}</label>
+    <div class="sel-opt">${[['week','Weekly'],['month','Monthly'],['off','Never']].map(([k,l])=>`<button class="${p.period===k?'on':''}" onclick="pushOpt('period','${k}')">${t(l)}</button>`).join('')}</div>
+    <div class="hint">${p.period==='week'?t('Sunday at 20:00.'):p.period==='month'?t('On the 1st at 10:00, for the month that ended.'):t('No summaries.')} ${p.period==='off'?'':t('Tap the notification and your analytics open at once.')}</div></div>
+   <button class="btn" onclick="pushTest()">${t('Send a test')}</button>
+   <button class="btn ghost" style="margin-top:9px" onclick="pushOff()">${t('Turn off on this device')}</button>`;
+  sheet(lead+h+`<button class="btn ghost" style="margin-top:9px" onclick="closeSheet()">${t('Close')}</button>`);
+}
+function pushRow(){
+  const st=pushState();if(st==='nouser'||st==='teacher')return '';
+  return `<button class="rowlink" onclick="pushSheet()"><span>${ic('sound',19)}${t('Reminders')}</span><em>${st==='on'?t('on'):t('off')}</em></button>`;
+}
+/* a tap on a notification (or ?go=… in the address) opens the right screen */
+const DEEP={td:['today',{}],pw:['progress',{tab:'week',w:0}],pl:['progress',{tab:'week',w:-1}],pm:['progress',{tab:'cal',m:-1}]};
+function deepGo(code){const d=DEEP[code];if(!d)return false;go(d[0],Object.assign({},d[1]));return true;}
+function deepBoot(){
+  try{
+    const c=new URLSearchParams(location.search).get('go');if(!c||!DEEP[c])return false;
+    history.replaceState(null,'',location.pathname);
+    view=Object.assign({name:DEEP[c][0]},DEEP[c][1]);return true;
+  }catch(e){return false;}
+}
+try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='noeon-go')deepGo(e.data.go);});}catch(e){}
+{const _osi=onSignedIn;onSignedIn=async function(){const r=await _osi.apply(this,arguments);setTimeout(pushResync,2500);return r;};}
+Object.assign(RU_DICT,{"Reminders":"Напоминания","Sign in to get reminders.":"Войдите в аккаунт, чтобы получать напоминания.","Reminders for teachers will come later.":"Напоминания для учителей появятся позже.","On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.":"На iPhone напоминания работают только у приложения на экране «Домой»: в Safari нажмите «Поделиться» → «На экран Домой», откройте приложение оттуда и вернитесь сюда.","This browser does not support notifications.":"Этот браузер не поддерживает уведомления.","Notifications are blocked. Allow them in the browser or phone settings.":"Уведомления запрещены. Разрешите их в настройках браузера или телефона.","We remind you at 21:00 if today’s goal is still open, and send your weekly summary with the charts.":"Напомним в 21:00, если цель дня ещё не закрыта, и пришлём итоги недели с графиками.","Turn on reminders":"Включить напоминания","Daily reminder":"Ежедневное напоминание","On":"Вкл","Off":"Выкл","Comes only if you have not reached today’s goal yet. Time:":"Придёт, только если вы ещё не достигли цели дня. Время:","Summary with analytics":"Итоги с аналитикой","Weekly":"Раз в неделю","Monthly":"Раз в месяц","Never":"Не присылать","Sunday at 20:00.":"В воскресенье в 20:00.","On the 1st at 10:00, for the month that ended.":"1-го числа в 10:00, за прошедший месяц.","No summaries.":"Итоги не приходят.","Tap the notification and your analytics open at once.":"Нажмите на уведомление, и сразу откроется ваша аналитика.","Send a test":"Отправить пробное","Turn off on this device":"Выключить на этом устройстве","Reminders on":"Напоминания включены","Sent — check your notifications":"Отправлено — проверьте уведомления","No device is subscribed yet":"Устройство ещё не подписано","The notification server is not set up yet. See the setup instructions.":"Сервер уведомлений ещё не настроен. Смотрите инструкцию по установке.","on":"вкл","off":"выкл"});
+
 const TEACH_VIEWS=['students','tsets','twords','tsaccess','tan','tprog'];
 function viewSave(){try{
   const lv=(view.name==='libset'&&LV&&LV.src!=='link'&&LV.set)?{src:LV.src,id:LV.set.id,cid:LV.set.cid||'',back:LV.back||''}:null;
@@ -8051,7 +8182,7 @@ function bootApp(){
 loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
 applyTheme();
 try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.addEventListener&&mq.addEventListener('change',()=>{if((S.settings.theme||'auto')==='auto')applyTheme();});}}catch(e){}
-{const bv=bootView();
+{const dg=deepBoot(),bv=dg?false:bootView();
   if(bv==='wait'){const a=$('#app');a.innerHTML=skel(5);}else render();
   if(bv===true)keepScroll();}
 authInit();
