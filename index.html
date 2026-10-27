@@ -8179,7 +8179,7 @@ Object.assign(RU_DICT,{"Analytics":"Аналитика","Words":"Слова","We
 
 /* ================= reminders (v111): Web Push ================= */
 const PUSHK='noeon_push';
-const PUSH_DEF={on:false,daily:true,dh:21,period:'week',up:''};
+const PUSH_DEF={on:false,daily:true,asg:true,dh:21,period:'week',up:''};
 function ntfPrefs(){try{return Object.assign({},PUSH_DEF,JSON.parse(localStorage.getItem(PUSHK)||'{}'));}catch(e){return Object.assign({},PUSH_DEF);}}
 function pushSet(p){try{localStorage.setItem(PUSHK,JSON.stringify(p));}catch(e){}}
 const pushSupported=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
@@ -8210,7 +8210,7 @@ function pushB64(s){
 }
 const pushTz=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';}catch(e){return 'UTC';}};
 const pushLang=()=>S.settings.lang==='en'?'en':'ru';
-const pushServerPrefs=p=>({daily:!!p.daily,dh:p.dh,wh:20,period:p.period,lang:pushLang()});
+const pushServerPrefs=p=>({asg:p.asg!==false,daily:!!p.daily,dh:p.dh,wh:20,period:p.period,lang:pushLang()});
 async function pushSub(create){
   const reg=await navigator.serviceWorker.ready;
   let sub=await reg.pushManager.getSubscription();
@@ -8279,6 +8279,9 @@ function pushSheet(msg){
    <div class="field"><label>${t('Daily reminder')}</label>
     <div class="sel-opt"><button class="${p.daily?'on':''}" onclick="pushOpt('daily',true)">${t('On')}</button><button class="${p.daily?'':'on'}" onclick="pushOpt('daily',false)">${t('Off')}</button></div>
     ${p.daily?`<div class="hint">${t('Comes only if you have not reached today’s goal yet. Time:')}</div><div class="sel-opt">${[18,19,20,21,22,23].map(x=>`<button class="${p.dh===x?'on':''}" onclick="pushOpt('dh',${x})">${x}:00</button>`).join('')}</div>`:''}</div>
+   <div class="field"><label>${t('Assignment reminders')}</label>
+    <div class="sel-opt"><button class="${p.asg!==false?'on':''}" onclick="pushOpt('asg',true)">${t('On')}</button><button class="${p.asg!==false?'':'on'}" onclick="pushOpt('asg',false)">${t('Off')}</button></div>
+    <div class="hint">${t('At 10:00: the day before a deadline, on the day, and the day after. A teacher is told when a student passes.')}</div></div>
    <div class="field"><label>${t('Summary with analytics')}</label>
     <div class="sel-opt">${[['week','Weekly'],['month','Monthly'],['off','Never']].map(([k,l])=>`<button class="${p.period===k?'on':''}" onclick="pushOpt('period','${k}')">${t(l)}</button>`).join('')}</div>
     <div class="hint">${p.period==='week'?t('Sunday at 20:00.'):p.period==='month'?t('On the 1st at 10:00, for the month that ended.'):t('No summaries.')} ${p.period==='off'?'':t('Tap the notification and your analytics open at once.')}</div></div>
@@ -8291,11 +8294,12 @@ function pushRow(){
   return `<button class="rowlink" onclick="pushSheet()"><span>${ic('sound',19)}${t('Reminders')}</span><em>${st==='on'?t('on'):t('off')}</em></button>`;
 }
 /* a tap on a notification (or ?go=… in the address) opens the right screen */
-const DEEP={td:['today',{}],pw:['progress',{tab:'week',w:0}],pl:['progress',{tab:'week',w:-1}],pm:['progress',{tab:'cal',m:-1}]};
+const DEEP={td:['today',{}],pw:['progress',{tab:'week',w:0}],pl:['progress',{tab:'week',w:-1}],pm:['progress',{tab:'cal',m:-1}],st:['students',{}]};
 function deepGo(code){const d=DEEP[code];if(!d)return false;go(d[0],Object.assign({},d[1]));return true;}
 function deepBoot(){
   try{
     const c=new URLSearchParams(location.search).get('go');if(!c||!DEEP[c])return false;
+    if(c==='st'){history.replaceState(null,'',location.pathname);return false;}
     history.replaceState(null,'',location.pathname);
     view=Object.assign({name:DEEP[c][0]},DEEP[c][1]);return true;
   }catch(e){return false;}
@@ -8304,6 +8308,7 @@ try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',
 {const _osi=onSignedIn;onSignedIn=async function(){const r=await _osi.apply(this,arguments);setTimeout(pushResync,2500);return r;};}
 Object.assign(RU_DICT,{"Reminders":"Напоминания","Sign in to get reminders.":"Войдите в аккаунт, чтобы получать напоминания.","Reminders for teachers will come later.":"Напоминания для учителей появятся позже.","On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.":"На iPhone напоминания работают только у приложения на экране «Домой»: в Safari нажмите «Поделиться» → «На экран Домой», откройте приложение оттуда и вернитесь сюда.","This browser does not support notifications.":"Этот браузер не поддерживает уведомления.","Notifications are blocked. Allow them in the browser or phone settings.":"Уведомления запрещены. Разрешите их в настройках браузера или телефона.","We remind you at 21:00 if today’s goal is still open, and send your weekly summary with the charts.":"Напомним в 21:00, если цель дня ещё не закрыта, и пришлём итоги недели с графиками.","Turn on reminders":"Включить напоминания","Daily reminder":"Ежедневное напоминание","On":"Вкл","Off":"Выкл","Comes only if you have not reached today’s goal yet. Time:":"Придёт, только если вы ещё не достигли цели дня. Время:","Summary with analytics":"Итоги с аналитикой","Weekly":"Раз в неделю","Monthly":"Раз в месяц","Never":"Не присылать","Sunday at 20:00.":"В воскресенье в 20:00.","On the 1st at 10:00, for the month that ended.":"1-го числа в 10:00, за прошедший месяц.","No summaries.":"Итоги не приходят.","Tap the notification and your analytics open at once.":"Нажмите на уведомление, и сразу откроется ваша аналитика.","Send a test":"Отправить пробное","Turn off on this device":"Выключить на этом устройстве","Reminders on":"Напоминания включены","Sent — check your notifications":"Отправлено — проверьте уведомления","No device is subscribed yet":"Устройство ещё не подписано","The notification server is not set up yet. See the setup instructions.":"Сервер уведомлений ещё не настроен. Смотрите инструкцию по установке.","on":"вкл","off":"выкл"});
 
+Object.assign(RU_DICT,{"Assignment reminders":"Напоминания о заданиях","At 10:00: the day before a deadline, on the day, and the day after. A teacher is told when a student passes.":"В 10:00: за день до срока, в день срока и на следующий день. Учителю приходит уведомление, когда ученик сдал задание."});
 const TEACH_VIEWS=['students','tsets','twords','tsaccess','tan','tprog'];
 function viewSave(){try{
   const lv=(view.name==='libset'&&LV&&LV.src!=='link'&&LV.set)?{src:LV.src,id:LV.set.id,cid:LV.set.cid||'',back:LV.back||''}:null;
