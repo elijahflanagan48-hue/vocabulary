@@ -7180,7 +7180,7 @@ function rdAdd(){
 }
 
 /* ================= Assignments: a task with a deadline ================= */
-Object.assign(RU_DICT,{"Assignments":"Задания","Assignment":"Задание","New assignment":"Новое задание","Assign":"Назначить","Assign to":"Кому","Word list":"Список слов","Due date":"Срок","Pass mark, %":"Проходной балл, %","Library":"Библиотека","My lists":"Мои списки","Choose a list":"Выберите список","Pick a due date":"Укажите срок","Pick at least one student":"Выберите хотя бы одного ученика","Assigned ✓":"Назначено ✓","Run the SQL file first (the assignments table is missing).":"Сначала выполните SQL-файл (в базе нет таблицы заданий).","Overdue":"Просрочено","Due today":"Срок — сегодня","Due tomorrow":"Срок — завтра","Due":"Срок","Passed":"Сдано","Not started":"Не начато","Best":"Лучший","Attempts":"Попыток","Learn these words":"Выучить слова","Take the test":"Пройти тест","Take the test again":"Пройти тест заново","Typed answers only — every word of the list. You need at least {n}%.":"Только ввод ответа — все слова списка. Нужно набрать не меньше {n}%.","Assignment complete!":"Задание выполнено!","Not passed yet":"Пока не сдано","You need {n}% — review the words and try again.":"Нужно {n}% — повторите слова и попробуйте ещё раз.","Words in this assignment":"Слова задания","Assignment not found":"Задание не найдено","Delete assignment":"Удалить задание","Delete this assignment?":"Удалить это задание?","Assignment deleted":"Задание удалено","overdue":"просрочено","open":"в работе","all done":"всё сдано","Too many words (max 400)":"Слишком много слов (максимум 400)","The list is empty":"В списке нет слов","Added to your dictionary":"Добавлено в словарь","Student’s lists":"Списки ученика","Result":"Результат","Passed on":"Сдано","Title":"Название","Not saved":"Не сохранено"});
+Object.assign(RU_DICT,{"Open to this student":"Открыто этому ученику","Assignments":"Задания","Assignment":"Задание","New assignment":"Новое задание","Assign":"Назначить","Assign to":"Кому","Word list":"Список слов","Due date":"Срок","Pass mark, %":"Проходной балл, %","Library":"Библиотека","My lists":"Мои списки","Choose a list":"Выберите список","Pick a due date":"Укажите срок","Pick at least one student":"Выберите хотя бы одного ученика","Assigned ✓":"Назначено ✓","Run the SQL file first (the assignments table is missing).":"Сначала выполните SQL-файл (в базе нет таблицы заданий).","Overdue":"Просрочено","Due today":"Срок — сегодня","Due tomorrow":"Срок — завтра","Due":"Срок","Passed":"Сдано","Not started":"Не начато","Best":"Лучший","Attempts":"Попыток","Learn these words":"Выучить слова","Take the test":"Пройти тест","Take the test again":"Пройти тест заново","Typed answers only — every word of the list. You need at least {n}%.":"Только ввод ответа — все слова списка. Нужно набрать не меньше {n}%.","Assignment complete!":"Задание выполнено!","Not passed yet":"Пока не сдано","You need {n}% — review the words and try again.":"Нужно {n}% — повторите слова и попробуйте ещё раз.","Words in this assignment":"Слова задания","Assignment not found":"Задание не найдено","Delete assignment":"Удалить задание","Delete this assignment?":"Удалить это задание?","Assignment deleted":"Задание удалено","overdue":"просрочено","open":"в работе","all done":"всё сдано","Too many words (max 400)":"Слишком много слов (максимум 400)","The list is empty":"В списке нет слов","Added to your dictionary":"Добавлено в словарь","Student’s lists":"Списки ученика","Result":"Результат","Passed on":"Сдано","Title":"Название","Not saved":"Не сохранено"});
 const ASG_KEY='noeon.asg.v1';
 let ASG={list:[],at:0,uid:'',err:''};
 try{const c=JSON.parse(localStorage.getItem(ASG_KEY)||'null');if(c&&Array.isArray(c.list)){ASG.list=c.list;ASG.uid=c.uid||'';}}catch(e){}
@@ -7338,15 +7338,21 @@ function asgSources(sid){
   const bi=LIB_BUILTIN.map(x=>opt('lib:'+x.id,libTitle(x),x.words.length));
   const own=lists().filter(s=>s.words.length).map(s=>opt('own:'+s.id,s.name,s.words.length));
   const c=TC.owner[sid],stu=c?(c.sets||[]).filter(s=>s.name!==ARCH_NAME).map(s=>[s,(c.words||[]).filter(w=>w.set_id===s.id).length]).filter(x=>x[1]).map(x=>opt('stu:'+x[0].id,x[0].name,x[1])):[];
+  const ex=(EXM.lists||[]).filter(l=>l.w&&l.w.length).sort((a,b)=>EXAM_IDS.indexOf(a.id)-EXAM_IDS.indexOf(b.id));
+  const open=ex.filter(l=>examSees(examCfg(l.id),sid)),rest=ex.filter(l=>!open.includes(l));
+  const eo=l=>opt('exm:'+l.id,l.title,l.w.length);
+  if(open.length)g.push(`<optgroup label="${t('Open to this student')}">${open.map(eo).join('')}</optgroup>`);
   if(lib.length)g.push(`<optgroup label="${t('Library')} · ${t('My lists')}">${lib.join('')}</optgroup>`);
   g.push(`<optgroup label="${t('Library')}">${bi.join('')}</optgroup>`);
   if(own.length)g.push(`<optgroup label="${t('My lists')}">${own.join('')}</optgroup>`);
   if(stu.length)g.push(`<optgroup label="${t('Student’s lists')}">${stu.join('')}</optgroup>`);
+  if(rest.length)g.push(`<optgroup label="${t('Exam lists')}">${rest.map(eo).join('')}</optgroup>`);
   return g.join('');
 }
 function asgSrcWords(v,sid){
   const i=v.indexOf(':'),k=v.slice(0,i),id=v.slice(i+1);
   const clean=a=>a.filter(w=>w&&w.en&&String(w.en).trim()).map(w=>({en:String(w.en).trim(),ru:String(w.ru||'').trim()}));
+  if(k==='exm'){const l=(EXM.lists||[]).find(z=>z.id===id);return l?{title:l.title,lang:'en',words:clean(l.w.map(a=>({en:a[0],ru:a[1]})))}:null;}
   if(k==='lib'){const x=LIB_BUILTIN.find(z=>z.id===id)||LIBX.list.find(z=>z.id===id);return x?{title:libTitle(x),lang:x.lang||'en',words:clean(x.words)}:null;}
   if(k==='own'){const s=S.sets.find(z=>z.id===id);return s?{title:s.name,lang:setLangOf(s),words:clean(s.words)}:null;}
   if(k==='stu'){const c=TC.owner[sid],s=c&&(c.sets||[]).find(z=>z.id===id);return s?{title:s.name,lang:tSetLang(s.id),words:clean((c.words||[]).filter(w=>w.set_id===id))}:null;}
@@ -7355,6 +7361,7 @@ function asgSrcWords(v,sid){
 const asgYMD=ts=>{const d=new Date(ts),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
 async function asgSheet(sid){
   if(!libOk())await libLoad();
+  await examLoad();
   let pct=85;try{pct=+localStorage.getItem('noeon.asg.pct')||85;}catch(e){}
   const studs=(AUTH.students||[]);
   sheet(`<h2>${t('New assignment')}</h2>
