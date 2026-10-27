@@ -1319,6 +1319,8 @@ function fix(d){
     due:w.due||0,rep:w.rep||0,fs:w.fs||0,fd:w.fd||0,fl:w.fl||0,fx:w.fx||0,upd:w.upd||Date.now(),synced:!!w.synced
   }))}));
   d.libSubs=(d.libSubs&&typeof d.libSubs==='object'&&!Array.isArray(d.libSubs))?d.libSubs:{};
+  d.asgSets=(d.asgSets&&typeof d.asgSets==='object'&&!Array.isArray(d.asgSets))?d.asgSets:{};
+  if(!d.stats.asg||typeof d.stats.asg!=='object'||Array.isArray(d.stats.asg))d.stats.asg={};
   d.texts=Array.isArray(d.texts)?d.texts.filter(x=>x&&x.id&&typeof x.body==='string'):[];
   d.sets.forEach(sortPos);
   return d;
@@ -2048,7 +2050,7 @@ function permBlocked(e){const m=errText(e);return m.indexOf('row-level')>=0||m.i
 const dayNum=k=>{if(!k)return 0;const p=String(k).split('-');return (+p[0]||0)*10000+(+p[1]||0)*100+(+p[2]||0);};
 
 let SEEN=0,_seenT=0;
-function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,seen:SEEN||0,conf:st.conf||{},wf:st.wf||{},act:st.act||{}};}
+function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,seen:SEEN||0,conf:st.conf||{},wf:st.wf||{},act:st.act||{},asg:st.asg||{}};}
 /* a student's device tells the teacher it was opened: at most once every ~2 minutes while visible */
 function pingSeen(){
   try{
@@ -2094,6 +2096,15 @@ function mergeStats(r){
     const la=actAll();
     Object.keys(r.act).forEach(k=>{const b=r.act[k];if(!Array.isArray(b))return;const a=la[k],b0=+b[0]||0,b1=+b[1]||0;
       if(!a){la[k]=[b0,b1];ch=true;}else if(b0>a[0]||b1>a[1]){a[0]=Math.max(a[0],b0);a[1]=Math.max(a[1],b1);ch=true;}});
+  }
+  if(r.asg&&typeof r.asg==='object'&&!Array.isArray(r.asg)){
+    const la=asgRes();
+    Object.keys(r.asg).forEach(k=>{
+      if(!okId(k))return;const b=r.asg[k];if(!b||typeof b!=='object')return;const a=la[k];
+      const bd=+b.d||0,ad=a?+a.d||0:0;
+      const nb={b:Math.max(+b.b||0,a?+a.b||0:0),n:Math.max(+b.n||0,a?+a.n||0:0),d:(bd&&ad)?Math.min(bd,ad):(bd||ad),u:Math.max(+b.u||0,a?+a.u||0:0)};
+      if(!a||nb.b!==a.b||nb.n!==a.n||nb.d!==a.d||nb.u!==a.u){la[k]=nb;ch=true;}
+    });
   }
   if((l.best||0)<(l.streak||0)){l.best=l.streak;ch=true;}
   if(ch)l.upd=Math.max(l.upd||0,r.upd||0,Date.now());   /* re-sync the merged truth */
@@ -2711,10 +2722,11 @@ today(app){
   app.innerHTML=hdr(t('Today'),'',themeBtn())+
    (standalone||S.settings.hideBanner||!total?'':
      `<div class="banner"><span class="ib">${ic('phone',19)}</span><div><b>${t('Add to Home Screen.')}</b> ${t("In Safari: Share → “Add to Home Screen”. Then it’s always one tap away and works offline.")}</div><button class="x" onclick="S.settings.hideBanner=true;save();render()">×</button></div>`)+
-   hero+testBanner()+(total?cfCard(plan.lg||targetLang()):'')+
+   asgToday()+hero+testBanner()+(total?cfCard(plan.lg||targetLang()):'')+
    (total?anTodayCard()+dayStrip()+wordsCard()+`<button class="rowlink" onclick="modesSheet()"><span>${ic('grid',19)}${t('Choose a mode')}</span>${ic('right',18)}</button>`:'')+
    tabBar();
   celSoon(900);
+  asgKick();
 },
 
 vocab(app){
@@ -3362,7 +3374,7 @@ VIEWS.students=async function(app){
       <div class="av"${stale?' style="background:var(--line2);color:var(--mut)"':''}>${esc(nm.trim().charAt(0).toUpperCase()||'?')}</div>
       <div class="t"><div class="nm">${esc(nm)}</div>
         <div class="meta">${inf?nWords(inf.n)+' · '+learned+' '+t('learned'):'…'}</div>
-        <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${seenTxt(last)}${weekN?` · ${weekN} ${t('this week')}`:''}</div></div>
+        <div class="meta" style="color:${stale||!last?'var(--bad)':'var(--ok)'};font-weight:650">${seenTxt(last)}${weekN?` · ${weekN} ${t('this week')}`:''}</div>${asgBadge(s)}</div>
       ${stEdit?`<button class="ic" style="color:var(--bad)" aria-label="Remove student" onclick="event.stopPropagation();unlinkStudent('${s.id}','${q1(nm)}')">${ic('trash',20)}</button>`:ic('right',18)}</div>`;
     }).join('');
   };
@@ -3407,6 +3419,7 @@ VIEWS.students=async function(app){
   }catch(e){}
   topLoad(false);
   if(view.name!=='students')return;
+  asgLoad(false).then(ch=>{if(ch&&view.name==='students'&&TC.students)paint($('#rl'),draw(TC.students),false);});
   if(fresh){TC.students=fresh;paint($('#rl'),draw(fresh),!had);}
   else if(!had)paint($('#rl'),draw({students:[],info:{}}),true);
 };
@@ -3423,6 +3436,7 @@ function tsetsHtml(){
       <div class="meta" id="seenLn" style="color:var(--mut);font-size:13.5px;margin-top:5px">${t('Last visit')}: <b style="color:var(--tx)">${esc(fmtDT(last))}</b></div>
       <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:5px">
         ${archN} ${t('learned')} · ${weekN} ${t('this week')}${dueN?` · ${dueN} ${t('due for review')}`:''}</div></div></div>`+
+   `<div id="tAsg"></div>`+(setTimeout(()=>asgTRefresh(sid),0),'')+
    (tricky.length?`<div class="subhead"><span class="t">${t('Needs work')}</span></div>`+
      '<div class="wlist">'+tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
@@ -3501,7 +3515,7 @@ async function tSeenRefresh(sid){
     const {data}=await sb.from('profiles').select('stats').eq('id',sid).maybeSingle();
     if(!data||!data.stats)return;
     const stu=(AUTH.students||[]).find(x=>x.id===sid);if(!stu)return;
-    stu.stats=data.stats;tLearnDraw(sid);
+    stu.stats=data.stats;tLearnDraw(sid);asgTDraw(sid);
     if(view.name!=='tsets'||view.sid!==sid)return;
     const w=(TV&&TV.sid===sid?TV.words:[])||[];
     const last=Math.max(w.reduce((m,x)=>Math.max(m,+new Date(x.updated_at)),0),stuSeen(stu));
@@ -5600,7 +5614,7 @@ function testBanner(){
 }
 function resumeTest(){const s=testSaved();if(!s){render();return;}runTest(null,s.kinds,s.review,s);}
 function discardTest(){testClear();render();}
-function runTest(words,kinds,review,resume){
+function runTest(words,kinds,review,resume,asg){
   const pool=resume?null:poolNow(),app=$('#app');
   const qs=resume?resume.qs:buildQs(words,kinds,pool);
   const total=qs.length;
@@ -5746,13 +5760,14 @@ function runTest(words,kinds,review,resume){
     });
     /* grading already happened in result() */
     const good=res.filter(r=>r.ok).length,pct=Math.round(good/res.length*100);
+    const asgPass=asg?asgRecord(asg,pct):null;
     /* a spelling slip is a mistake too — it is only listed apart so it reads clearly */
     const wrong=res.filter(r=>!r.ok);
     const slips=wrong.filter(r=>r.near),bad=wrong.filter(r=>!r.near);
     const toArch=res.filter(r=>r.ok&&r.w.arch).length;
     app.innerHTML=hdr(t('Result'),"render()")+
       celHero('test',{pct,title:scoreTitle(pct),sub:`${good} / ${res.length} ${t('correct')}${!review&&toArch?` · ${toArch} ${t('moved to Archive')}`:''}`})+
-      `<div style="height:8px"></div>`+
+      (asg?asgResultHtml(asg,pct,asgPass):'')+`<div style="height:8px"></div>`+
       (slips.length?`<div class="subhead"><span class="t">${t('Spelling slips')} — ${slips.length}</span></div>
         <div class="hint" style="margin:0 2px 8px">${t('A slip counts as a mistake — the spelling has to be exact.')}</div>`+
         slips.map(r=>`<div class="item" style="display:block;padding:13px 15px">
@@ -5772,9 +5787,10 @@ function runTest(words,kinds,review,resume){
             <span class="ans-bad">${r.given?esc(r.given):t('no answer')}</span>
             <span class="ans-ok">${esc(r.correct||r.w.en)}</span></div>${ffNote(r.w)}</div>`).join('')+
         `<div style="height:10px"></div>`:'')+
-      (wrong.length?`<button class="btn pri" id="rt">${t('Retry mistakes')}</button><div style="height:9px"></div>`:'')+
+      (asg?(asgPass?'':`<button class="btn pri" id="rt">${t('Take the test again')}</button><div style="height:9px"></div>`):wrong.length?`<button class="btn pri" id="rt">${t('Retry mistakes')}</button><div style="height:9px"></div>`:'')+
       `<button class="btn ghost" onclick="render()">${t('Close')}</button>`;
-    if(wrong.length)$('#rt').onclick=()=>runTest(shuffle(wrong.map(r=>r.w)),kinds,review);
+    if(asg){if($('#rt'))$('#rt').onclick=()=>asgTest(asg.id);}
+    else if(wrong.length)$('#rt').onclick=()=>runTest(shuffle(wrong.map(r=>r.w)),kinds,review);
     celPlay();
   }
   draw();
@@ -7161,6 +7177,250 @@ function rdAdd(){
   (T.added||(T.added=[])).push(fold(RS.orig||en));T.upd=Date.now();
   save();rdClose();toast(t('Added ✓'));
   setTimeout(rdRefresh,60);
+}
+
+/* ================= Assignments: a task with a deadline ================= */
+Object.assign(RU_DICT,{"Assignments":"Задания","Assignment":"Задание","New assignment":"Новое задание","Assign":"Назначить","Assign to":"Кому","Word list":"Список слов","Due date":"Срок","Pass mark, %":"Проходной балл, %","Library":"Библиотека","My lists":"Мои списки","Choose a list":"Выберите список","Pick a due date":"Укажите срок","Pick at least one student":"Выберите хотя бы одного ученика","Assigned ✓":"Назначено ✓","Run the SQL file first (the assignments table is missing).":"Сначала выполните SQL-файл (в базе нет таблицы заданий).","Overdue":"Просрочено","Due today":"Срок — сегодня","Due tomorrow":"Срок — завтра","Due":"Срок","Passed":"Сдано","Not started":"Не начато","Best":"Лучший","Attempts":"Попыток","Learn these words":"Выучить слова","Take the test":"Пройти тест","Take the test again":"Пройти тест заново","Typed answers only — every word of the list. You need at least {n}%.":"Только ввод ответа — все слова списка. Нужно набрать не меньше {n}%.","Assignment complete!":"Задание выполнено!","Not passed yet":"Пока не сдано","You need {n}% — review the words and try again.":"Нужно {n}% — повторите слова и попробуйте ещё раз.","Words in this assignment":"Слова задания","Assignment not found":"Задание не найдено","Delete assignment":"Удалить задание","Delete this assignment?":"Удалить это задание?","Assignment deleted":"Задание удалено","overdue":"просрочено","open":"в работе","all done":"всё сдано","Too many words (max 400)":"Слишком много слов (максимум 400)","The list is empty":"В списке нет слов","Added to your dictionary":"Добавлено в словарь","Student’s lists":"Списки ученика","Result":"Результат","Passed on":"Сдано","Title":"Название","Not saved":"Не сохранено"});
+const ASG_KEY='noeon.asg.v1';
+let ASG={list:[],at:0,uid:'',err:''};
+try{const c=JSON.parse(localStorage.getItem(ASG_KEY)||'null');if(c&&Array.isArray(c.list)){ASG.list=c.list;ASG.uid=c.uid||'';}}catch(e){}
+const asgIsT=()=>!!(AUTH.profile&&AUTH.profile.role==='teacher');
+const asgMine=()=>(AUTH.user&&ASG.uid===AUTH.user.id)?ASG.list:[];
+const asgNoTable=m=>/42P01|PGRST205|relation|schema cache|assignments/i.test(String(m||''));
+function asgNorm(r){
+  if(!r||!okId(String(r.id))||!okId(String(r.student_id||'')))return null;
+  const due=+new Date(r.due);if(!(due>0))return null;
+  const ws=(Array.isArray(r.words)?r.words:[]).filter(w=>w&&typeof w.en==='string'&&w.en.trim()).slice(0,400)
+    .map(w=>({en:String(w.en).slice(0,200),ru:String(w.ru==null?'':w.ru).slice(0,300)}));
+  return {id:r.id,teacher_id:r.teacher_id,student_id:r.student_id,title:String(r.title||'').slice(0,120),lang:okLang(r.lang)?r.lang:'en',
+    words:ws,due,pct:Math.min(100,Math.max(1,Math.round(+r.pct||85))),at:+new Date(r.created_at)||0};
+}
+/* a student gets his own assignments, a teacher the ones he gave; true = something changed */
+async function asgLoad(force){
+  if(!sb||!AUTH.user)return false;
+  if(!force&&Date.now()-ASG.at<45000&&ASG.uid===AUTH.user.id)return false;
+  ASG.at=Date.now();
+  try{
+    await ensureAuth();
+    let q=sb.from('assignments').select('id,teacher_id,student_id,title,lang,words,due,pct,created_at').eq('deleted',false).order('due',{ascending:true});
+    q=asgIsT()?q.eq('teacher_id',AUTH.user.id):q.eq('student_id',AUTH.user.id);
+    const {data,error}=await q;
+    if(error)throw error;
+    const list=(data||[]).map(asgNorm).filter(Boolean);
+    const ch=JSON.stringify(list)!==JSON.stringify(ASG.list)||ASG.uid!==AUTH.user.id;
+    ASG.list=list;ASG.uid=AUTH.user.id;ASG.err='';
+    try{localStorage.setItem(ASG_KEY,JSON.stringify({uid:ASG.uid,list}));}catch(e){}
+    return ch;
+  }catch(e){ASG.err=String((e&&(e.message||e.code))||'error');return false;}
+}
+/* results live in the student's stats: {id:{b:best %, n:attempts, d:when passed, u:last}} */
+function asgRes(){const st=S.stats;if(!st.asg||typeof st.asg!=='object'||Array.isArray(st.asg))st.asg={};return st.asg;}
+function asgStateOf(a,r){
+  const done=!!(r&&+r.d);
+  return {done,late:!done&&a.due<Date.now(),best:r?+r.b||0:0,tries:r?+r.n||0:0,doneAt:done?+r.d:0};
+}
+function asgRecord(a,pct){
+  const R=asgRes(),r=R[a.id]||(R[a.id]={b:0,n:0,d:0,u:0}),now=Date.now();
+  r.n=(+r.n||0)+1;r.b=Math.max(+r.b||0,pct);r.u=now;
+  const pass=pct>=a.pct;if(pass&&!r.d)r.d=now;
+  const ks=Object.keys(R);
+  if(ks.length>80){ks.sort((x,y)=>(R[x].u||0)-(R[y].u||0)).slice(0,ks.length-80).forEach(k=>delete R[k]);}
+  S.stats.upd=now;save();
+  return pass;
+}
+const asgDay=ts=>new Date(ts).toLocaleDateString(uiEn()?'en-GB':'ru-RU',{weekday:'short',day:'numeric',month:'short'});
+const asgMid=ts=>{const d=new Date(ts);return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();};
+function asgDueTxt(a){
+  const k=Math.round((asgMid(a.due)-asgMid(Date.now()))/DAY);
+  if(a.due<Date.now())return t('Overdue')+' · '+asgDay(a.due);
+  if(k<=0)return t('Due today');
+  if(k===1)return t('Due tomorrow');
+  return t('Due')+' '+asgDay(a.due);
+}
+/* ---- student: a card on the home screen ---- */
+function asgKick(){
+  if(!sb||!AUTH.user||asgIsT())return;
+  asgLoad(false).then(ch=>{if(ch&&view.name==='today')softRender();});
+}
+function asgToday(){
+  if(asgIsT()||!AUTH.user)return '';
+  const R=asgRes();
+  const list=asgMine().map(a=>({a,s:asgStateOf(a,R[a.id])})).filter(x=>!x.s.done||Date.now()-x.s.doneAt<3*DAY);
+  if(!list.length)return '';
+  list.sort((x,y)=>(x.s.done-y.s.done)||(x.a.due-y.a.due));
+  return `<div class="subhead"><span class="t">${t('Assignments')}</span></div>`+list.map(({a,s})=>{
+    const col=s.done?'var(--ok)':s.late?'var(--bad)':'var(--acc)';
+    const meta=s.done?`${t('Passed')} · ${s.best}%`
+      :`${asgDueTxt(a)} · ${nWords(a.words.length)}${s.best?` · ${t('Best')} ${s.best}%`:''}`;
+    return `<div class="setcard" onclick="go('asg',{id:'${a.id}'})"${s.late?' style="border-color:var(--bad)"':''}>
+      <div class="arch-ic" style="color:${col}">${ic(s.done?'check':'clock',22,2)}</div>
+      <div class="t"><div class="nm">${esc(a.title)}</div><div class="meta" style="color:${s.late?'var(--bad)':'var(--mut)'};font-weight:${s.late?650:500}">${esc(meta)}</div></div>
+      ${ic('right',18)}</div>`;}).join('')+'<div style="height:8px"></div>';
+}
+VIEWS.asg=function(app){
+  const a=asgMine().find(x=>x.id===view.id);
+  if(!a){app.innerHTML=hdr(t('Assignment'),"go('today')")+`<div class="empty"><p>${t('Assignment not found')}</p></div>`;return;}
+  const s=asgStateOf(a,asgRes()[a.id]);
+  const col=s.done?'var(--ok)':s.late?'var(--bad)':'var(--tx)';
+  app.innerHTML=hdr(a.title,"go('today')")+
+   `<div class="daycard" style="align-items:flex-start"><div class="t">
+      <div class="lbl"><span style="color:${col}">${s.done?esc(t('Passed')+' · '+asgDay(s.doneAt)):esc(asgDueTxt(a))}</span><b>${nWords(a.words.length)}</b></div>
+      <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:6px;line-height:1.5">${esc(t('Typed answers only — every word of the list. You need at least {n}%.').replace('{n}',a.pct))}</div>
+      ${s.tries?`<div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:6px">${t('Best')}: <b style="color:var(--tx)">${s.best}%</b> · ${t('Attempts')}: <b style="color:var(--tx)">${s.tries}</b></div>`:''}
+    </div></div>
+    <button class="btn" style="margin-top:4px" onclick="asgLearn('${a.id}')">${ic('book',18)}${t('Learn these words')}</button>
+    <button class="btn pri" style="margin-top:10px" onclick="asgTest('${a.id}')">${ic('quiz',18)}${s.tries?t('Take the test again'):t('Take the test')}</button>
+    <div class="subhead" style="margin-top:18px"><span class="t">${t('Words in this assignment')}</span></div>
+    <div class="wlist">`+a.words.map(w=>`<div class="item"><div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru)}</div></div>
+      <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${a.lang}')">${ic('sound',17)}</button></div>`).join('')+'</div>';
+};
+/* the words go into the student's own dictionary as a list, to be learned the usual way */
+function asgLearn(id){
+  const a=asgMine().find(x=>x.id===id);if(!a)return;
+  const map=(S.asgSets&&typeof S.asgSets==='object')?S.asgSets:(S.asgSets={});
+  let set=S.sets.find(z=>z.id===map[id]);
+  if(!set){set={id:uid(),name:a.title||t('Assignment'),lang:a.lang,words:[],upd:Date.now(),synced:false};S.sets.push(set);map[id]=set.id;}
+  const have=new Set(set.words.map(w=>fold(w.en)));
+  const mine=a.words.filter(w=>w.en&&!have.has(fold(w.en))&&!findDup(set.lang,w.en));
+  const rows=mine.map((w,i)=>{const nw=newWord(w.en,w.ru||'—','');nw.pos=posNow(i,mine.length);return nw;});
+  set.words.unshift(...rows);set.upd=Date.now();set.synced=false;
+  S.settings.lastSet=set.id;save();
+  if(rows.length)toast(t('Added to your dictionary')+': '+rows.length);
+  go('set',{id:set.id});
+}
+/* the test: every word, typed answers only; the words are copied into memory and nothing about progress is touched */
+function asgTest(id){
+  const a=asgMine().find(x=>x.id===id);if(!a||!a.words.length)return toast(t('No words'));
+  const ws=a.words.map((w,i)=>({id:'asg'+i,en:w.en,ru:w.ru||'—',ex:'',ipa:'',box:0,arch:false,ok:0,bad:0,added:1,due:0,rep:0,upd:0,synced:true,lg:a.lang}));
+  PRACTICE={words:ws};setScope('prac');
+  runTest(shuffle(ws.slice()),['type'],true,null,a);
+}
+function asgResultHtml(a,pct,pass){
+  return `<div class="banner" style="margin:12px 0 4px;${pass?'border-color:var(--ok)':''}"><span class="ib" style="color:${pass?'var(--ok)':'var(--acc)'}">${ic(pass?'check':'target',19,2)}</span>
+    <div><b>${pass?t('Assignment complete!'):t('Not passed yet')}</b> ${pass?'':esc(t('You need {n}% — review the words and try again.').replace('{n}',a.pct))}</div></div>`;
+}
+/* ---- teacher: a student's assignments with the status of each ---- */
+function asgStuLine(a,r){
+  const s=asgStateOf(a,r);
+  if(s.done)return {c:'var(--ok)',ic:'check',tx:`${t('Passed')} ${s.best}% · ${asgDay(s.doneAt)}`};
+  if(s.late)return {c:'var(--bad)',ic:'clock',tx:`${t('Overdue')} · ${s.tries?t('Best')+' '+s.best+'%':t('Not started')}`};
+  if(s.tries)return {c:'var(--acc)',ic:'clock',tx:`${t('Best')} ${s.best}% · ${t('Attempts')}: ${s.tries} · ${asgDueTxt(a)}`};
+  return {c:'var(--mut)',ic:'clock',tx:`${t('Not started')} · ${asgDueTxt(a)}`};
+}
+function asgTDraw(sid){
+  const el=$('#tAsg');if(!el||view.name!=='tsets'||view.sid!==sid)return;
+  const stu=(AUTH.students||[]).find(x=>x.id===sid),R=(stu&&stu.stats&&stu.stats.asg&&typeof stu.stats.asg==='object')?stu.stats.asg:{};
+  const list=asgMine().filter(a=>a.student_id===sid);
+  const sorted=list.map(a=>({a,s:asgStateOf(a,R[a.id])})).sort((x,y)=>(x.s.done-y.s.done)||(x.a.due-y.a.due));
+  el.innerHTML=`<div class="subhead"><span class="t">${t('Assignments')}</span></div>`+
+    (sorted.length?'<div class="wlist">'+sorted.map(({a})=>{const l=asgStuLine(a,R[a.id]);
+      return `<div class="item" onclick="asgEdit('${a.id}')"><span class="chk" style="color:${l.c}">${ic(l.ic,16,2)}</span>
+        <div class="t"><div class="en">${esc(a.title)}</div><div class="ru" style="color:${l.c}">${esc(l.tx)}</div></div>
+        <span class="numx" style="min-width:auto">${a.pct}%</span></div>`;}).join('')+'</div>':'')+
+    `<button class="btn" style="margin:8px 0 14px" onclick="asgSheet('${sid}')">${ic('plus',18)}${t('New assignment')}</button>`;
+}
+async function asgTRefresh(sid){
+  const ch=await asgLoad(true);
+  if(ch||true)asgTDraw(sid);
+}
+function asgBadge(s){
+  const list=asgMine().filter(a=>a.student_id===s.id);if(!list.length)return '';
+  const R=(s.stats&&s.stats.asg&&typeof s.stats.asg==='object')?s.stats.asg:{};
+  let open=0,late=0;
+  list.forEach(a=>{const st=asgStateOf(a,R[a.id]);if(!st.done){if(st.late)late++;else open++;}});
+  if(!open&&!late)return `<div class="meta" style="color:var(--ok);font-weight:650">${t('Assignments')}: ${t('all done')}</div>`;
+  return `<div class="meta" style="color:${late?'var(--bad)':'var(--acc)'};font-weight:650">${t('Assignments')}: ${late?late+' '+t('overdue'):''}${late&&open?' · ':''}${open?open+' '+t('open'):''}</div>`;
+}
+function asgSources(sid){
+  const g=[];
+  const opt=(v,tt,n)=>`<option value="${esc(v)}" data-t="${esc(tt)}">${esc(tt)} · ${n}</option>`;
+  const lib=libMine().filter(x=>x.words.length).map(x=>opt('lib:'+x.id,x.title,x.words.length));
+  const bi=LIB_BUILTIN.map(x=>opt('lib:'+x.id,libTitle(x),x.words.length));
+  const own=lists().filter(s=>s.words.length).map(s=>opt('own:'+s.id,s.name,s.words.length));
+  const c=TC.owner[sid],stu=c?(c.sets||[]).filter(s=>s.name!==ARCH_NAME).map(s=>[s,(c.words||[]).filter(w=>w.set_id===s.id).length]).filter(x=>x[1]).map(x=>opt('stu:'+x[0].id,x[0].name,x[1])):[];
+  if(lib.length)g.push(`<optgroup label="${t('Library')} · ${t('My lists')}">${lib.join('')}</optgroup>`);
+  g.push(`<optgroup label="${t('Library')}">${bi.join('')}</optgroup>`);
+  if(own.length)g.push(`<optgroup label="${t('My lists')}">${own.join('')}</optgroup>`);
+  if(stu.length)g.push(`<optgroup label="${t('Student’s lists')}">${stu.join('')}</optgroup>`);
+  return g.join('');
+}
+function asgSrcWords(v,sid){
+  const i=v.indexOf(':'),k=v.slice(0,i),id=v.slice(i+1);
+  const clean=a=>a.filter(w=>w&&w.en&&String(w.en).trim()).map(w=>({en:String(w.en).trim(),ru:String(w.ru||'').trim()}));
+  if(k==='lib'){const x=LIB_BUILTIN.find(z=>z.id===id)||LIBX.list.find(z=>z.id===id);return x?{title:libTitle(x),lang:x.lang||'en',words:clean(x.words)}:null;}
+  if(k==='own'){const s=S.sets.find(z=>z.id===id);return s?{title:s.name,lang:setLangOf(s),words:clean(s.words)}:null;}
+  if(k==='stu'){const c=TC.owner[sid],s=c&&(c.sets||[]).find(z=>z.id===id);return s?{title:s.name,lang:tSetLang(s.id),words:clean((c.words||[]).filter(w=>w.set_id===id))}:null;}
+  return null;
+}
+const asgYMD=ts=>{const d=new Date(ts),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());};
+async function asgSheet(sid){
+  if(!libOk())await libLoad();
+  let pct=85;try{pct=+localStorage.getItem('noeon.asg.pct')||85;}catch(e){}
+  const studs=(AUTH.students||[]);
+  sheet(`<h2>${t('New assignment')}</h2>
+   <div class="field"><label>${t('Word list')}</label><select class="inp" id="asgSrc" onchange="asgPick()"><option value="">${t('Choose a list')}</option>${asgSources(sid)}</select></div>
+   <div class="field"><label>${t('Title')}</label><input class="inp" id="asgT" maxlength="120" oninput="this.dataset.d=1"></div>
+   <div class="field"><label>${t('Due date')}</label><input class="inp" type="date" id="asgD" value="${asgYMD(Date.now()+7*DAY)}" min="${asgYMD(Date.now())}"></div>
+   <div class="field"><label>${t('Pass mark, %')}</label><input class="inp" type="number" inputmode="numeric" id="asgP" min="1" max="100" value="${pct}"></div>
+   ${studs.length>1?`<div class="field"><label>${t('Assign to')}</label>`+studs.map(s=>`<label style="display:flex;gap:10px;align-items:center;padding:6px 0"><input type="checkbox" class="asgS" value="${esc(s.id)}" ${s.id===sid?'checked':''}> ${esc(s.display_name||'Student')}</label>`).join('')+'</div>':''}
+   <div class="err" id="asgErr"></div>
+   <button class="btn pri" id="asgBtn" onclick="asgCreate('${sid}')">${t('Assign')}</button>`);
+}
+function asgPick(){
+  const s=$('#asgSrc'),o=s&&s.selectedOptions[0],T=$('#asgT');
+  if(o&&T&&!T.dataset.d)T.value=o.dataset.t||'';
+}
+async function asgCreate(sid){
+  const err=m=>{$('#asgErr').textContent=m;};
+  const v=($('#asgSrc')||{}).value;if(!v)return err(t('Choose a list'));
+  const src=asgSrcWords(v,sid);if(!src||!src.words.length)return err(t('The list is empty'));
+  if(src.words.length>400)return err(t('Too many words (max 400)'));
+  const ds=($('#asgD')||{}).value;if(!/^\d{4}-\d{2}-\d{2}$/.test(ds||''))return err(t('Pick a due date'));
+  const [y,m,d]=ds.split('-').map(Number),due=new Date(y,m-1,d,23,59,0);
+  const pct=Math.min(100,Math.max(1,Math.round(+($('#asgP')||{}).value||85)));
+  const title=(($('#asgT')||{}).value||src.title||'').trim().slice(0,120)||src.title;
+  let ids=$$('.asgS').filter(x=>x.checked).map(x=>x.value);
+  if(!$$('.asgS').length)ids=[sid];
+  if(!ids.length)return err(t('Pick at least one student'));
+  const btn=$('#asgBtn');btn.disabled=true;
+  try{localStorage.setItem('noeon.asg.pct',String(pct));}catch(e){}
+  await ensureAuth();
+  const rows=ids.map(id=>({teacher_id:AUTH.user.id,student_id:id,title,lang:okLang(src.lang)?src.lang:'en',words:src.words,due:due.toISOString(),pct}));
+  const {error}=await sb.from('assignments').insert(rows);
+  btn.disabled=false;
+  if(error){err(asgNoTable(error.message||error.code)?t('Run the SQL file first (the assignments table is missing).'):String(error.message||error.code).slice(0,140));return;}
+  closeSheet();toast(t('Assigned ✓'));
+  await asgTRefresh(sid);
+}
+function asgEdit(id){
+  const a=asgMine().find(x=>x.id===id);if(!a)return;
+  const stu=(AUTH.students||[]).find(x=>x.id===a.student_id),R=(stu&&stu.stats&&stu.stats.asg)||{};
+  const l=asgStuLine(a,R[a.id]);
+  sheet(`<h2>${esc(a.title)}</h2>
+   <div class="hint" style="color:${l.c};font-weight:650">${esc(l.tx)}</div>
+   <div class="hint">${nWords(a.words.length)}</div>
+   <div class="field"><label>${t('Title')}</label><input class="inp" id="asgT" maxlength="120" value="${esc(a.title)}"></div>
+   <div class="field"><label>${t('Due date')}</label><input class="inp" type="date" id="asgD" value="${asgYMD(a.due)}"></div>
+   <div class="field"><label>${t('Pass mark, %')}</label><input class="inp" type="number" inputmode="numeric" id="asgP" min="1" max="100" value="${a.pct}"></div>
+   <div class="err" id="asgErr"></div>
+   <button class="btn pri" id="asgBtn" onclick="asgSave('${a.id}')">${t('Save')}</button>
+   <button class="btn" style="margin-top:10px;color:var(--bad)" onclick="asgDel('${a.id}')">${ic('trash',18)}${t('Delete assignment')}</button>`);
+}
+async function asgSave(id){
+  const a=asgMine().find(x=>x.id===id);if(!a)return;
+  const ds=$('#asgD').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(ds||''))return($('#asgErr').textContent=t('Pick a due date'));
+  const [y,m,d]=ds.split('-').map(Number);
+  const patch={title:($('#asgT').value||'').trim().slice(0,120)||a.title,due:new Date(y,m-1,d,23,59,0).toISOString(),pct:Math.min(100,Math.max(1,Math.round(+$('#asgP').value||85)))};
+  const {data,error}=await sb.from('assignments').update(patch).eq('id',id).select('id');
+  if(error||!data||!data.length){$('#asgErr').textContent=t('Not saved');return;}
+  closeSheet();await asgTRefresh(a.student_id);
+}
+async function asgDel(id){
+  const a=asgMine().find(x=>x.id===id);if(!a)return;
+  if(!confirm(t('Delete this assignment?')))return;
+  const {data,error}=await sb.from('assignments').update({deleted:true}).eq('id',id).select('id');
+  if(error||!data||!data.length){$('#asgErr').textContent=t('Not saved');return;}
+  closeSheet();toast(t('Assignment deleted'));await asgTRefresh(a.student_id);
 }
 
 /* ================= Library: ready-made sets, a teacher's sets, sets by link ================= */
