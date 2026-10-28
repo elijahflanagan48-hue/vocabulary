@@ -7331,26 +7331,39 @@ function asgBadge(s){
   if(!open&&!late)return `<div class="meta" style="color:var(--ok);font-weight:650">${t('Assignments')}: ${t('all done')}</div>`;
   return `<div class="meta" style="color:${late?'var(--bad)':'var(--acc)'};font-weight:650">${t('Assignments')}: ${late?late+' '+t('overdue'):''}${late&&open?' · ':''}${open?open+' '+t('open'):''}</div>`;
 }
-function asgSources(sid){
-  const g=[];
-  const opt=(v,tt,n)=>`<option value="${esc(v)}" data-t="${esc(String(tt).replace(/^✓ /,''))}">${esc(tt)} · ${n}</option>`;
-  const lib=libMine().filter(x=>x.words.length).map(x=>opt('lib:'+x.id,x.title,x.words.length));
-  const bi=LIB_BUILTIN.map(x=>opt('lib:'+x.id,libTitle(x),x.words.length));
-  const own=lists().filter(s=>s.words.length).map(s=>opt('own:'+s.id,s.name,s.words.length));
-  const c=TC.owner[sid],stu=c?(c.sets||[]).filter(s=>s.name!==ARCH_NAME).map(s=>[s,(c.words||[]).filter(w=>w.set_id===s.id).length]).filter(x=>x[1]).map(x=>opt('stu:'+x[0].id,x[0].name,x[1])):[];
-  /* exam lists stay in their folders (all of them, not only the ones open to this student; open ones are ticked) */
-  const exF=[];
+/* every list the teacher can give as a task: {g: group, v: value, t: title, n: words, o: open to this student} */
+let ASGI=[];
+function asgItems(sid){
+  const out=[],add=(g,v,tt,n,o)=>{if(n)out.push({g,v,t:String(tt||''),n,o:!!o});};
+  libMine().forEach(x=>add(t('Library')+' · '+t('My lists'),'lib:'+x.id,x.title,x.words.length));
+  LIB_BUILTIN.forEach(x=>add(t('Library'),'lib:'+x.id,libTitle(x),x.words.length));
+  lists().forEach(x=>add(t('My lists'),'own:'+x.id,x.name,x.words.length));
+  const c=TC.owner[sid];
+  if(c)(c.sets||[]).filter(x=>x.name!==ARCH_NAME).forEach(x=>add(t('Student’s lists'),'stu:'+x.id,x.name,(c.words||[]).filter(w=>w.set_id===x.id).length));
+  /* exam lists stay in their folders (all of them; the ones open to this student are ticked) */
   EXAM_FOLDERS.forEach(F=>F.groups.forEach(gr=>{
-    const ls=(EXM.lists||[]).filter(l=>l.w&&l.w.length&&examIn(l,F.id,gr[0])).sort((a,b)=>EXAM_IDS.indexOf(a.id)-EXAM_IDS.indexOf(b.id));
-    if(!ls.length)return;
-    exF.push(`<optgroup label="${esc(exTxt(F.ru,F.en)+' · '+exTxt(gr[1],gr[2]))}">${ls.map(l=>opt('exm:'+l.id,(examSees(examCfg(l.id),sid)?'✓ ':'')+l.title,l.w.length)).join('')}</optgroup>`);
+    (EXM.lists||[]).filter(l=>l.w&&l.w.length&&examIn(l,F.id,gr[0])).sort((p,q)=>EXAM_IDS.indexOf(p.id)-EXAM_IDS.indexOf(q.id))
+      .forEach(l=>add(exTxt(F.ru,F.en)+' · '+exTxt(gr[1],gr[2]),'exm:'+l.id,l.title,l.w.length,examSees(examCfg(l.id),sid)));
   }));
-  if(lib.length)g.push(`<optgroup label="${t('Library')} · ${t('My lists')}">${lib.join('')}</optgroup>`);
-  g.push(`<optgroup label="${t('Library')}">${bi.join('')}</optgroup>`);
-  if(own.length)g.push(`<optgroup label="${t('My lists')}">${own.join('')}</optgroup>`);
-  if(stu.length)g.push(`<optgroup label="${t('Student’s lists')}">${stu.join('')}</optgroup>`);
-  g.push(...exF);
-  return g.join('');
+  return out;
+}
+function asgList(){
+  const q=fold(($('#asgQ')||{}).value||''),cur=($('#asgSrc')||{}).value||'',box=$('#asgRes');if(!box)return;
+  let h='',last=null,n=0;
+  ASGI.forEach(x=>{
+    if(q&&!fold(x.t+' '+x.g).includes(q))return;
+    n++;
+    if(x.g!==last){h+=`<div class="tbar" style="margin-top:8px"><span class="t">${esc(x.g)}</span></div>`;last=x.g;}
+    h+=`<div class="item ${x.v===cur?'pick':''}" data-v="${esc(x.v)}" onclick="asgChoose(this.dataset.v)"><div class="t"><div class="en">${x.o?'✓ ':''}${esc(x.t)}</div><div class="ru">${nWords(x.n)}</div></div></div>`;
+  });
+  box.innerHTML=n?h:`<div class="hint" style="margin:8px 2px">${t('Nothing found')}</div>`;
+}
+function asgChoose(v){
+  const x=ASGI.find(z=>z.v===v);if(!x)return;
+  $('#asgSrc').value=v;
+  const T=$('#asgT');if(T&&!T.dataset.d)T.value=x.t;
+  $('#asgSel').textContent=x.t+' · '+nWords(x.n);
+  asgList();
 }
 function asgSrcWords(v,sid){
   const i=v.indexOf(':'),k=v.slice(0,i),id=v.slice(i+1);
@@ -7367,18 +7380,19 @@ async function asgSheet(sid){
   await examLoad();
   let pct=85;try{pct=+localStorage.getItem('noeon.asg.pct')||85;}catch(e){}
   const studs=(AUTH.students||[]);
+  ASGI=asgItems(sid);
   sheet(`<h2>${t('New assignment')}</h2>
-   <div class="field"><label>${t('Word list')}</label><select class="inp" id="asgSrc" onchange="asgPick()"><option value="">${t('Choose a list')}</option>${asgSources(sid)}</select></div>
+   <div class="field"><label>${t('Word list')}</label><input type="hidden" id="asgSrc" value="">
+     <div class="hint" id="asgSel" style="margin:0 0 8px;font-weight:650;color:var(--tx)">${t('Choose a list')}</div>
+     <input class="inp" id="asgQ" placeholder="${t('Search')}" oninput="asgList()" ${NOASSIST}>
+     <div class="wlist" id="asgRes" style="max-height:30vh;overflow:auto;margin-top:6px"></div></div>
    <div class="field"><label>${t('Title')}</label><input class="inp" id="asgT" maxlength="120" oninput="this.dataset.d=1"></div>
    <div class="field"><label>${t('Due date')}</label><input class="inp" type="date" id="asgD" value="${asgYMD(Date.now()+7*DAY)}" min="${asgYMD(Date.now())}"></div>
    <div class="field"><label>${t('Pass mark, %')}</label><input class="inp" type="number" inputmode="numeric" id="asgP" min="1" max="100" value="${pct}"></div>
    ${studs.length>1?`<div class="field"><label>${t('Assign to')}</label>`+studs.map(s=>`<label style="display:flex;gap:10px;align-items:center;padding:6px 0"><input type="checkbox" class="asgS" value="${esc(s.id)}" ${s.id===sid?'checked':''}> ${esc(s.display_name||'Student')}</label>`).join('')+'</div>':''}
    <div class="err" id="asgErr"></div>
    <button class="btn pri" id="asgBtn" onclick="asgCreate('${sid}')">${t('Assign')}</button>`);
-}
-function asgPick(){
-  const s=$('#asgSrc'),o=s&&s.selectedOptions[0],T=$('#asgT');
-  if(o&&T&&!T.dataset.d)T.value=o.dataset.t||'';
+  asgList();
 }
 async function asgCreate(sid){
   const err=m=>{$('#asgErr').textContent=m;};
