@@ -7333,20 +7333,23 @@ function asgBadge(s){
 }
 function asgSources(sid){
   const g=[];
-  const opt=(v,tt,n)=>`<option value="${esc(v)}" data-t="${esc(tt)}">${esc(tt)} · ${n}</option>`;
+  const opt=(v,tt,n)=>`<option value="${esc(v)}" data-t="${esc(String(tt).replace(/^✓ /,''))}">${esc(tt)} · ${n}</option>`;
   const lib=libMine().filter(x=>x.words.length).map(x=>opt('lib:'+x.id,x.title,x.words.length));
   const bi=LIB_BUILTIN.map(x=>opt('lib:'+x.id,libTitle(x),x.words.length));
   const own=lists().filter(s=>s.words.length).map(s=>opt('own:'+s.id,s.name,s.words.length));
   const c=TC.owner[sid],stu=c?(c.sets||[]).filter(s=>s.name!==ARCH_NAME).map(s=>[s,(c.words||[]).filter(w=>w.set_id===s.id).length]).filter(x=>x[1]).map(x=>opt('stu:'+x[0].id,x[0].name,x[1])):[];
-  const ex=(EXM.lists||[]).filter(l=>l.w&&l.w.length).sort((a,b)=>EXAM_IDS.indexOf(a.id)-EXAM_IDS.indexOf(b.id));
-  const open=ex.filter(l=>examSees(examCfg(l.id),sid)),rest=ex.filter(l=>!open.includes(l));
-  const eo=l=>opt('exm:'+l.id,l.title,l.w.length);
-  if(open.length)g.push(`<optgroup label="${t('Open to this student')}">${open.map(eo).join('')}</optgroup>`);
+  /* exam lists stay in their folders (all of them, not only the ones open to this student; open ones are ticked) */
+  const exF=[];
+  EXAM_FOLDERS.forEach(F=>F.groups.forEach(gr=>{
+    const ls=(EXM.lists||[]).filter(l=>l.w&&l.w.length&&examIn(l,F.id,gr[0])).sort((a,b)=>EXAM_IDS.indexOf(a.id)-EXAM_IDS.indexOf(b.id));
+    if(!ls.length)return;
+    exF.push(`<optgroup label="${esc(exTxt(F.ru,F.en)+' · '+exTxt(gr[1],gr[2]))}">${ls.map(l=>opt('exm:'+l.id,(examSees(examCfg(l.id),sid)?'✓ ':'')+l.title,l.w.length)).join('')}</optgroup>`);
+  }));
   if(lib.length)g.push(`<optgroup label="${t('Library')} · ${t('My lists')}">${lib.join('')}</optgroup>`);
   g.push(`<optgroup label="${t('Library')}">${bi.join('')}</optgroup>`);
   if(own.length)g.push(`<optgroup label="${t('My lists')}">${own.join('')}</optgroup>`);
   if(stu.length)g.push(`<optgroup label="${t('Student’s lists')}">${stu.join('')}</optgroup>`);
-  if(rest.length)g.push(`<optgroup label="${t('Exam lists')}">${rest.map(eo).join('')}</optgroup>`);
+  g.push(...exF);
   return g.join('');
 }
 function asgSrcWords(v,sid){
