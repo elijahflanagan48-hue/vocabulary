@@ -3796,8 +3796,43 @@ async function tHolderId(lg){
 }
 let tArchLg=DEF_LANG;
 function tArchLangChange(v){tArchLg=v;TR.lang=v;const l=$('#tWl');if(l)l.textContent=t('Word')+' ('+langNameLc(v)+')';}
+let TFAMSEL=new Set(),tFamT=0,tFamSeq=0;
+function tFamLang(){return TV.setId==='archive'?tArchLg:tSetLang(TV.setId);}
+function tCardSide(){
+  clearTimeout(tFamT);
+  tFamT=setTimeout(async()=>{
+    const box=$('#tFam');if(!box)return;
+    const en=(($('#tEn')||{}).value||'').trim(),seq=++tFamSeq;
+    if(!en||tEditId||TV.setId==='archive'||tFamLang()!=='en'){box.innerHTML='';return;}
+    const list=await famOf(en).catch(()=>[]);
+    if(seq!==tFamSeq||!$('#tFam')||(($('#tEn')||{}).value||'').trim()!==en)return;
+    box.innerHTML=famHtml(list,TFAMSEL,'tFamToggle',new Set((TV.words||[]).filter(x=>!x.deleted).map(x=>fold(x.en))));
+  },420);
+}
+function tFamToggle(b){
+  const w=b.dataset.w;if(TFAMSEL.has(w)){TFAMSEL.delete(w);b.classList.remove('sel');b.querySelector('.p').textContent='+';}
+  else{TFAMSEL.add(w);b.classList.add('sel');b.querySelector('.p').textContent='✓';}
+}
+/* the chosen related words are translated and added to the same list of the student */
+async function tAddFamily(list,setId){
+  const have=new Set((TV.words||[]).map(x=>fold(x.en)));
+  const res=await Promise.all(list.filter(w=>!have.has(fold(w))).map(async w=>({w,ru:await trQuick(w).catch(()=>'')})));
+  const ok=res.filter(r=>r.ru),fail=res.filter(r=>!r.ru).map(r=>r.w);
+  if(ok.length){
+    const now=new Date().toISOString();
+    const rows=ok.map((r,i)=>({id:uid(),set_id:setId,owner_id:TV.sid,en:r.w,ru:r.ru,ex:'',box:0,arch:false,ok:0,bad:0,position:posNow(i,ok.length),deleted:false,updated_at:now}));
+    try{
+      const {error}=await aatRetry(()=>sb.from('words').insert(rows.map(withAat)));
+      if(error)throw error;
+      rows.forEach(r=>{if(noAatCol)delete r.aat;TV.words.push(r);});
+      if(view.name==='twords')tDrawWords();
+      toast(t('Added {n} related').replace('{n}',rows.length));
+    }catch(e){toast(t('Couldn’t save — check your connection'));}
+  }
+  if(fail.length)toast(t('Couldn’t translate: ')+fail.join(', '));
+}
 function tWordForm(id){
-  tEditId=id||null;
+  tEditId=id||null;TFAMSEL=new Set();
   const w=id?TV.words.find(x=>x.id===id):null;
   const toArch=!w&&TV.setId==='archive';
   if(toArch){const first=(TV.sets||[]).map(x=>tSetLang(x.id))[0];tArchLg=first||DEF_LANG;}
@@ -3809,12 +3844,13 @@ function tWordForm(id){
    ${w?'<div class="tinfo" id="tInfo"></div>':''}
    ${toArch?`<div class="hint">${t('This word goes straight to the Archive.')}</div>
      <div class="field"><label>${t('List language')}</label><select class="inp" id="tArL" onchange="tArchLangChange(this.value)">${langOptions(lg)}</select></div>`:''}
-   <div class="field"><label id="tWl">${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?w.en:'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr()"></div>
+   <div class="field"><label id="tWl">${t('Word')} (${esc(langNameLc(lg))})</label><input class="inp" id="tEn" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?w.en:'')}" placeholder="${ph?t('reliable'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="autoTr();tCardSide()"></div>
    <div class="field"><label>${t('Translation')}</label>
      <div class="row"><input class="inp" id="tRu" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?(w.ru||''):'')}" placeholder="${ph?t('надёжный'):''}" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="ruTouched=true;this.dataset.auto='0';syncChips()" style="flex:1">
      <button class="ic" style="width:48px;height:51px" aria-label="Translate" onclick="doTr(true)">${ic('globe')}</button></div></div>
    <div class="hint" id="tTrSt">${t('The translation fills in automatically as you type')}</div>
    <div class="chips" id="tChips"></div>
+   ${w?'':'<div class="cardsec" id="tFam"></div>'}
    <div class="field"><label>${t('Example (optional)')}</label><input class="inp" id="tEx" enterkeyhint="done" onkeydown="enterAdd(event,'teacher')" value="${esc(w?exEn(w):'')}" data-en="${esc(w?exEn(w):'')}" data-ru="${esc(w?exRu(w):'')}" oninput="exTyped(this)" placeholder="${ph?t('a reliable friend'):''}" autocapitalize="none" autocorrect="off" spellcheck="false"><div class="chips" id="tExChips" style="margin-top:8px"></div></div>
    <div class="err" id="tErr"></div>
    <button class="btn pri" id="tSave" onclick="tSaveWord('${id||''}')">${w?t('Save'):t('Add')}</button>
@@ -3864,6 +3900,8 @@ async function tSaveWord(id){
       /* keep the form open so a whole batch can be typed in one go */
       TV.words.push(row);tDrawWords();
       toast(t('Added ✓'));
+      const famSel=[...TFAMSEL];TFAMSEL=new Set();const fb=$('#tFam');if(fb)fb.innerHTML='';
+      if(famSel.length&&!toArch)tAddFamily(famSel,setId);
       btn.disabled=false;btn.textContent=t('Add');
       ['tEn','tRu','tEx'].forEach(k=>{const e=$('#'+k);if(e){e.value='';e.dataset.en='';e.dataset.ru='';}});
       const ch=$('#tChips');if(ch)ch.innerHTML='';clearEx();
@@ -4984,9 +5022,9 @@ function ipaPlay(word,kind){
 /* ---- word family: a small built-in table, loaded the first time it is needed ---- */
 const FAM={ready:null,idx:null,fam:null};
 function famLoad(){
-  if(!FAM.ready)FAM.ready=fetch('lib/deriv.json?v=98').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{
+  if(!FAM.ready)FAM.ready=fetch('lib/deriv.json?v=121').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{
     FAM.fam=(j.f||[]).map(s=>s.split(' ').map(x=>{const i=x.lastIndexOf(':');return{w:x.slice(0,i),p:x.slice(i+1)};}));
-    FAM.idx={};FAM.fam.forEach((f,i)=>f.forEach(m=>{(FAM.idx[m.w]||(FAM.idx[m.w]=[])).push(i);}));
+    FAM.idx=Object.create(null);FAM.fam.forEach((f,i)=>f.forEach(m=>{(FAM.idx[m.w]||(FAM.idx[m.w]=[])).push(i);}));
     return true;
   }).catch(()=>{FAM.ready=null;return false;});
   return FAM.ready;
@@ -4995,6 +5033,8 @@ function famKeys(en){
   const x=String(en||'').toLowerCase().trim().replace(/^to\s+/,'').replace(/[’]/g,"'");
   if(!x||/\s/.test(x))return [];
   const out=[x];
+  const us=x.replace(/isation/g,'ization').replace(/ise$/,'ize').replace(/ised$/,'ized').replace(/ising$/,'izing').replace(/yse$/,'yze').replace(/ysed$/,'yzed').replace(/ysing$/,'yzing').replace(/our/g,'or').replace(/tre$/,'ter').replace(/ence$/,'ense').replace(/lled$/,'led').replace(/lling$/,'ling');
+  if(us!==x)out.push(us);
   try{const li=lemIrr(x);if(li)out.push(li);lemCands(x).forEach(([c,s])=>{if(s)out.push(c);});}catch(e){}
   return out;
 }
@@ -5006,9 +5046,9 @@ async function famOf(en){
 }
 const POSL={n:'n.',v:'v.',a:'a.',r:'r.'};
 function haveWords(){const h=new Set();S.sets.forEach(s=>s.words.forEach(w=>h.add(fold(w.en))));return h;}
-function famHtml(list,sel,onclick){
+function famHtml(list,sel,onclick,haveSet){
   if(!list.length)return '';
-  const have=haveWords();
+  const have=haveSet||haveWords();
   return `<div class="lab">${t('Word family')}</div><div class="chips">`+list.map(m=>{
     const h=have.has(fold(m.w)),on=sel&&sel.has(m.w);
     return `<button type="button" class="chip fam ${h?'have':on?'sel':''}" data-w="${esc(m.w)}" ${h?'':`onclick="${onclick}(this)"`}><span class="p">${h||on?'✓':'+'}</span>${esc(m.w)}<em>${t(POSL[m.p]||'')}</em></button>`;
