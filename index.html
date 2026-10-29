@@ -940,6 +940,14 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 .tcount{flex:none;font-size:15px;font-weight:750;font-variant-numeric:tabular-nums;color:var(--pri);background:var(--pri-soft);padding:5px 12px;border-radius:14px}
 
 #app .tbar{position:sticky;top:var(--hh,60px);z-index:9;background:var(--bg);margin:0 -2px 6px;padding:8px 2px}
+#app .numx[data-rn]{position:relative;cursor:pointer}
+#app .numx[data-rn]::before{content:'';position:absolute;inset:-9px -7px}
+.numx.rpk{background:var(--pri);color:#fff}
+.rphint{position:fixed;left:12px;right:12px;bottom:max(16px,env(safe-area-inset-bottom));z-index:40;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;
+  padding:10px 10px 10px 16px;border-radius:16px;background:#1b2433;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.28);font-weight:600;font-size:14.5px}
+.rphint span{flex:1}.rphint button{border:0;border-radius:11px;padding:9px 14px;font-weight:700;background:rgba(255,255,255,.18);color:inherit}
+#app .rangebar{position:sticky;top:var(--hh,60px);z-index:10;height:42px;box-sizing:border-box;margin:0;padding:0 14px;box-shadow:0 0 0 6px var(--bg)}
+#app:has(.rangebar) .tbar{top:calc(var(--hh,60px) + 44px)}
 html[data-bg]:not([data-bg="none"]):not([data-bg="stars"]) #app .tbar,html[data-dbg]:not([data-dbg="none"]) #app .tbar{background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .selcnt{flex:1;text-align:center;font-size:13.5px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums}
 .item .cbox+.numx{margin-left:-4px}
@@ -2587,7 +2595,7 @@ function go(name,p={}){
   PENDV=null;todayPick=null;rowCap=400;if(window.rdClose)rdClose(1);if(inl)inlineCommit();swClose();
   /* older entry points still work: lists and the two smart lists are filters now */
   if(name==='home')name='today';
-  clearSel();
+  clearSel();RP=null;rpHint();
   /* the slice belongs to the screen that set it */
   if(name!=='archive'||(p.lang||null)!==(view.lang||null))archRange=null;
   if(name!=='set'||p.id!==view.id)setRange=null;
@@ -3231,7 +3239,7 @@ function wordRows(items,qs,showSrc){
     const tricky=(w.bad||0)>=2&&(w.bad||0)>(w.ok||0);
     const left=selMode
       ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span>${n?`<span class="numx">${n}</span>`:''}`
-      :(n?`<span class="numx">${n}</span>`
+      :(n?`<span class="numx"${markMode?'':` data-rn="${n}"`}>${n}</span>`
         :w.arch?'<span class="chk">'+ic('check',14,2.2)+'</span>'
         :tricky?`<span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>`
         :`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`);
@@ -3592,7 +3600,7 @@ function tDrawWords(anim){
        ${(!inArch&&!fq&&!tSelMode&&!markMode)?`<span class="dgrip" aria-label="${t('Drag to reorder')}">${ic('grip',16)}</span>`:''}
        ${tSelMode
          ?`<span class="cbox ${picked?'on':''}">${picked?ic('check',14,2.4):''}</span><span class="numx">${numOf.get(w.id)}</span>`
-         :`<span class="numx">${numOf.get(w.id)}</span>`}
+         :`<span class="numx"${markMode?'':` data-rn="${numOf.get(w.id)}"`}>${numOf.get(w.id)}</span>`}
        <div class="t"><div class="en">${esc(w.en)}${fqChip(w,tSetLang(w.set_id))}</div><div class="ru">${esc(w.ru||'')}${inArch&&setName2(w.set_id)?`<span class="src"> · ${esc(setName2(w.set_id))}</span>`:''}</div></div>
        ${(!tSelMode&&!inArch)?`<span class="pips"><i class="pip ${w.box>=1?'on1':''}"></i><i class="pip ${w.box>=2?'on2':''}"></i><i class="pip ${w.box>=3?'on3':''}"></i></span>`:''}
        ${(tSelMode||markMode)?'':rowActsHtml()}
@@ -4063,14 +4071,39 @@ function langOptions(cur){
   return LANGS.map(l=>`<option value="${l.c}" ${l.c===cur?'selected':''}>${esc(uiEn()?l.e:l.ru)}${l.n&&l.n!==(uiEn()?l.e:l.ru)?' · '+esc(l.n):''}</option>`).join('');
 }
 /* choose which slice of the Archive to work on */
+/* pick a range by touching the numbers in the list: first word, then last word */
+let RP=null;   /* {n: first number or null, key: the screen it belongs to} */
+const rpKey=()=>view.name+'|'+(view.id||view.lang||(window.TV&&TV.setId)||'');
+function rpHint(){
+  let e=$('#rpHint');
+  if(!RP){if(e)e.remove();document.querySelectorAll('.numx.rpk').forEach(x=>x.classList.remove('rpk'));return;}
+  if(!e){e=document.createElement('div');e.id='rpHint';e.className='rphint';document.body.appendChild(e);}
+  e.innerHTML=`<span>${RP.n==null?t('Tap the number of the first word'):t('Now tap the number of the last word')}</span><button onclick="rpCancel()">${t('Cancel')}</button>`;
+  document.querySelectorAll('.numx.rpk').forEach(x=>x.classList.remove('rpk'));
+  if(RP.n!=null)document.querySelectorAll('.numx[data-rn="'+RP.n+'"]').forEach(x=>x.classList.add('rpk'));
+}
+function rpStart(){closeSheet();RP={n:null,key:rpKey()};rpHint();}
+function rpCancel(){RP=null;rpHint();}
+document.addEventListener('click',ev=>{
+  const x=ev.target.closest&&ev.target.closest('.numx[data-rn]');if(!x)return;
+  ev.stopPropagation();ev.preventDefault();
+  const n=+x.dataset.rn;
+  if(!RP||RP.key!==rpKey())RP={n:null,key:rpKey()};
+  if(RP.n==null){RP.n=n;rpHint();return;}
+  if(RP.n===n){RP.n=null;rpHint();return;}
+  const a=Math.min(RP.n,n),b=Math.max(RP.n,n),c=rctx();
+  RP=null;rpHint();
+  c.set((a<=1&&b>=c.total)?null:{from:a,to:b});
+},true);
 function rangeSheet(){
   const c=rctx(),total=c.total;
   const a=c.cur?Math.max(1,c.cur.from):1;
   const b=c.cur?Math.min(total,c.cur.to):total;
   const presets=[];
-  for(let st=0;st<total&&presets.length<8;st+=100)presets.push([st+1,Math.min(total,st+100)]);
+  for(let st=0;st<total&&presets.length<30;st+=100)presets.push([st+1,Math.min(total,st+100)]);
   sheet(`<h2>${t('Choose a range')}</h2>
    <div class="hint">${c.hint}</div>
+   <button class="btn" style="margin-bottom:12px" onclick="rpStart()">${ic('sliders',18)}${t('Pick in the list by numbers')}</button>
    <div class="rangerow">
      <div class="field" style="flex:1"><label>${t('from')}</label>
        <input class="inp" id="rFrom" type="number" inputmode="numeric" min="1" max="${total}" value="${a}"></div>
@@ -8372,6 +8405,7 @@ try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',
 {const _osi=onSignedIn;onSignedIn=async function(){const r=await _osi.apply(this,arguments);setTimeout(pushResync,2500);return r;};}
 Object.assign(RU_DICT,{"Reminders":"Напоминания","Sign in to get reminders.":"Войдите в аккаунт, чтобы получать напоминания.","Reminders for teachers will come later.":"Напоминания для учителей появятся позже.","On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.":"На iPhone напоминания работают только у приложения на экране «Домой»: в Safari нажмите «Поделиться» → «На экран Домой», откройте приложение оттуда и вернитесь сюда.","This browser does not support notifications.":"Этот браузер не поддерживает уведомления.","Notifications are blocked. Allow them in the browser or phone settings.":"Уведомления запрещены. Разрешите их в настройках браузера или телефона.","We remind you at 21:00 if today’s goal is still open, and send your weekly summary with the charts.":"Напомним в 21:00, если цель дня ещё не закрыта, и пришлём итоги недели с графиками.","Turn on reminders":"Включить напоминания","Daily reminder":"Ежедневное напоминание","On":"Вкл","Off":"Выкл","Comes only if you have not reached today’s goal yet. Time:":"Придёт, только если вы ещё не достигли цели дня. Время:","Summary with analytics":"Итоги с аналитикой","Weekly":"Раз в неделю","Monthly":"Раз в месяц","Never":"Не присылать","Sunday at 20:00.":"В воскресенье в 20:00.","On the 1st at 10:00, for the month that ended.":"1-го числа в 10:00, за прошедший месяц.","No summaries.":"Итоги не приходят.","Tap the notification and your analytics open at once.":"Нажмите на уведомление, и сразу откроется ваша аналитика.","Send a test":"Отправить пробное","Turn off on this device":"Выключить на этом устройстве","Reminders on":"Напоминания включены","Sent — check your notifications":"Отправлено — проверьте уведомления","No device is subscribed yet":"Устройство ещё не подписано","The notification server is not set up yet. See the setup instructions.":"Сервер уведомлений ещё не настроен. Смотрите инструкцию по установке.","on":"вкл","off":"выкл"});
 
+Object.assign(RU_DICT,{"Pick in the list by numbers":"Выбрать по номерам в списке","Tap the number of the first word":"Нажмите на номер первого слова","Now tap the number of the last word":"Теперь нажмите на номер последнего слова"});
 Object.assign(RU_DICT,{"Assignment reminders":"Напоминания о заданиях","At 10:00: the day before a deadline, on the day, and the day after. A teacher is told when a student passes.":"В 10:00: за день до срока, в день срока и на следующий день. Учителю приходит уведомление, когда ученик сдал задание."});
 const TEACH_VIEWS=['students','tsets','twords','tsaccess','tan','tprog'];
 function viewSave(){try{
