@@ -941,6 +941,8 @@ html[data-dbg]:not([data-dbg="none"]) .selbar,html[data-dbg]:not([data-dbg="none
 
 #app .tbar{position:sticky;top:var(--hh,60px);z-index:9;background:var(--bg);margin:0 -2px 6px;padding:8px 2px}
 #app .numx[data-rn]{position:relative;cursor:pointer}
+.rbx{flex:none;width:30px;height:30px;margin:-4px -6px -4px 0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--pri) 14%,transparent);color:var(--pri);position:relative}
+.rbx::before{content:'';position:absolute;inset:-6px}
 #app .numx[data-rn]::before{content:'';position:absolute;inset:-9px -7px}
 .numx.rpk{background:var(--pri);color:#fff}
 .rphint{position:fixed;left:12px;right:12px;bottom:max(16px,env(safe-area-inset-bottom));z-index:40;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;
@@ -1495,7 +1497,7 @@ function rctx(){
 function rangeBarHtml(c){
   if(c.total<2)return '';
   const lbl=c.cur?(Math.max(1,c.cur.from)+'–'+Math.min(c.total,c.cur.to)+' '+t('of')+' '+c.total):(c.whole+' · '+nWords(c.total));
-  return `<button class="rangebar ${c.cur?'on':''}" onclick="rangeSheet()"><span>${ic('sliders',18)}${t('Range')}</span><em>${esc(lbl)}</em>${ic('right',17)}</button>`;
+  return `<button class="rangebar ${c.cur?'on':''}" onclick="rangeSheet()"><span>${ic('sliders',18)}${t('Range')}</span><em>${esc(lbl)}</em>${c.cur?`<span class="rbx" role="button" aria-label="${t('Whole list')}" onclick="event.stopPropagation();clearRange()">${ic('close',16)}</span>`:ic('right',17)}</button>`;
 }
 function findWord(id){
   for(const s of S.sets){const w=s.words.find(x=>x.id===id);if(w)return{w,s};}
@@ -2786,7 +2788,7 @@ archive(app){
   /* pick the slice first, then the mode — practice runs on exactly what is shown */
   const rangeBar=(total>1&&!selMode)
    ?`<button class="rangebar ${archRange?'on':''}" onclick="rangeSheet()">
-       <span>${ic('sliders',18)}${t('Range')}</span><em>${esc(archRangeLabel(lang))}</em>${ic('right',17)}</button>`
+       <span>${ic('sliders',18)}${t('Range')}</span><em>${esc(archRangeLabel(lang))}</em>${archRange?`<span class="rbx" role="button" aria-label="${t('Whole list')}" onclick="event.stopPropagation();clearRange()">${ic('close',16)}</span>`:ic('right',17)}</button>`
    :'';
   app.innerHTML=hdr(t('Archive')+(lang?' · '+esc(langName(lang)):''),"go('vocab')",`<button class="ic" aria-label="Add word" onclick="wordForm(null,{arch:true,lang:'${lang||''}'})">${ic('plus')}</button><button class="ic" aria-label="Import" onclick="importSheet(false,{arch:true,lang:'${lang||''}'})">${ic('download')}</button><button class="ic" aria-label="PDF" onclick="pdfArchive()">${ic('send')}</button>`)+
    rangeBar+
