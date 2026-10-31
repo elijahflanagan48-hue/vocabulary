@@ -3642,6 +3642,11 @@ function tSelAll(){const l=TV.list||[];if(tSelIds.size>=l.length)tSelIds.clear()
 function tRedraw(){tDrawWords();}
 function tSelBar(inArch){
   const n=tSelIds.size;
+  if(!inArch)return `<div class="selbar"><div class="in" style="display:flex;flex-direction:column;gap:8px">
+    <button class="btn ghost mvb" style="flex:none;height:48px" ${n?'':'disabled'} onclick="tMoveSheet()">${ic('swap',17)}${t('To list')}${n?` (${n})`:''}</button>
+    <div style="display:flex;gap:8px;flex:none"><button class="btn pri" style="flex:1;min-width:0" ${n?'':'disabled'} onclick="tBulkArch(true)">${ic('archive')}${t('To Archive')}${n?` (${n})`:''}</button>
+    <button class="btn danger" style="flex:none;width:auto;padding:0 16px" ${n?'':'disabled'} onclick="tBulkDelete()" aria-label="${t('Delete')}">${ic('trash')}</button></div>
+  </div></div>`;
   return `<div class="selbar"><div class="in row2">
     <button class="btn pri" ${n?'':'disabled'} onclick="tBulkArch(${inArch?'false':'true'})">${inArch?ic('reset')+t('To learning'):ic('archive')+t('To Archive')}${n?` (${n})`:''}</button>
     <button class="btn danger" ${n?'':'disabled'} onclick="tBulkDelete()">${ic('trash')}${t('Delete')}${n?` (${n})`:''}</button>
@@ -3723,6 +3728,45 @@ async function tBulkArch(toArch){
     }
     tClearSel();toast((toArch?t('Moved to Archive ✓'):t('Moved back to learning'))+': '+ids.length);tBack();
     if(toArch)tDupSoon(ids);
+  }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
+}
+/* teacher: the same, inside one student's lists */
+function tMoveSheet(){
+  if(!tSelIds.size)return toast(t('Select words first'));
+  const lg=tSetLang(TV.setId);
+  sheet(mvSheetHtml((TV.sets||[]).filter(x=>x.name!==ARCH_NAME&&x.id!==TV.setId&&tSetLang(x.id)===lg)
+    .map(x=>({id:x.id,name:x.name,n:(TV.words||[]).filter(w=>w.set_id===x.id&&!w.arch).length})),tSelIds.size,'tMvDo','tMvNew'));
+}
+async function tMvNew(){
+  const n=(($('#mvNm')||{}).value||'').trim();
+  if(!n){const e=$('#mvErr');if(e)e.textContent=t('Enter a name');return;}
+  const lg=tSetLang(TV.setId);
+  const base={id:uid(),owner_id:TV.sid,name:n,position:(TV.sets||[]).length,deleted:false,updated_at:new Date().toISOString()};
+  try{
+    let {error}=await sb.from('sets').insert(noLangCol?base:Object.assign({},base,{lang:lg}));
+    if(error&&!noLangCol&&missingLangCol(error)){noLangCol=true;({error}=await sb.from('sets').insert(base));}
+    if(error)throw error;
+    TV.sets.push({id:base.id,name:n,lang:lg,position:base.position});
+    tMvDo(base.id);
+  }catch(e){const x=$('#mvErr');if(x)x.textContent=srvMsg(e,t('Couldn’t create — check your connection'));}
+}
+async function tMvDo(tid){
+  const ids=[...tSelIds];if(!ids.length||tid===TV.setId)return closeSheet();
+  const have=new Set((TV.words||[]).filter(w=>w.set_id===tid).map(w=>fold(w.en))),go1=[];let dup=0;
+  ids.forEach(id=>{
+    const w=(TV.words||[]).find(x=>x.id===id);if(!w||w.arch)return;
+    if(have.has(fold(w.en))){dup++;return;}
+    have.add(fold(w.en));go1.push(id);
+  });
+  try{
+    for(let i=0;i<go1.length;i+=100){
+      const {error}=await sb.from('words').update({set_id:tid,updated_at:new Date().toISOString()}).in('id',go1.slice(i,i+100));
+      if(error)throw error;
+    }
+    const set=new Set(go1);(TV.words||[]).forEach(w=>{if(set.has(w.id))w.set_id=tid;});
+    const dn=((TV.sets||[]).find(x=>x.id===tid)||{}).name||'';
+    closeSheet();tClearSel();tBack();
+    toast(t('Moved')+': '+go1.length+' → '+dn+(dup?' · '+t('already there')+': '+dup:''));
   }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
 }
 async function tBulkDelete(){
@@ -3977,6 +4021,12 @@ async function tCreateSet(){
 function selBar(inArch){
   const n=selIds.size;
   const moveLabel=inArch?`${ic('reset')}${t('To learning')}${n?` (${n})`:''}`:`${ic('archive')}${t('To Archive')}${n?` (${n})`:''}`;
+  const mv=(inArch||view.name!=='set')?'':`<button class="btn ghost mvb" style="flex:1;min-width:0;padding:0 10px;height:48px" ${n?'':'disabled'} onclick="moveSheet()">${ic('swap',17)}${t('To list')}</button>`;
+  if(mv)return `<div class="selbar"><div class="in" style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;gap:8px;flex:none"><button class="btn ghost" style="flex:1;min-width:0;padding:0 10px;height:48px" onclick="bulkCopy()">${t('Copy')}${n?` (${n})`:''}</button>${mv}</div>
+    <div style="display:flex;gap:8px;flex:none"><button class="btn pri" style="flex:1;min-width:0" ${n?'':'disabled'} onclick="bulkArch(true)">${moveLabel}</button>
+    <button class="btn danger" style="flex:none;width:auto;padding:0 16px" ${n?'':'disabled'} onclick="bulkDelete()" aria-label="${t('Delete')}">${ic('trash')}</button></div>
+  </div></div>`;
   return `<div class="selbar"><div class="in row2" style="display:flex;gap:8px">
     <button class="btn ghost" style="flex:none;width:auto;padding:0 16px" onclick="bulkCopy()">${t('Copy')}${n?` (${n})`:''}</button>
     <button class="btn pri" style="flex:1;min-width:0" ${n?'':'disabled'} onclick="bulkArch(${inArch?'false':'true'})">${moveLabel}</button>
@@ -4004,6 +4054,43 @@ function bulkArch(toArch){
   save();clearSel();render();
   toast((toArch?t('Moved to Archive'):t('Moved back to learning'))+': '+n);
   if(toArch&&moved.length)dupSoon(moved);
+}
+/* ---- move the chosen words to another list (a list in the same language) ---- */
+function mvSheetHtml(items,n,doFn,newFn){
+  return `<h2>${t('Move to list')} · ${nWords(n)}</h2>
+   <div class="field"><label>${t('New list')}</label><div style="display:flex;gap:8px">
+     <input class="inp" id="mvNm" placeholder="${t('e.g. Unit 1')}" style="flex:1;min-width:0">
+     <button class="btn pri" style="flex:none;width:auto;padding:0 16px" onclick="${newFn}()">${t('Create')}</button></div></div>
+   <div id="mvErr" class="err"></div>
+   ${items.length?`<div class="wlist" style="max-height:46vh;overflow:auto">${items.map(x=>`<div class="item" data-id="${esc(x.id)}" onclick="${doFn}(this.dataset.id)"><div class="t"><div class="en">${esc(x.name)}</div><div class="ru">${nWords(x.n)}</div></div>${ic('right',17)}</div>`).join('')}</div>`
+     :`<div class="hint">${t('No other lists in this language yet — create one above.')}</div>`}`;
+}
+function moveSheet(){
+  const s=curSet();if(!s||!selIds.size)return toast(t('Select words first'));
+  const lg=setLangOf(s);
+  sheet(mvSheetHtml(lists().filter(x=>x.id!==s.id&&setLangOf(x)===lg).map(x=>({id:x.id,name:x.name,n:active(x).length})),selIds.size,'mvDo','mvNew'));
+}
+function mvNew(){
+  const s=curSet(),n=(($('#mvNm')||{}).value||'').trim();
+  if(!s)return;if(!n){const e=$('#mvErr');if(e)e.textContent=t('Enter a name');return;}
+  const d={id:uid(),name:n,lang:setLangOf(s),words:[],upd:Date.now(),synced:false};S.sets.push(d);
+  mvDo(d.id);
+}
+function mvDo(tid){
+  const src=curSet(),dst=S.sets.find(x=>x.id===tid);
+  if(!src||!dst||dst===src)return closeSheet();
+  const have=new Set(dst.words.map(w=>fold(w.en))),mv=[];let dup=0;
+  src.words.forEach(w=>{
+    if(!selIds.has(w.id)||w.arch)return;
+    if(have.has(fold(w.en))){dup++;return;}
+    have.add(fold(w.en));mv.push(w);
+  });
+  mv.forEach(w=>touch(w));
+  const gone=new Set(mv);
+  src.words=src.words.filter(w=>!gone.has(w));
+  dst.words=dst.words.concat(mv);sortPos(dst);
+  save();clearSel();closeSheet();render();
+  toast(t('Moved')+': '+mv.length+' → '+dst.name+(dup?' · '+t('already there')+': '+dup:''));
 }
 function bulkDelete(){
   const n=selIds.size;if(!n)return;
@@ -8408,6 +8495,7 @@ try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',
 Object.assign(RU_DICT,{"Reminders":"Напоминания","Sign in to get reminders.":"Войдите в аккаунт, чтобы получать напоминания.","Reminders for teachers will come later.":"Напоминания для учителей появятся позже.","On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.":"На iPhone напоминания работают только у приложения на экране «Домой»: в Safari нажмите «Поделиться» → «На экран Домой», откройте приложение оттуда и вернитесь сюда.","This browser does not support notifications.":"Этот браузер не поддерживает уведомления.","Notifications are blocked. Allow them in the browser or phone settings.":"Уведомления запрещены. Разрешите их в настройках браузера или телефона.","We remind you at 21:00 if today’s goal is still open, and send your weekly summary with the charts.":"Напомним в 21:00, если цель дня ещё не закрыта, и пришлём итоги недели с графиками.","Turn on reminders":"Включить напоминания","Daily reminder":"Ежедневное напоминание","On":"Вкл","Off":"Выкл","Comes only if you have not reached today’s goal yet. Time:":"Придёт, только если вы ещё не достигли цели дня. Время:","Summary with analytics":"Итоги с аналитикой","Weekly":"Раз в неделю","Monthly":"Раз в месяц","Never":"Не присылать","Sunday at 20:00.":"В воскресенье в 20:00.","On the 1st at 10:00, for the month that ended.":"1-го числа в 10:00, за прошедший месяц.","No summaries.":"Итоги не приходят.","Tap the notification and your analytics open at once.":"Нажмите на уведомление, и сразу откроется ваша аналитика.","Send a test":"Отправить пробное","Turn off on this device":"Выключить на этом устройстве","Reminders on":"Напоминания включены","Sent — check your notifications":"Отправлено — проверьте уведомления","No device is subscribed yet":"Устройство ещё не подписано","The notification server is not set up yet. See the setup instructions.":"Сервер уведомлений ещё не настроен. Смотрите инструкцию по установке.","on":"вкл","off":"выкл"});
 
 Object.assign(RU_DICT,{"Pick in the list by numbers":"Выбрать по номерам в списке","Tap the number of the first word":"Нажмите на номер первого слова","Now tap the number of the last word":"Теперь нажмите на номер последнего слова"});
+Object.assign(RU_DICT,{"To list":"В список","Move to list":"Перенести в список","Moved":"Перенесено","already there":"уже были в списке","Select words first":"Сначала выберите слова","No other lists in this language yet — create one above.":"Других списков на этом языке пока нет — создайте новый выше."});
 Object.assign(RU_DICT,{"Assignment reminders":"Напоминания о заданиях","At 10:00: the day before a deadline, on the day, and the day after. A teacher is told when a student passes.":"В 10:00: за день до срока, в день срока и на следующий день. Учителю приходит уведомление, когда ученик сдал задание."});
 const TEACH_VIEWS=['students','tsets','twords','tsaccess','tan','tprog'];
 function viewSave(){try{
