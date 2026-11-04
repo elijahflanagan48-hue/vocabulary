@@ -7384,7 +7384,7 @@ function rdAdd(){
 }
 
 /* ================= Assignments: a task with a deadline ================= */
-Object.assign(RU_DICT,{"Open to this student":"Открыто этому ученику","Assignments":"Задания","Assignment":"Задание","New assignment":"Новое задание","Assign":"Назначить","Assign to":"Кому","Word list":"Список слов","Due date":"Срок","Pass mark, %":"Проходной балл, %","Library":"Библиотека","My lists":"Мои списки","Choose a list":"Выберите список","Pick a due date":"Укажите срок","Pick at least one student":"Выберите хотя бы одного ученика","Assigned ✓":"Назначено ✓","Run the SQL file first (the assignments table is missing).":"Сначала выполните SQL-файл (в базе нет таблицы заданий).","Overdue":"Просрочено","Due today":"Срок — сегодня","Due tomorrow":"Срок — завтра","Due":"Срок","Passed":"Сдано","Not started":"Не начато","Best":"Лучший","Attempts":"Попыток","Learn these words":"Выучить слова","Take the test":"Пройти тест","Take the test again":"Пройти тест заново","Typed answers only — every word of the list. You need at least {n}%.":"Только ввод ответа — все слова списка. Нужно набрать не меньше {n}%.","Assignment complete!":"Задание выполнено!","Not passed yet":"Пока не сдано","You need {n}% — review the words and try again.":"Нужно {n}% — повторите слова и попробуйте ещё раз.","Words in this assignment":"Слова задания","Assignment not found":"Задание не найдено","Delete assignment":"Удалить задание","Delete this assignment?":"Удалить это задание?","Assignment deleted":"Задание удалено","overdue":"просрочено","open":"в работе","all done":"всё сдано","Too many words (max 400)":"Слишком много слов (максимум 400)","The list is empty":"В списке нет слов","Added to your dictionary":"Добавлено в словарь","Student’s lists":"Списки ученика","Result":"Результат","Passed on":"Сдано","Title":"Название","Not saved":"Не сохранено"});
+Object.assign(RU_DICT,{"Open to this student":"Открыто этому ученику","Assignments":"Задания","Assignment":"Задание","New assignment":"Новое задание","Assign":"Назначить","Assign to":"Кому","Word list":"Список слов","Due date":"Срок","Pass mark, %":"Проходной балл, %","Library":"Библиотека","My lists":"Мои списки","Choose a list":"Выберите список","Pick a due date":"Укажите срок","Pick at least one student":"Выберите хотя бы одного ученика","Assigned ✓":"Назначено ✓","Run the SQL file first (the assignments table is missing).":"Сначала выполните SQL-файл (в базе нет таблицы заданий).","Overdue":"Просрочено","Due today":"Срок — сегодня","Due tomorrow":"Срок — завтра","Due":"Срок","Passed":"Сдано","Not started":"Не начато","Best":"Лучший","Attempts":"Попыток","Learn these words":"Выучить слова","Take the test":"Пройти тест","Take the test again":"Пройти тест заново","Typed answers only — every word of the list. You need at least {n}%.":"Только ввод ответа — все слова списка. Нужно набрать не меньше {n}%.","Typed answers only — {q} random words of the list each time. You need at least {n}%.":"Только ввод ответа — каждый раз {q} случайных слов из списка. Нужно набрать не меньше {n}%.","Assignment complete!":"Задание выполнено!","Not passed yet":"Пока не сдано","You need {n}% — review the words and try again.":"Нужно {n}% — повторите слова и попробуйте ещё раз.","Words in this assignment":"Слова задания","Assignment not found":"Задание не найдено","Delete assignment":"Удалить задание","Delete this assignment?":"Удалить это задание?","Assignment deleted":"Задание удалено","overdue":"просрочено","open":"в работе","all done":"всё сдано","Too many words (max 400)":"Слишком много слов (максимум 400)","The list is empty":"В списке нет слов","Added to your dictionary":"Добавлено в словарь","Student’s lists":"Списки ученика","Result":"Результат","Passed on":"Сдано","Title":"Название","Not saved":"Не сохранено"});
 const ASG_KEY='noeon.asg.v1';
 let ASG={list:[],at:0,uid:'',err:''};
 try{const c=JSON.parse(localStorage.getItem(ASG_KEY)||'null');if(c&&Array.isArray(c.list)){ASG.list=c.list;ASG.uid=c.uid||'';}}catch(e){}
@@ -7469,7 +7469,7 @@ VIEWS.asg=function(app){
   app.innerHTML=hdr(a.title,"go('today')")+
    `<div class="daycard" style="align-items:flex-start"><div class="t">
       <div class="lbl"><span style="color:${col}">${s.done?esc(t('Passed')+' · '+asgDay(s.doneAt)):esc(asgDueTxt(a))}</span><b>${nWords(a.words.length)}</b></div>
-      <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:6px;line-height:1.5">${esc(t('Typed answers only — every word of the list. You need at least {n}%.').replace('{n}',a.pct))}</div>
+      <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:6px;line-height:1.5">${esc(t(a.words.length>ASG_Q?'Typed answers only — {q} random words of the list each time. You need at least {n}%.':'Typed answers only — every word of the list. You need at least {n}%.').replace('{q}',ASG_Q).replace('{n}',a.pct))}</div>
       ${s.tries?`<div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:6px">${t('Best')}: <b style="color:var(--tx)">${s.best}%</b> · ${t('Attempts')}: <b style="color:var(--tx)">${s.tries}</b></div>`:''}
     </div></div>
     <button class="btn" style="margin-top:4px" onclick="asgLearn('${a.id}')">${ic('book',18)}${t('Learn these words')}</button>
@@ -7492,12 +7492,14 @@ function asgLearn(id){
   if(rows.length)toast(t('Added to your dictionary')+': '+rows.length);
   go('set',{id:set.id});
 }
-/* the test: every word, typed answers only; the words are copied into memory and nothing about progress is touched */
+/* the test: typed answers only. Up to ASG_Q words — when the list is longer, 30 random ones, a new draw on every attempt;
+   the words are copied into memory and nothing about progress is touched */
+const ASG_Q=30;
 function asgTest(id){
   const a=asgMine().find(x=>x.id===id);if(!a||!a.words.length)return toast(t('No words'));
   const ws=a.words.map((w,i)=>({id:'asg'+i,en:w.en,ru:w.ru||'—',ex:'',ipa:'',box:0,arch:false,ok:0,bad:0,added:1,due:0,rep:0,upd:0,synced:true,lg:a.lang}));
   PRACTICE={words:ws};setScope('prac');
-  runTest(shuffle(ws.slice()),['type'],true,null,a);
+  runTest(shuffle(ws.slice()).slice(0,ASG_Q),['type'],true,null,a);
 }
 function asgResultHtml(a,pct,pass){
   return `<div class="banner" style="margin:12px 0 4px;${pass?'border-color:var(--ok)':''}"><span class="ib" style="color:${pass?'var(--ok)':'var(--acc)'}">${ic(pass?'check':'target',19,2)}</span>
