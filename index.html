@@ -2956,7 +2956,6 @@ set(app){
    ?`<div class="tbar selt"><button class="lnk" onclick="selAll()">${selIds.size>=items.length&&items.length?t('Clear selection'):t('Select all')}</button><span class="selcnt">${t('Selected')}: ${selIds.size}</span><button class="lnk" onclick="toggleSelMode()">${t('Cancel')}</button></div>`
    :(pool.length?`<div class="tbar"><span class="t">${t('Learning')} · ${items.length}</span>${dupGroups(s.id).length?`<button class="lnk" onclick="dupSheet(null,'${s.id}')">${t('Duplicates')} · ${dupGroups(s.id).length}</button>`:''}<button class="lnk" onclick="toggleMarkMode()">${ic('pen',15,2)}${t('Marker')}</button><button class="lnk" onclick="toggleSelMode()">${ic('check',16,2)}${t('Select')}</button></div>`:'');
   app.innerHTML=hdr(s.name,"go('vocab')",`<button class="ic" aria-label="Menu" onclick="setMenu()">${ic('more')}</button>`)+
-   (!selMode?`<div style="margin:-2px 0 10px"><button class="lnk" onclick="langSheet()">${ic('globe',15)}${t('Language')}: ${esc(langName(setLangOf(s)))} ›</button></div>`:'')+
    (pool.length&&!selMode?rangeBarHtml(rctx()):'')+
    (pool.length&&!selMode?modesTop('set',s.id):'')+
    tbar+markHint()+
@@ -3757,7 +3756,6 @@ VIEWS.twords=async function(app){
     setId==='archive'
       ?`<button class="ic" aria-label="Import" onclick="importSheet(true,{arch:true})">${ic('download')}</button><button class="ic" aria-label="PDF" onclick="tPdf()">${ic('send')}</button><button class="ic" aria-label="Select" onclick="tToggleSel()">${ic('check',20,2)}</button>`
       :`<button class="ic" aria-label="Menu" onclick="tSetMenu()">${ic('more')}</button>`)+
-   (setId&&setId!=='archive'?`<div style="margin:-2px 0 10px"><button class="lnk" onclick="tLangSheet()">${ic('globe',15)}${t('Language')}: ${esc(langName(tSetLang(setId)))} ›</button></div>`:'')+
    sbox('twSearch','tsb')+`<div id="tl"></div>`;
   const c=TC.owner[sid];
   if(c){TV={sid,sname,setId,setName,alang,words:c.words,sets:c.sets};tDrawWords(false);}
