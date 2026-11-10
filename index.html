@@ -6309,6 +6309,7 @@ const cStarP=(x,y,s)=>(x=+x,y=+y,s=+s,`M${x} ${y-s}L${x+s*.26} ${y-s*.26}L${x+s}
 /* ---------- sound: everything is synthesised, nothing is downloaded ---------- */
 const CAU={ctx:null,out:null,nb:null,
   ensure(){
+    audHold(30000);unmuteIOS();   /* the silent switch must not mute effects either */
     if(this.ctx){if(this.ctx.state==='suspended')try{this.ctx.resume();}catch(e){}return true;}
     const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
     try{this.use(new AC());}catch(e){return false;}return true;
@@ -6375,6 +6376,16 @@ const CAU={ctx:null,out:null,nb:null,
 const CN={C4:261.63,E4:329.63,G4:392,A4:440,C5:523.25,D5:587.33,E5:659.25,G5:783.99,A5:880,B5:987.77,C6:1046.5,D6:1174.66,E6:1318.5,G6:1568,A6:1760,C7:2093,D7:2349.3,E7:2637,D3:146.83,A3:220};
 const PENT=[CN.C5,CN.D5,CN.E5,CN.G5,CN.A5,CN.C6,CN.D6,CN.E6,CN.G6];
 function celSound(fn){if(!fxOn())return;try{if(CAU.ensure())fn(CAU.ctx.currentTime+.06);}catch(e){}}
+/* iOS older than 16.4 has no audioSession: a looping silent <audio> switches the page to the "playback" category, so Web Audio ignores the silent switch */
+let _um=null;
+function unmuteIOS(){
+  if(_um||!IS_IOS||navigator.audioSession)return;
+  try{
+    const n=800,b=new Uint8Array(44+n*2),dv=new DataView(b.buffer),w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i);};
+    w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,8000,true);dv.setUint32(28,16000,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
+    const a=new Audio(URL.createObjectURL(new Blob([b],{type:'audio/wav'})));a.loop=true;a.setAttribute('playsinline','');a.volume=.01;_um=a;a.play().catch(()=>{_um=null;});
+  }catch(e){}
+}
 /* browsers only let sound start after a tap: the first tap anywhere wakes the engine */
 addEventListener('pointerdown',()=>{if(fxOn())CAU.ensure();},{passive:true});
 function setFx(v){S.settings.fx=v;save();stgRefresh();if(v==='on')celSound(t=>{CAU.bell(CN.E6,t,.08,1.3);CAU.bell(CN.A6,t+.09,.06,1.4);});}
