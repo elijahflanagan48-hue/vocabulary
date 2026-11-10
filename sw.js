@@ -1,10 +1,32 @@
-const CACHE = 'vocab-v136';
+const CACHE = 'vocab-v137';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v3.png', './icon-512-v3.png', './icon-mask-512-v3.png', './favicon-32-v3.png', './favicon-192-v3.png',
   './lib/supabase-2.45.4.js', './lib/591.supabase.js', './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const OCR_CACHE = 'noeon-ocr-v1';
 const EXTERNAL = [];
-/* how long the app waits for the network before opening the saved copy */
+/* how long the app waits for the network before opening the saved copy (files other than the page itself) */
 const WAIT_MS = 3000;
+
+/* the page itself: opened from the saved copy AT ONCE (no waiting for the network, which was what made starting slow),
+   and refreshed quietly in the background. A new release also brings a new cache (see CACHE), so the saved copy
+   is always the latest one the phone has already downloaded. When a newer page arrives, the open app is told. */
+const SHELL = './index.html';
+function tellClients() {
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    .then(list => list.forEach(c => c.postMessage({ type: 'noeon-update' }))).catch(() => {});
+}
+function refreshShell() {
+  /* no-cache = ask the server "has it changed?" (a tiny answer when nothing changed) */
+  return fetch(new Request(SHELL, { cache: 'no-cache' })).then(async res => {
+    if (!res || !res.ok) return null;
+    const c = await caches.open(CACHE);
+    const old = await c.match(SHELL);
+    const tag = r => r && (r.headers.get('etag') || r.headers.get('last-modified') || '');
+    const changed = !!old && !!tag(old) && !!tag(res) && tag(old) !== tag(res);
+    await c.put(SHELL, res.clone());
+    if (changed) tellClients();
+    return res;
+  }).catch(() => null);
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -80,7 +102,19 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  /* the app itself: network first, as before. If the network has not answered within WAIT_MS and a saved copy exists,
+  /* opening the app: the saved page first (instant start), the network only in the background */
+  if (req.mode === 'navigate') {
+    e.respondWith(caches.match(SHELL).then(hit => {
+      const fresh = refreshShell();
+      e.waitUntil(fresh);
+      if (hit) return hit;
+      /* nothing saved yet (the very first visit): wait for the network */
+      return fresh.then(r => r || fetch(req));
+    }));
+    return;
+  }
+
+  /* everything else of ours: network first, as before. If the network has not answered within WAIT_MS and a saved copy exists,
      open the saved copy; the network answer still arrives in the background and is saved for the next start. */
   const net = fetchAndKeep(req);
   e.waitUntil(net.then(() => {}, () => {}));

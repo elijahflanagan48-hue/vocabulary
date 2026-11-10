@@ -62,6 +62,11 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--ff);
   padding-bottom:calc(96px + env(safe-area-inset-bottom));overscroll-behavior-y:none}
 #app{max-width:680px;margin:0 auto;padding:0 16px}
 button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button,select,summary,[onclick],.rowlink,.setcard,.tabs a{touch-action:manipulation}
+#updb{position:fixed;left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:80;display:flex;align-items:center;gap:8px;padding:10px 10px 10px 16px;border-radius:16px;background:var(--surf);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.28);font-weight:650;font-size:14.5px}
+#updb span{flex:1}
+#updb .go{padding:9px 16px;border-radius:11px;background:var(--pri);color:var(--on-pri);font-weight:700}
+#updb .x{width:34px;height:34px;border-radius:10px;color:var(--mut);font-size:20px;line-height:1}
 input,textarea,select{font-family:inherit;font-size:16px}
 ::selection{background:rgba(47,111,237,.32);color:inherit}
 :root[data-theme="dark"] ::selection{background:rgba(122,172,255,.55);color:#fff}
@@ -1845,8 +1850,11 @@ function resolveDark(){
   const h=now.getHours()+now.getMinutes()/60;return h<7||h>=19;
 }
 let _themeTimer=null;
+let _lastDark=null;
 function applyTheme(){
   const dark=resolveDark();
+  if(_lastDark!==null&&_lastDark!==dark)setTimeout(()=>{try{stgRefresh();themeSync();}catch(e){}},0);
+  _lastDark=dark;
   document.documentElement.setAttribute('data-theme',dark?'dark':'light');
   document.documentElement.setAttribute('data-bg',dark&&NBGS.some(x=>x[0]===(S.settings.bg||'stars'))?(S.settings.bg||'stars'):'none');
   const db=dark?'none':(DBGS.some(x=>x[0]===S.settings.dbg)?S.settings.dbg:'none');
@@ -1856,21 +1864,21 @@ function applyTheme(){
   if(((S.settings.theme)||'auto')==='auto')_themeTimer=setTimeout(applyTheme,60000);
 }
 function themeIcon(){return ic(document.documentElement.getAttribute('data-theme')==='dark'?'sun':'moon');}
-function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();themeSync();}
+function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';S.settings.theme=dark?'light':'dark';save();applyTheme();stgRefresh();themeSync();}
 function themeSync(){try{document.querySelectorAll('button[aria-label="Theme"]').forEach(b=>{b.innerHTML=themeIcon();});}catch(e){}}
-function setLang(l){S.settings.lang=l;S.settings.upd=Date.now();save();settingsSheet();render();}
+function setLang(l){S.settings.lang=l;S.settings.upd=Date.now();save();render();stgRefresh();}
 const NBGS=[['none','None'],['stars','Starry sky'],['aurora','Aurora'],['milky','Milky Way'],['city','City']];
 const DBGS=[['none','None'],['dawn','Dawn'],['dots','Dots'],['sea','Sea']];
 const DBG_TOP={dawn:'#fde9dc',dots:'#eaf0fa',sea:'#e6f1fd'};
-function setDbg(v){S.settings.dbg=v;save();applyTheme();if($('#scrim'))settingsSheet();}
-function setBg(v){S.settings.bg=v;save();applyTheme();if($('#scrim'))settingsSheet();}
-function setTheme(m){S.settings.theme=m;save();applyTheme();if($('#scrim'))settingsSheet();render();}
+function setDbg(v){S.settings.dbg=v;save();applyTheme();stgRefresh();}
+function setBg(v){S.settings.bg=v;save();applyTheme();stgRefresh();}
+function setTheme(m){S.settings.theme=m;save();applyTheme();stgRefresh();themeSync();}
 function useLocation(){
   if(!navigator.geolocation)return toast(t('Location not available'));
   toast(t('Requesting location…'));
   navigator.geolocation.getCurrentPosition(p=>{
     S.settings.geo={lat:p.coords.latitude,lon:p.coords.longitude};save();applyTheme();
-    toast(t('Using your sunrise & sunset'));if($('#scrim'))settingsSheet();
+    toast(t('Using your sunrise & sunset'));stgRefresh();
   },()=>toast(t('Location denied')),{maximumAge:36e5,timeout:8000});
 }
 
@@ -2474,11 +2482,26 @@ async function cloudDeleteWord(w){
 }
 
 /* ---------- auth ---------- */
+/* a teacher who closed the app on one of the teacher screens: open it at once from what the phone already has
+   (saved session, saved profile and student list) instead of showing a skeleton until the network answers */
+function fastAuthBoot(){
+  try{
+    const k=Object.keys(localStorage).find(x=>/^sb-.+-auth-token$/.test(x));if(!k)return;
+    const ss=JSON.parse(localStorage.getItem(k)||'null'),u=ss&&ss.user;if(!u||!u.id)return;
+    const c=JSON.parse(localStorage.getItem(PKEY)||'null');
+    if(!c||c.id!==u.id||c.role!=='teacher')return;
+    const sc=stCacheLoad();
+    AUTH={user:u,profile:c,ready:true,students:(sc&&sc.uid===u.id&&sc.students)?sc.students:[],_fast:true};
+    try{AUTH.isOwner=localStorage.getItem('vocab.own')===u.id;}catch(e){}
+    restorePending();
+  }catch(e){}
+}
 async function authInit(){
   if(!sb)return;
   try{
     const {data}=await sb.auth.getSession();
     if(data&&data.session)await onSignedIn(data.session.user);
+    else if(AUTH._fast){AUTH={user:null,profile:null,ready:true,students:[]};render();}   /* the saved session turned out to be gone */
   }catch(e){}
   restorePending();
   try{
@@ -4906,7 +4929,16 @@ function srCustom(){
 }
 
 /* ---------- settings / backup ---------- */
-function settingsHtml(){
+/* the settings block redraws itself in place (profile screen AND the settings sheet), so the highlighted choice always matches the real state */
+function settingsHtml(){return `<div class="stg">${settingsInner()}</div>`;}
+function stgRefresh(){
+  document.querySelectorAll('.stg').forEach(el=>{
+    const sc=window.scrollY;
+    try{el.innerHTML=settingsInner();}catch(e){}
+    if(window.scrollY!==sc)window.scrollTo(0,sc);
+  });
+}
+function settingsInner(){
   const th=S.settings.theme||'auto',ac=S.settings.accent||'uk',lg=S.settings.lang||'ru',bg=S.settings.bg||'stars',fx=S.settings.fx||'on';
   return `<div class="field"><label>${t('Language')}</label>
      <div class="seg3">
@@ -4955,8 +4987,7 @@ function voiceOptions(){
     en.map(v=>`<option value="${esc(voiceId(v))}"${(cur&&(cur===voiceId(v)||cur===v.name))?' selected':''}>${esc(v.name)} · ${esc((v.lang||'').replace('_','-'))}</option>`).join('');
 }
 function setVoice(val){const key=VOKEY[S.settings.accent==='us'?'us':'uk'];S.settings[key]=val;S.settings.upd=Date.now();save();setTimeout(()=>speak('Hello! This is how this voice sounds.','en'),80);}
-function setRate(r){S.settings.rate=r;S.settings.upd=Date.now();save();speak('Hello! This is how I sound at this speed.','en');
-  document.querySelectorAll('.seg3 button').forEach(b=>{if(/setRate\('/.test(b.getAttribute('onclick')||''))b.classList.toggle('on',b.getAttribute('onclick')==="setRate('"+r+"')");});}
+function setRate(r){S.settings.rate=r;S.settings.upd=Date.now();save();stgRefresh();speak('Hello! This is how I sound at this speed.','en');}
 function settingsSheet(){sheet(`<h2>${t('Settings')}</h2>`+settingsHtml());}
 async function exportData(setId){
   closeSheet();
@@ -6346,7 +6377,7 @@ const PENT=[CN.C5,CN.D5,CN.E5,CN.G5,CN.A5,CN.C6,CN.D6,CN.E6,CN.G6];
 function celSound(fn){if(!fxOn())return;try{if(CAU.ensure())fn(CAU.ctx.currentTime+.06);}catch(e){}}
 /* browsers only let sound start after a tap: the first tap anywhere wakes the engine */
 addEventListener('pointerdown',()=>{if(fxOn())CAU.ensure();},{passive:true});
-function setFx(v){S.settings.fx=v;save();if(v==='on')celSound(t=>{CAU.bell(CN.E6,t,.08,1.3);CAU.bell(CN.A6,t+.09,.06,1.4);});if($('#scrim'))settingsSheet();}
+function setFx(v){S.settings.fx=v;save();stgRefresh();if(v==='on')celSound(t=>{CAU.bell(CN.E6,t,.08,1.3);CAU.bell(CN.A6,t+.09,.06,1.4);});}
 
 /* ---------- particles (one small engine per animation, drawn on a viewport-wide canvas) ---------- */
 const celPal=()=>celDark()
@@ -8933,6 +8964,21 @@ function deepBoot(){
   }catch(e){return false;}
 }
 try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='noeon-go')deepGo(e.data.go);});}catch(e){}
+/* the app opens from the saved copy, so a newer release is announced instead of being waited for */
+function updBanner(){
+  if(document.getElementById('updb'))return;
+  const d=document.createElement('div');d.id='updb';
+  d.innerHTML=`<span>${t('A new version is ready')}</span><button class="go" onclick="location.reload()">${t('Update')}</button><button class="x" aria-label="Close" onclick="this.parentNode.remove()">×</button>`;
+  document.body.appendChild(d);
+}
+try{
+  if('serviceWorker' in navigator){
+    const had=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)updBanner();});
+    navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='noeon-update')updBanner();});
+  }
+}catch(e){}
+Object.assign(RU_DICT,{"A new version is ready":"Вышла новая версия","Update":"Обновить"});
 {const _osi=onSignedIn;onSignedIn=async function(){const r=await _osi.apply(this,arguments);setTimeout(pushResync,2500);return r;};}
 Object.assign(RU_DICT,{"Reminders":"Напоминания","Sign in to get reminders.":"Войдите в аккаунт, чтобы получать напоминания.","Reminders for teachers will come later.":"Напоминания для учителей появятся позже.","On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.":"На iPhone напоминания работают только у приложения на экране «Домой»: в Safari нажмите «Поделиться» → «На экран Домой», откройте приложение оттуда и вернитесь сюда.","This browser does not support notifications.":"Этот браузер не поддерживает уведомления.","Notifications are blocked. Allow them in the browser or phone settings.":"Уведомления запрещены. Разрешите их в настройках браузера или телефона.","We remind you at 21:00 if today’s goal is still open, and send your weekly summary with the charts.":"Напомним в 21:00, если цель дня ещё не закрыта, и пришлём итоги недели с графиками.","Turn on reminders":"Включить напоминания","Daily reminder":"Ежедневное напоминание","On":"Вкл","Off":"Выкл","Comes only if you have not reached today’s goal yet. Time:":"Придёт, только если вы ещё не достигли цели дня. Время:","Summary with analytics":"Итоги с аналитикой","Weekly":"Раз в неделю","Monthly":"Раз в месяц","Never":"Не присылать","Sunday at 20:00.":"В воскресенье в 20:00.","On the 1st at 10:00, for the month that ended.":"1-го числа в 10:00, за прошедший месяц.","No summaries.":"Итоги не приходят.","Tap the notification and your analytics open at once.":"Нажмите на уведомление, и сразу откроется ваша аналитика.","Send a test":"Отправить пробное","Turn off on this device":"Выключить на этом устройстве","Reminders on":"Напоминания включены","Sent — check your notifications":"Отправлено — проверьте уведомления","No device is subscribed yet":"Устройство ещё не подписано","The notification server is not set up yet. See the setup instructions.":"Сервер уведомлений ещё не настроен. Смотрите инструкцию по установке.","on":"вкл","off":"выкл"});
 
@@ -9226,7 +9272,7 @@ loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
 applyTheme();
 try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.addEventListener&&mq.addEventListener('change',()=>{if((S.settings.theme||'auto')==='auto')applyTheme();});}}catch(e){}
 {const dg=deepBoot(),bv=dg?false:bootView();
-  if(bv==='wait'){const a=$('#app');a.innerHTML=skel(5);}else render();
+  if(bv==='wait'){const a=$('#app');a.innerHTML=skel(5);fastAuthBoot();}else render();
   if(bv===true)keepScroll();}
 authInit();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled()){cloudPull().then(softRender);setTimeout(pingSeen,1500);}});
