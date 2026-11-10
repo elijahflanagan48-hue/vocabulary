@@ -4,8 +4,8 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0a1330",
-  "theme_color": "#1f66ee",
+  "background_color": "#070c17",
+  "theme_color": "#070c17",
   "lang": "ru",
   "description": "Личный словарь для изучения иностранных слов: карточки, тесты и интервальные повторения.",
   "icons": [
