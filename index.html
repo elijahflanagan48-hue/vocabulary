@@ -373,6 +373,7 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .rwru{display:block;margin-top:5px;color:var(--tx);opacity:.82;font-style:italic}
 .rwdup{margin:0 0 10px;padding:10px 13px;border-radius:12px;background:var(--ok-soft);color:var(--ok);font-size:14px}
 .chip.ctx{box-shadow:inset 0 0 0 1.5px var(--ok)}
+.chip.vf{box-shadow:inset 0 0 0 1.5px var(--pri)}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .tdimgs[hidden]{display:none}
 .rtitle{margin:6px 2px 6px;font-size:28px;line-height:1.2;font-weight:800;letter-spacing:-.03em}
@@ -2049,6 +2050,128 @@ async function translate(txt,lang){
   }
   return null;
 }
+
+/* ---------- translation memory: remembered choices, teacher-verified translations, correction journal ---------- */
+const TMKEY='noeon.tm.v1';
+let TM={mine:{},shared:{},uid:'',at:0,tids:null};
+const TMAUTO={},TMT={};
+try{const c=JSON.parse(localStorage.getItem(TMKEY)||'null');if(c){TM.mine=c.mine||{};TM.shared=c.shared||{};TM.uid=c.uid||'';}}catch(e){}
+const tmK=(lang,en)=>(okLang(lang)?lang:'en')+'|'+fold(en);
+function tmSave(){try{localStorage.setItem(TMKEY,JSON.stringify({mine:TM.mine,shared:TM.shared,uid:TM.uid}));}catch(e){}}
+const tmIsT=()=>!!(AUTH.profile&&AUTH.profile.role==='teacher');
+/* the teacher's verified list: the teacher's own rows, or those of the teacher(s) the student is linked to (the database decides who may read what) */
+async function tmSync(){
+  if(!cloudEnabled()||Date.now()-TM.at<600000)return;TM.at=Date.now();
+  try{
+    if(TM.uid!==AUTH.user.id){TM.uid=AUTH.user.id;TM.mine={};TM.shared={};}
+    const {data,error}=await sb.from('tr_memory').select('lang,en_key,ru,n').limit(3000);
+    if(error||!Array.isArray(data))return;
+    const sh={};data.forEach(r=>{if(r&&r.lang&&r.en_key&&r.ru)sh[r.lang+'|'+r.en_key]={ru:String(r.ru),n:r.n||1};});
+    TM.shared=sh;tmSave();
+  }catch(e){}
+}
+async function tmTeachers(){
+  if(TM.tids)return TM.tids;
+  try{const {data}=await sb.from('links').select('teacher_id').eq('student_id',AUTH.user.id);TM.tids=(data||[]).map(r=>r.teacher_id).filter(Boolean);}catch(e){TM.tids=[];}
+  return TM.tids;
+}
+/* put what is remembered in front of the translator's guess; remember the guess to see later whether it was changed */
+function tmApply(r,en,lang){
+  const k=tmK(lang,en);TMAUTO[k]=(r&&r.main)||'';
+  const sh=TM.shared[k],ru=(sh&&sh.ru)||TM.mine[k];
+  if(!ru)return r;
+  const o=Object.assign({alts:[]},r||{});
+  o.alts=(o.alts||[]).filter(x=>x.toLowerCase()!==ru.toLowerCase());
+  o.main=ru;o.vf={v:ru,h:sh?t('verified'):t('your choice')};
+  return o;
+}
+function tmLearn(en,ru,lang){
+  if(!en||!ru)return;const k=tmK(lang,en);clearTimeout(TMT[k]);
+  TMT[k]=setTimeout(()=>tmDo(k,en,ru,lang).catch(()=>{}),1500);
+}
+async function tmDo(k,en,ru,lang){
+  const auto=TMAUTO[k];ru=String(ru).trim();if(!auto||!ru)return;
+  const list=ru.toLowerCase().split(/\s*[,;]\s*/);
+  if(list.includes(auto.toLowerCase()))return;                       /* the translator was right */
+  const sh=TM.shared[k];if(sh&&sh.ru===ru)return;                    /* took the verified translation */
+  const T=tmIsT();
+  if(!T&&TM.mine[k]===ru)return;
+  TM.mine[k]=ru;tmSave();
+  if(!cloudEnabled())return;
+  const lg=okLang(lang)?lang:'en',now=new Date().toISOString();
+  if(T){
+    const {error}=await sb.from('tr_memory').upsert({teacher_id:AUTH.user.id,lang:lg,en_key:fold(en),en:String(en).slice(0,200),ru:ru.slice(0,300),n:1,updated_at:now},{onConflict:'teacher_id,lang,en_key'});
+    if(!error){TM.shared[k]={ru,n:1};tmSave();}
+  }else{
+    const ids=await tmTeachers();
+    if(ids.length)await sb.from('tr_log').insert(ids.map(tid=>({student_id:AUTH.user.id,teacher_id:tid,lang:lg,en:String(en).slice(0,200),en_key:fold(en),auto:auto.slice(0,300),chosen:ru.slice(0,300)})));
+  }
+}
+/* teacher: journal of corrections and the verified list */
+let TRM={tab:'log',log:[],mem:[],err:'',busy:false};
+function trmOpen(){TRM.tab='log';go('trmem');trmLoad();}
+async function trmLoad(){
+  TRM.err='';
+  try{
+    const a=await sb.from('tr_log').select('id,lang,en,en_key,auto,chosen,student_id,created_at').eq('teacher_id',AUTH.user.id).order('created_at',{ascending:false}).limit(1500);
+    const b=await sb.from('tr_memory').select('lang,en_key,en,ru,updated_at').eq('teacher_id',AUTH.user.id).order('updated_at',{ascending:false}).limit(3000);
+    if(a.error||b.error){TRM.err=errText(a.error||b.error);}
+    TRM.log=a.data||[];TRM.mem=b.data||[];
+  }catch(e){TRM.err=String(e&&e.message||e);}
+  if(view.name==='trmem')render();
+}
+function trmGroups(){
+  const g={};
+  TRM.log.forEach(r=>{
+    const k=r.lang+'|'+r.en_key;
+    const o=g[k]||(g[k]={k,lang:r.lang,en:r.en,auto:{},ch:{},st:new Set(),n:0,last:r.created_at});
+    o.n++;o.st.add(r.student_id);o.auto[r.auto]=(o.auto[r.auto]||0)+1;o.ch[r.chosen]=(o.ch[r.chosen]||0)+1;
+  });
+  const done=new Set(TRM.mem.map(m=>m.lang+'|'+m.en_key));
+  return Object.values(g).filter(o=>!done.has(o.k)).sort((x,y)=>y.n-x.n||(y.last>x.last?1:-1));
+}
+function viewTrmem(app){
+  if(!tmIsT())return go('library');
+  const tab=(v,l)=>`<button data-s="${v}" class="${TRM.tab===v?'on':''}" onclick="TRM.tab='${v}';render()">${l}</button>`;
+  const gs=trmGroups();
+  let h=hdr(t('Translations'),"go('library')",'')+`<div class="sel-opt" style="margin:6px 0 12px">${tab('log',t('Corrections')+' · '+gs.length)}${tab('mem',t('Verified')+' · '+TRM.mem.length)}</div>`;
+  if(TRM.err)h+=`<div class="rwdup" style="background:var(--bad-soft);color:var(--bad)">${t('The translation tables are not set up yet — run the SQL from the instructions.')}</div>`;
+  if(TRM.tab==='log'){
+    h+=`<div class="hint" style="margin:0 2px 10px">${t('Words where students changed the automatic translation — the most corrected first. Approve the right one: it will be offered first to everyone.')}</div>`;
+    h+=gs.length?gs.map((o,i)=>{
+      const auto=Object.entries(o.auto).sort((a,b)=>b[1]-a[1])[0][0];
+      const chs=Object.entries(o.ch).sort((a,b)=>b[1]-a[1]);
+      return `<div class="card" style="padding:12px 14px;margin-bottom:10px"><div style="font-weight:600">${esc(o.en)} <span class="hint" style="font-weight:400">· ${o.n}×</span></div>
+       <div class="hint">${t('Translator offered')}: ${esc(auto)}</div>
+       <div class="chips" style="margin-top:6px">${chs.map(([c,n])=>`<button class="chip" onclick="trmApprove(${i},this.dataset.v)" data-v="${esc(c)}">✓ ${esc(c)}${chs.length>1||n>1?`<small>${n}×</small>`:''}</button>`).join('')}</div>
+       <button class="lnk" style="margin-top:4px" onclick="trmHide(${i})">${t('Dismiss')}</button></div>`;}).join('')
+      :`<div class="hint" style="text-align:center;margin:30px 0">${t('No corrections yet.')}</div>`;
+  }else{
+    h+=TRM.mem.length?TRM.mem.map((m,i)=>`<div class="card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px"><div style="flex:1"><b>${esc(m.en)}</b> → ${esc(m.ru)}</div><button class="lnk" onclick="trmDel(${i})">${t('Delete')}</button></div>`).join('')
+      :`<div class="hint" style="text-align:center;margin:30px 0">${t('Nothing verified yet.')}</div>`;
+  }
+  app.innerHTML=h+`<div style="height:30px"></div>`+tabBar();
+}
+async function trmApprove(i,ru){
+  const o=trmGroups()[i];if(!o||!ru||TRM.busy)return;TRM.busy=true;
+  try{
+    const {error}=await sb.from('tr_memory').upsert({teacher_id:AUTH.user.id,lang:o.lang,en_key:fold(o.en),en:o.en,ru:ru.slice(0,300),n:o.n,updated_at:new Date().toISOString()},{onConflict:'teacher_id,lang,en_key'});
+    if(error)throw error;
+    TM.shared[o.k]={ru,n:o.n};tmSave();toast(t('Verified ✓'));await trmLoad();
+  }catch(e){toast(errText(e));}
+  TRM.busy=false;render();
+}
+async function trmHide(i){
+  const o=trmGroups()[i];if(!o)return;
+  try{await sb.from('tr_log').delete().eq('teacher_id',AUTH.user.id).eq('lang',o.lang).eq('en_key',fold(o.en));}catch(e){}
+  await trmLoad();
+}
+async function trmDel(i){
+  const m=TRM.mem[i];if(!m)return;
+  try{await sb.from('tr_memory').delete().eq('teacher_id',AUTH.user.id).eq('lang',m.lang).eq('en_key',m.en_key);delete TM.shared[m.lang+'|'+m.en_key];tmSave();}catch(e){}
+  await trmLoad();
+}
+Object.assign(RU_DICT,{"verified":"проверено","your choice":"ваш выбор","Remembered":"Запомнено","Translations":"Переводы","Corrections":"Исправления","Verified":"Проверенные","Translator offered":"Переводчик предложил","Dismiss":"Скрыть","Delete":"Удалить","No corrections yet.":"Исправлений пока нет.","Nothing verified yet.":"Проверенных переводов пока нет.","Verified ✓":"Утверждено ✓","The translation tables are not set up yet — run the SQL from the instructions.":"Таблицы переводов ещё не созданы — выполните SQL из инструкции.","Words where students changed the automatic translation — the most corrected first. Approve the right one: it will be offered first to everyone.":"Слова, где ученики поменяли автоперевод, — чаще всего исправляемые сверху. Утвердите верный вариант: он будет предлагаться первым всем.","Translation memory":"Память переводов"});
 
 /* ---------- cloud: account + sync ---------- */
 const SB_URL='https://sbpqwwsnvbpfwqoxfpza.supabase.co';
@@ -4005,6 +4128,7 @@ async function tSaveWord(id){
   const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim();let ex=exVal('tEx');{const p=exParse(ex);if(p.en&&!p.ru){const r=await Promise.race([trSentence(p.en).catch(()=>''),new Promise(z=>setTimeout(()=>z(''),2500))]);ex=exJoin(p.en,r);}}
   const err=$('#tErr');
   if(!en){err.textContent=t('Enter a word');return;}
+  tmLearn(en,ru,TV.setId==='archive'?tArchLg:tSetLang(TV.setId));
   const btn=$('#tSave');btn.disabled=true;btn.textContent=t('Saving…');
   const now=new Date().toISOString();
   try{
@@ -4446,7 +4570,8 @@ function autoTr(){clearTimeout(trTimer);trTimer=setTimeout(()=>doTr(false),650);
 async function doTr(force){
   const enEl=$('#'+TR.en);if(!enEl)return;const en=enEl.value.trim();if(!en)return;
   const seq=++trSeq;const st=$('#'+TR.st);if(st)st.textContent=t('Translating…');
-  const r=await translate(en,TR.lang);
+  await tmSync();
+  const r=await translate(en,TR.lang).then(x=>tmApply(x,en,TR.lang));
   const now=$('#'+TR.en);
   if(seq!==trSeq||!now||now.value.trim()!==en)return;     /* the field moved on while we waited */
   const ruEl=$('#'+TR.ru);if(!ruEl)return;
@@ -4458,9 +4583,10 @@ async function doTr(force){
   const ch=$('#'+TR.chips);
   if(ch){
     const groups=(r.groups&&r.groups.length)?r.groups.map(g=>({pos:g.pos,items:g.items.map(x=>({v:lcFirst(x.v,en),h:x.h}))})):[{pos:'',items:[r.main,...r.alts].map(v=>({v,h:''}))}];
+    if(r.vf){const lv=r.vf.v.toLowerCase();groups.forEach(g=>{g.items=g.items.filter(x=>x.v.toLowerCase()!==lv);});groups.unshift({pos:t('Remembered'),items:[{v:lcFirst(r.vf.v,en),h:r.vf.h,vf:1}]});}
     const have=new Set(groups.flatMap(g=>g.items.map(x=>x.v.toLowerCase())));
     if(!have.has(r.main.toLowerCase()))groups[0].items.unshift({v:r.main,h:''});
-    ch.innerHTML=groups.map(g=>(g.pos?`<div class="chpos">${esc(g.pos)}</div>`:'')+g.items.map(x=>`<button class="chip" data-v="${esc(x.v)}" onclick="pickChip(this)">${esc(x.v)}${x.h?`<small>${esc(x.h)}</small>`:''}</button>`).join('')).join('');
+    ch.innerHTML=groups.filter(g=>g.items.length).map(g=>(g.pos?`<div class="chpos">${esc(g.pos)}</div>`:'')+g.items.map(x=>`<button class="chip${x.vf?' vf':''}" data-v="${esc(x.v)}" onclick="pickChip(this)">${esc(x.v)}${x.h?`<small>${esc(x.h)}</small>`:''}</button>`).join('')).join('');
     syncChips();
   }
   if(force&&TR.after)TR.after('ru');
@@ -5519,6 +5645,7 @@ async function saveWord(){
   const d=formLang==='en'?DICT[en.toLowerCase()]:null,ipa=ipaStr(d);
   const fam=[...FAMSEL];
   const mk=()=>newWord(en,ru,ex,ipa);
+  tmLearn(en,ru,formLang);
   let target;
   if(formArch){
     const dup=dupGroupsFor(formArch.lang,en);
@@ -5605,7 +5732,7 @@ let _vwT=0;
 function vwAuto(k){clearTimeout(_vwT);_vwT=setTimeout(()=>vwAfter(k),500);}
 function vwAfter(k){
   const f=findWord(VW.id);if(!f)return;const w=f.w;
-  if(k==='ru'||!k){const v=(($('#vRu')||{}).value||'').trim();if(v&&v!==w.ru){w.ru=v;touch(w);save();render();}}
+  if(k==='ru'||!k){const v=(($('#vRu')||{}).value||'').trim();if(v&&v!==w.ru){w.ru=v;touch(w);save();render();tmLearn(w.en,v,setLangOf(f.s));}}
   if(k==='ex'||!k){const v=exVal('vEx');if(v!==(w.ex||'')){w.ex=v;touch(w);save();}}
 }
 async function vwFam(b){
@@ -7420,7 +7547,7 @@ function rdCtx(ruSent,diff){
     const w=v.split(/[\s,;]+/).filter(x=>x.length>2)[0]||v;
     const stem=w.replace(STEM_END,'');const base=stem.length>=3?stem:w;
     const st=base.slice(0,Math.min(base.length,Math.max(4,Math.ceil(base.length*.6))));   /* задаваться ≈ задаются */
-    if(toks.some(x=>x.startsWith(st))){c.classList.add('ctx');any=true;if(!first)first=c;}
+    if(toks.some(x=>x.startsWith(st))){c.classList.add('ctx');any=true;if(!first||(c.classList.contains('vf')&&!first.classList.contains('vf')))first=c;}
   });
   const hint=$('#rSt');
   /* the dictionary has nothing that fits this sentence: offer the wording the sentence itself uses */
@@ -7446,6 +7573,7 @@ function rdAdd(){
   const sel=$('#rList');
   let s=(sel&&S.sets.find(x=>x.id===sel.value))||lists().find(x=>x.id===S.settings.lastSet&&setLangOf(x)===T.lang)||lists().find(x=>setLangOf(x)===T.lang);
   if(!s){s={id:uid(),name:t('My words'),lang:T.lang,words:[],upd:Date.now(),synced:false};S.sets.push(s);}
+  tmLearn(en,ru,T.lang);
   s.words.unshift(newWord(en,ru,ex));S.settings.lastSet=s.id;
   (T.added||(T.added=[])).push(fold(RS.orig||en));T.upd=Date.now();
   save();rdClose();toast(t('Added ✓'));
@@ -8069,7 +8197,7 @@ function libDraw(){
     h+=sec(t('My sets'));
     if(LIBX.noTable)h+=`<div class="rwdup" style="background:var(--bad-soft);color:var(--bad)">${t('The library tables are not set up yet — run the SQL from the instructions.')}</div>`;
     const m=libMine();
-    h+=`<button class="btn pri" style="margin:8px 0 4px" onclick="libEditOpen()">${ic('plus',18)}${t('Create a set')}</button>`;
+    h+=`<button class="btn pri" style="margin:8px 0 4px" onclick="libEditOpen()">${ic('plus',18)}${t('Create a set')}</button><button class="btn" style="margin:4px 0" onclick="trmOpen()">${ic('text',18)}${t('Translation memory')}</button>`;
     h+=m.length?m.map(x=>libCardHtml('cards',x.title,`${nWords(x.words.length)} · ${libStatusTxt(x.status)}${libSubsOf(x.id)?' · '+libSubsOf(x.id)+' '+t('added it'):''}`,'',`libOpen('server','${x.id}')`)).join('')
       :`<div class="hint" style="margin:10px 2px">${t('Create a set here — it stays hidden until you choose who sees it.')}</div><button class="btn" style="margin-top:6px" onclick="libPublish()">${ic('plus',18)}${t('Publish a list')}</button>`;
   }else{
@@ -8222,6 +8350,7 @@ function libEditOpen(id){
       :{id:null,title:'',descr:'',level:'',lang:(S.settings&&S.settings.lastLang)||'en',status:'draft',ver:1,orig:'[]',words:[{en:'',ru:'',ex:''}],dirty:false};
   go('libedit');
 }
+VIEWS.trmem=viewTrmem;
 VIEWS.libedit=function(app){
   if(!LE||!libTeacher())return go('library');
   const st=(v,l)=>`<button data-s="${v}" class="${LE.status===v?'on':''}" onclick="leSt(this)">${l}</button>`;
