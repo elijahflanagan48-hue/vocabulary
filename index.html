@@ -1373,7 +1373,7 @@ const q1=s=>esc(String(s??'').replace(/[\\']/g,'\\$&').replace(/[\r\n\u2028\u202
 
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 /* spacing never decides a mark: invisible characters, non-breaking/odd spaces, runs of spaces, and spaces around a hyphen all fold away */
-const norm=s=>String(s).toLowerCase().replace(/[\u200b-\u200f\u2060\ufeff\u00ad]/g,'').replace(/[\u2010-\u2015\u2212]/g,'-')
+const norm=s=>String(s).normalize('NFKC').toLowerCase().replace(/[\u200b-\u200f\u2060-\u2064\u202a-\u202e\u180e\u061c\ufe00-\ufe0f\ufeff\u00ad]/g,'').replace(/[\u2010-\u2015\u2212]/g,'-')
   .replace(/ё/g,'е').replace(/[.,!?;:"'’‘`´()\[\]\u2026\u2024\u2025\u00b7\u22ef\u3002\uff0e]/g,'').replace(/\s*-\s*/g,'-').replace(/\s+/g,' ').trim();
 /* the shorthand teachers write in vocabulary lists, folded to one spelling */
 const ABBR={
@@ -1394,7 +1394,10 @@ function canon(s){
 }
 /* dots and spaces never count against an answer: “ice cream” = “icecream” = “ice  cream.” */
 const sqz=x=>String(x||'').replace(/\s+/g,'');
-const canonQ=s=>sqz(canon(s));
+/* a Russian-keyboard letter that looks exactly like a Latin one (е, а, о, р, с, х, у…) inside an otherwise Latin word is the same word to a human eye */
+const HOMO={'а':'a','е':'e','о':'o','р':'p','с':'c','х':'x','у':'y','к':'k','м':'m','т':'t','н':'h','в':'b','і':'i','ј':'j','ѕ':'s'};
+const deHomo=x=>/[a-z]/.test(x)?x.replace(/[аеорсхукмтнвіјѕ]/g,c=>HOMO[c]):x;
+const canonQ=s=>deHomo(sqz(canon(s)));
 function okAns(inp,correct,isRu){const n=canonQ(inp);if(!n)return false;const c=canonQ(correct);if(c===n||(!isRu&&n==='to'+c))return true;return isRu&&correct.split(/[,;\/]/).some(v=>canonQ(v)===n);}
 /* edit distance (counts a swap of two neighbours as one slip, like "recieve") */
 function lev(a,b){
