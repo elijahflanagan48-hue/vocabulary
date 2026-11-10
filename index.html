@@ -2489,12 +2489,21 @@ async function authInit(){
 const PKEY='vocab.profile';
 async function onSignedIn(user){
   AUTH.user=user;AUTH.ready=true;
+  try{AUTH.isOwner=localStorage.getItem('vocab.own')===user.id;}catch(e){AUTH.isOwner=false;}
   try{const c=JSON.parse(localStorage.getItem(PKEY)||'null');if(c&&c.id===user.id)AUTH.profile=c;}catch(e){}
   try{
     const {data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();
     if(data){AUTH.profile=data;try{localStorage.setItem(PKEY,JSON.stringify(data));}catch(e){}
       if(mergePrefsFrom(data))save();}
   }catch(e){}
+  if(AUTH.profile&&AUTH.profile.role==='teacher'&&sb){
+    sb.rpc('is_owner').then(r=>{
+      if(!r||r.error)return;
+      const v=!!r.data;AUTH.ownChecked=true;
+      try{if(v)localStorage.setItem('vocab.own',user.id);else localStorage.removeItem('vocab.own');}catch(e){}
+      if(v!==!!AUTH.isOwner){AUTH.isOwner=v;softRender();}
+    }).catch(()=>{});
+  }else{AUTH.isOwner=false;AUTH.ownChecked=true;}
   let stP=null;
   if(AUTH.profile&&AUTH.profile.role==='teacher'){
     const c=stCacheLoad();
@@ -2598,7 +2607,7 @@ async function doSignOut(){
   liveStop();
   try{await pushDrop();}catch(e){}
   try{await sb.auth.signOut();}catch(e){}
-  try{localStorage.removeItem(PKEY);localStorage.removeItem('vocab.stc');}catch(e){}
+  try{localStorage.removeItem(PKEY);localStorage.removeItem('vocab.stc');localStorage.removeItem('vocab.own');}catch(e){}
   AUTH={user:null,profile:null,ready:true,students:[]};TC.students=null;TC.owner={};
   closeSheet();go('home');toast(t('Signed out'));
 }
@@ -2616,6 +2625,10 @@ function drawAuth(){
    <div class="field"><label>${t('Email')}</label><input class="inp" id="aEmail" type="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="${t('you@example.com')}"></div>
    <div class="field"><label>${t('Password')}</label><input class="inp" id="aPass" type="password" placeholder="${authTab===('signup')?t('At least 8 characters'):'••••••••'}"></div>
    ${authTab==='signin'?`<button class="linkbtn" onclick="forgotSheet()">${t('Forgot password?')}</button>`:''}
+   ${authTab==='signup'?`<button class="linkbtn" type="button" onclick="authInvToggle()">${t('I am a teacher')}</button>
+     <div class="field" id="aInvBox" style="display:none"><label>${t('Teacher invite code')}</label>
+       <input class="inp" id="aInv" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="20" placeholder="XXXX-XXXX-XXXX" style="text-transform:uppercase;letter-spacing:.08em">
+       <div class="hint">${t('Teacher accounts are created only with a code from the service owner.')}</div></div>`:''}
    <div class="err" id="aErr"></div>
    <button class="btn pri" id="aBtn" onclick="submitAuth()">${authTab==='signup'?t('Create account'):t('Sign in')}</button>
    <div class="hint" style="text-align:center;margin-top:12px">${t('An account syncs your words across devices. Using the app without one keeps everything on this device only.')}</div>`);
@@ -2667,8 +2680,15 @@ async function saveNewPass(){
     closeSheet();toast(t('Password changed ✓'));
   }catch(e){err.textContent=authErrMsg(e);btn.disabled=false;}
 }
+function authInvToggle(){
+  const b=$('#aInvBox');if(!b)return;
+  const on=b.style.display==='none';b.style.display=on?'':'none';
+  if(on){const e=$('#aInv');if(e)e.focus();}
+}
 function authErrMsg(e){
   const m=(e&&e.message)||'';
+  if(/INVITE_EMPTY/.test(m))return t('Enter the invite code');
+  if(/INVITE_BAD/.test(m))return t('This invite code is not valid or was already used');
   if(/already registered|already exists|User already/i.test(m))return t('This email is already registered — sign in instead.');
   if(/Invalid login/i.test(m))return t('Wrong email or password.');
   if(/least \d+|Password should/i.test(m))return t('Password must be at least 8 characters.');
@@ -2685,9 +2705,19 @@ async function submitAuth(){
   try{
     if(authTab==='signup'){
       const name=(($('#aName')||{}).value||'').trim()||email.split('@')[0];
-      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{display_name:name}}});
+      const meta={display_name:name};
+      const invBox=$('#aInvBox');
+      if(invBox&&invBox.style.display!=='none'){
+        const inv=(($('#aInv')||{}).value||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+        if(!inv)throw new Error('INVITE_EMPTY');
+        const ck=await sb.rpc('check_teacher_invite',{_code:inv});
+        if(ck.error)throw ck.error;
+        if(!ck.data)throw new Error('INVITE_BAD');
+        meta.invite=inv;
+      }
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:meta}});
       if(error)throw error;
-      if(data&&data.session){closeSheet();toast(t('Account created ✓'));}
+      if(data&&data.session){closeSheet();toast(meta.invite?t('Teacher account created ✓'):t('Account created ✓'));}
       else{closeSheet();toast(t('Check your email to confirm, then sign in'));}
     }else{
       const {error}=await sb.auth.signInWithPassword({email,password:pass});
@@ -2987,6 +3017,8 @@ me(app){
     ${pushRow()}
     <div class="subhead" style="margin-top:16px"><span class="t">${t('Interface')}</span></div>`+
    settingsHtml()+
+   (AUTH.isOwner?`<div class="subhead" style="margin-top:16px"><span class="t">${t('Service owner')}</span></div>
+    <button class="rowlink" onclick="ownOpen()"><span>${ic('users',19)}${t('Teachers')}</span>${ic('right',18)}</button>`:'')+
    `<div class="subhead" style="margin-top:16px"><span class="t">${t('Data')}</span></div>
     <div class="stack">
       <button class="btn" onclick="exportData()">${ic('download',18)}${t('Backup (all lists)')}</button>
@@ -8889,7 +8921,7 @@ function pushRow(){
   return `<button class="rowlink" onclick="pushSheet()"><span>${ic('sound',19)}${t('Reminders')}</span><em>${st==='on'?t('on'):t('off')}</em></button>`;
 }
 /* a tap on a notification (or ?go=… in the address) opens the right screen */
-const DEEP={td:['today',{}],pw:['progress',{tab:'week',w:0}],pl:['progress',{tab:'week',w:-1}],pm:['progress',{tab:'cal',m:-1}],st:['students',{}]};
+const DEEP={td:['today',{}],pw:['progress',{tab:'week',w:0}],pl:['progress',{tab:'week',w:-1}],pm:['progress',{tab:'cal',m:-1}],st:['students',{}],ow:['owner',{}]};
 function deepGo(code){const d=DEEP[code];if(!d)return false;go(d[0],Object.assign({},d[1]));return true;}
 function deepBoot(){
   try{
@@ -8906,6 +8938,152 @@ Object.assign(RU_DICT,{"Reminders":"Напоминания","Sign in to get remi
 Object.assign(RU_DICT,{"Pick in the list by numbers":"Выбрать по номерам в списке","Tap the number of the first word":"Нажмите на номер первого слова","Now tap the number of the last word":"Теперь нажмите на номер последнего слова"});
 Object.assign(RU_DICT,{"To list":"В список","Move to list":"Перенести в список","Moved":"Перенесено","already there":"уже были в списке","Select words first":"Сначала выберите слова","No other lists in this language yet — create one above.":"Других списков на этом языке пока нет — создайте новый выше."});
 Object.assign(RU_DICT,{"Assignment reminders":"Напоминания о заданиях","At 10:00: the day before a deadline, on the day, and the day after. A teacher is told when a student passes.":"В 10:00: за день до срока, в день срока и на следующий день. Учителю приходит уведомление, когда ученик сдал задание."});
+/* ================= owner panel: teachers and invite codes ================= */
+const OWN={teachers:null,invites:null,at:0,busy:false,err:''};
+const ownFmtCode=c=>String(c||'').replace(/(.{4})(?=.)/g,'$1-');
+const ownDay=ts=>{try{return new Date(ts).toLocaleDateString(uiEn()?'en-GB':'ru-RU',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '';}};
+function ownOpen(){OWN.at=0;OWN.err='';go('owner');}
+async function ownLoad(force){
+  if(!AUTH.isOwner||!sb||OWN.busy)return;
+  if(!force&&OWN.teachers&&Date.now()-OWN.at<20000)return;
+  OWN.busy=true;OWN.err='';topLoad(true);
+  try{
+    await ensureAuth();
+    const [a,b]=await Promise.all([sb.rpc('owner_list_teachers'),sb.rpc('owner_list_invites')]);
+    if(a.error||b.error)throw (a.error||b.error);
+    OWN.teachers=a.data||[];OWN.invites=b.data||[];OWN.at=Date.now();
+  }catch(e){OWN.err=(e&&e.message)||t('Something went wrong');}
+  OWN.busy=false;topLoad(false);
+  if(view.name==='owner')render();
+}
+VIEWS.owner=function(app){
+  const head=hdr(t('Teachers'),"go('me')",AUTH.isOwner?`<button class="ic" aria-label="Refresh" onclick="OWN.err='';ownLoad(true)">${ic('sync')}</button><button class="ic" aria-label="New code" onclick="ownInviteSheet()">${ic('plus')}</button>`:'');
+  if(!AUTH.isOwner){
+    app.innerHTML=head+`<div class="empty"><div class="big">${ic('key',26)}</div><b>${AUTH.user&&!AUTH.ownChecked?t('Loading…'):t('Owner only')}</b></div>`;
+    return;
+  }
+  if(!OWN.busy&&!OWN.err&&(!OWN.teachers||Date.now()-OWN.at>20000))ownLoad();
+  app.innerHTML=head+`<div id="ownBody">${ownHtml()}</div>`;
+};
+function ownHtml(){
+  if(OWN.err&&!OWN.teachers)return `<div class="err">${esc(OWN.err)}</div>`;
+  if(!OWN.teachers)return skel(4);
+  const ts=OWN.teachers,iv=OWN.invites||[];
+  const rows=ts.map(x=>{
+    const nm=x.name||x.email||'—',seen=+x.last_seen||0;
+    const stale=!seen||(Date.now()-seen)>14*DAY;
+    return `<div class="roster" onclick="ownTeacherSheet('${x.id}')">
+      <div class="av"${stale?' style="background:var(--line2);color:var(--mut)"':''}>${esc(nm.trim().charAt(0).toUpperCase()||'?')}</div>
+      <div class="t"><div class="nm">${esc(nm)}${x.is_owner?' · '+t('Owner'):''}</div>
+        <div class="meta">${t('Students')}: ${x.students}${x.students?` (${x.active7} ${t('this week')})`:''} · ${t('Words total')}: ${x.words}</div>
+        <div class="meta" style="color:${stale?'var(--bad)':'var(--ok)'};font-weight:650">${seenTxt(seen)}</div></div>${ic('right',18)}</div>`;
+  }).join('');
+  const irows=iv.map(i=>{
+    const act=i.status==='active';
+    const sub=i.status==='used'?`${t('Used by')} ${esc(i.used_name||'—')} · ${ownDay(i.used_at)}`
+      :act?`${t('Valid until')} ${ownDay(i.expires_at)}`
+      :i.status==='expired'?t('Expired'):t('Revoked');
+    return `<div class="roster" style="cursor:default${act?'':';opacity:.6'}">
+      <div class="t"><div class="nm" style="letter-spacing:.06em;font-variant-numeric:tabular-nums">${esc(ownFmtCode(i.code))}</div>
+        <div class="meta">${i.note?esc(i.note)+' · ':''}${sub}</div></div>
+      ${act?`<button class="ic" aria-label="Copy" onclick="ownCopyInvite('${i.id}')">${ic('send',19)}</button><button class="ic" style="color:var(--bad)" aria-label="Revoke" onclick="ownRevokeInvite('${i.id}')">${ic('trash',19)}</button>`:''}</div>`;
+  }).join('');
+  return `<div class="subhead"><span class="t">${t('Teachers')} · ${ts.length}</span></div>${rows}
+    <div class="subhead" style="margin-top:18px"><span class="t">${t('Invite codes')}</span></div>
+    <button class="btn" style="margin-bottom:10px" onclick="ownInviteSheet()">${ic('plus',18)}${t('New invite code')}</button>
+    ${irows||`<div class="hint">${t('No codes yet')}</div>`}`;
+}
+function ownCopyText(txt){
+  const done=()=>toast(t('Copied'));
+  const fb=()=>{try{const a=document.createElement('textarea');a.value=txt;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();done();}catch(e){}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fb);else fb();
+}
+function ownInviteMsg(code,until){
+  const url=location.origin+location.pathname.replace(/index\.html$/,'');
+  return uiEn()
+    ?`Teacher invite for NOEON Words: ${ownFmtCode(code)}\nOpen ${url}, tap Sign up → “I am a teacher” and enter the code. One-time code, valid until ${ownDay(until)}.`
+    :`Код учителя для NOEON Words: ${ownFmtCode(code)}\nОткройте ${url}, нажмите «Регистрация» → «Я учитель» и введите код. Код одноразовый, действует до ${ownDay(until)}.`;
+}
+function ownCopyInvite(id){
+  const i=(OWN.invites||[]).find(x=>x.id===id);if(!i)return;
+  ownCopyText(ownInviteMsg(i.code,i.expires_at));
+}
+function ownInviteSheet(){
+  sheet(`<h2>${t('New invite code')}</h2>
+   <div class="hint">${t('One code — one teacher. Send it to the person; they tick “I am a teacher” when signing up.')}</div>
+   <div class="field"><label>${t('Who is it for? (only you see this)')}</label><input class="inp" id="ivNote" maxlength="80" placeholder="${t('e.g. Anna, colleague')}"></div>
+   <div class="field"><label>${t('Valid for')}</label><select class="inp" id="ivDays" style="min-height:0;height:50px"><option value="7">7 ${t('days')}</option><option value="14" selected>14 ${t('days')}</option><option value="30">30 ${t('days')}</option></select></div>
+   <div class="err" id="ivErr"></div>
+   <button class="btn pri" id="ivBtn" onclick="ownCreateInvite()">${t('Create')}</button>`);
+  setTimeout(()=>{const e=$('#ivNote');if(e)e.focus();},60);
+}
+async function ownCreateInvite(){
+  const note=(($('#ivNote')||{}).value||'').trim(),days=+(($('#ivDays')||{}).value)||14;
+  const err=$('#ivErr'),btn=$('#ivBtn');err.textContent='';btn.disabled=true;
+  try{
+    await ensureAuth();
+    const {data,error}=await sb.rpc('owner_create_invite',{_note:note,_days:days});
+    if(error)throw error;
+    const until=Date.now()+days*DAY;
+    sheet(`<h2>${t('Invite code')}</h2>
+      <div class="codebox"><b style="font-size:23px">${esc(ownFmtCode(data))}</b></div>
+      <div class="hint">${t('Valid until')} ${ownDay(until)} · ${t('works once')}</div>
+      <div class="stack" style="margin-top:8px">
+        <button class="btn pri" onclick="ownCopyText(ownInviteMsg('${esc(data)}',${until}))">${ic('send',18)}${t('Copy message for the teacher')}</button>
+        <button class="btn ghost" onclick="closeSheet()">${t('Done')}</button></div>`);
+    ownLoad(true);
+  }catch(e){err.textContent=(e&&e.message)||t('Something went wrong');btn.disabled=false;}
+}
+async function ownRevokeInvite(id){
+  if(!confirm(t('Revoke this code? It will stop working.')))return;
+  try{
+    await ensureAuth();
+    const {error}=await sb.rpc('owner_revoke_invite',{_id:id});
+    if(error)throw error;
+    toast(t('Code revoked'));ownLoad(true);
+  }catch(e){toast((e&&e.message)||t('Something went wrong'));}
+}
+function ownTeacherSheet(id){
+  const x=(OWN.teachers||[]).find(r=>r.id===id);if(!x)return;
+  const kv=(l,v)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 2px;border-bottom:1px solid var(--line)"><span style="color:var(--mut)">${l}</span><b style="text-align:right">${v}</b></div>`;
+  sheet(`<h2>${esc(x.name||x.email||'—')}</h2>
+    <div class="hint">${esc(x.email||'')}${x.is_owner?' · '+t('Owner'):''}</div>
+    ${kv(t('Registered'),ownDay(x.joined))}
+    ${kv(t('Activity'),esc(seenTxt(+x.last_seen||0)))}
+    ${kv(t('Students'),`${x.students}${x.students?` (${x.active7} ${t('this week')})`:''}`)}
+    ${kv(t('Words total'),x.words)}
+    ${kv(t('Library sets'),x.lib_sets)}
+    ${kv(t('Assignments'),x.assignments)}
+    ${kv(t('Teacher code'),esc(x.teacher_code||'—'))}
+    <div class="stack" style="margin-top:14px">
+      ${x.is_owner?'':`<button class="btn danger" onclick="ownRevokeTeacher('${x.id}')">${ic('trash',18)}${t('Remove teacher rights')}</button>`}
+      <button class="btn ghost" onclick="closeSheet()">${t('Close')}</button></div>`);
+}
+async function ownRevokeTeacher(id){
+  const x=(OWN.teachers||[]).find(r=>r.id===id);if(!x)return;
+  if(!confirm(t('Remove teacher rights? The account becomes a regular student account, its students are unlinked (their words stay with them). To restore it you will need a new invite code.')+'\n\n'+(x.name||x.email||'')))return;
+  try{
+    await ensureAuth();
+    const {error}=await sb.rpc('owner_revoke_teacher',{_id:id});
+    if(error)throw error;
+    closeSheet();toast(t('Teacher rights removed'));ownLoad(true);
+  }catch(e){toast((e&&e.message)||t('Something went wrong'));}
+}
+Object.assign(RU_DICT,{
+ "I am a teacher":"Я учитель","Teacher invite code":"Код приглашения учителя",
+ "Teacher accounts are created only with a code from the service owner.":"Аккаунт учителя создаётся только по коду от владельца сервиса.",
+ "Enter the invite code":"Введите код приглашения","This invite code is not valid or was already used":"Код не подходит или уже использован",
+ "Teacher account created ✓":"Аккаунт учителя создан ✓","Service owner":"Владелец сервиса","Teachers":"Учителя","Owner":"Владелец","Owner only":"Только для владельца",
+ "Words total":"Слов всего","Used by":"Использовал","Valid until":"Действует до","Expired":"Срок истёк","Revoked":"Отозван","Invite codes":"Коды приглашения",
+ "New invite code":"Новый код приглашения","No codes yet":"Кодов пока нет","Invite code":"Код приглашения","works once":"одноразовый",
+ "One code — one teacher. Send it to the person; they tick “I am a teacher” when signing up.":"Один код — один учитель. Отправьте его человеку: при регистрации он отмечает «Я учитель» и вводит код.",
+ "Who is it for? (only you see this)":"Для кого код? (видите только вы)","e.g. Anna, colleague":"например, Анна, коллега","Valid for":"Срок действия",
+ "Copy message for the teacher":"Скопировать сообщение для учителя","Revoke this code? It will stop working.":"Отозвать код? Он перестанет работать.","Code revoked":"Код отозван",
+ "Registered":"Зарегистрирован","Activity":"Активность","Library sets":"Наборов в библиотеке","Assignments":"Заданий","Teacher code":"Код учителя для учеников",
+ "Remove teacher rights":"Снять права учителя","Teacher rights removed":"Права учителя сняты",
+ "Remove teacher rights? The account becomes a regular student account, its students are unlinked (their words stay with them). To restore it you will need a new invite code.":"Снять права учителя? Аккаунт станет обычным ученическим, его ученики будут отвязаны (слова остаются у них). Чтобы вернуть права, понадобится новый код приглашения."
+});
+
 const TEACH_VIEWS=['students','tsets','twords','tsaccess','tan','tprog'];
 function viewSave(){try{
   const lv=(view.name==='libset'&&LV&&LV.src!=='link'&&LV.set)?{src:LV.src,id:LV.set.id,cid:LV.set.cid||'',back:LV.back||''}:null;
