@@ -2147,11 +2147,9 @@ function irregOf(txt){
   return(r&&r.past.includes(w[1])&&r.pp.includes(w[2]))?{base:w[0],forms:w.join(' ')}:null;
 }
 async function translateVerb(bare){
-  const u=q=>'https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&dt=bd&q='+encodeURIComponent(q);
   try{
-    const [a,b]=await Promise.all([fetch(u(bare)),fetch(u('to '+bare))]);
-    if(!a.ok)return null;
-    const ja=await a.json(),jb=b.ok?await b.json():null;
+    const [ja,jb]=await Promise.all([gtxJson('en',bare),gtxJson('en','to '+bare)]);
+    if(!ja)return null;
     const main=j=>((j&&j[0])||[]).map(x=>x[0]).join('').trim();
     const verbs=(ja[1]||[]).filter(e=>/verb|глагол/i.test(e[0]||'')).flatMap(e=>e[1]||[]);
     const all=[...verbs,main(ja),cleanPrep(main(jb))].map(cleanPrep).filter(x=>x);
@@ -2170,17 +2168,44 @@ async function translate(txt,lang){
   for(const p of order){
     try{
       if(p==='google'){
-        const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+src+'&tl=ru&dt=t&dt=bd&q='+encodeURIComponent(txt));
-        if(!r.ok)continue;const j=await r.json();const main=(j[0]||[]).map(x=>x[0]).join('').trim();
+        const j=await gtxJson(src,txt);if(!j)continue;
+        const main=(j[0]||[]).map(x=>x[0]).join('').trim();
         const alts=(j[1]||[]).flatMap(e=>e[1]||[]).filter(x=>x&&x.toLowerCase()!==main.toLowerCase()).slice(0,6);
         if(main)return{main:(src==='en'&&/^to\s/i.test(txt.trim()))?(cleanPrep(main)||main):main,alts,groups:bdGroups(j[1],txt,src==='en'&&/^to\s/i.test(txt.trim()))};
       }else{
-        const r=await fetch('https://api.mymemory.translated.net/get?langpair='+src+'|ru&q='+encodeURIComponent(txt));
+        const r=await fetchT('https://api.mymemory.translated.net/get?langpair='+src+'|ru&q='+encodeURIComponent(txt),6000);
         if(!r.ok)continue;const j=await r.json();const main=(j.responseData.translatedText||'').trim();
-        const alts=[...new Set((j.matches||[]).map(m=>m.translation).filter(x=>x&&x.toLowerCase()!==main.toLowerCase()))].slice(0,5);
-        if(main&&!/^[A-Z\s]+$/.test(main))return{main,alts};
+        /* MyMemory is a crowd translation memory: for a single word it returns junk ("weather condition", "Стаб."), so only a Russian sentence-level answer is used, and its “matches” only for longer phrases from good-quality entries */
+        const multi=txt.trim().split(/\s+/).length>2;
+        if(!mmOk(main,txt)||(!multi&&S.settings.prov!=='mm'))continue;   /* single words: better to say “enter it yourself” than to suggest junk */
+        const alts=multi?[...new Set((j.matches||[]).filter(m=>+m.quality>=80&&+m.match>=0.95&&m['created-by']!=='Public_Corpora').map(m=>String(m.translation||'').trim()).filter(x=>mmOk(x,txt)&&x.toLowerCase()!==main.toLowerCase()))].slice(0,3):[];
+        return{main,alts};
       }
     }catch(e){}
+  }
+  return null;
+}
+/* a usable MyMemory answer: Cyrillic, not an abbreviation, not the English echoed back */
+function mmOk(x,src){
+  x=String(x||'').trim();
+  if(!x||!/[а-яё]/i.test(x)||/[a-z]{3,}/i.test(x)&&!/[а-яё]{3,}/i.test(x))return false;
+  if(/^[\p{L}]{1,6}\.$/u.test(x))return false;
+  if(x.toLowerCase()===String(src||'').trim().toLowerCase())return false;
+  return true;
+}
+function fetchT(u,ms){const c=new AbortController(),tm=setTimeout(()=>c.abort(),ms||6000);return fetch(u,{signal:c.signal}).finally(()=>clearTimeout(tm));}
+/* Google dictionary answer, with a small cache on the device, one retry, and the app's own server as a fallback when the phone can't reach Google (rate limit, blocked network) */
+const GTXKEY='noeon.gtx.v1';let GTXC=null;
+function gtxCache(){if(!GTXC){try{GTXC=JSON.parse(localStorage.getItem(GTXKEY)||'{}')||{};}catch(e){GTXC={};}}return GTXC;}
+function gtxPut(k,j){const c=gtxCache();c[k]=[Date.now(),j];const ks=Object.keys(c);if(ks.length>400)ks.sort((a,b)=>c[a][0]-c[b][0]).slice(0,ks.length-400).forEach(x=>delete c[x]);try{localStorage.setItem(GTXKEY,JSON.stringify(c));}catch(e){}}
+async function gtxJson(src,txt){
+  const q=String(txt||'').trim();if(!q)return null;
+  const k=src+'|'+q.toLowerCase(),short=q.length<=60;
+  const c=short&&gtxCache()[k];if(c&&Date.now()-c[0]<30*864e5)return c[1];
+  const direct='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+src+'&tl=ru&dt=t&dt=bd&q='+encodeURIComponent(q);
+  const tries=[direct,direct.replace('client=gtx','client=dict-chrome-ex'),SB_URL+'/functions/v1/tr?sl='+src+'&tl=ru&q='+encodeURIComponent(q)];
+  for(const u of tries){
+    try{const r=await fetchT(u,5000);if(!r.ok)continue;const j=await r.json();if(Array.isArray(j)&&Array.isArray(j[0])){if(short)gtxPut(k,j);return j;}}catch(e){}
   }
   return null;
 }
