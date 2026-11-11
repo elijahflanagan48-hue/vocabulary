@@ -1857,7 +1857,9 @@ const IS_WIN=/Windows/i.test(navigator.userAgent||'');
 let _asT=0;
 /* v147: the 'playback' audio category lets a spoken word be heard with the iPhone silent switch on, but iOS shows a “now playing” player while it is active —
    so it is switched on only for the moment a word is being spoken and back to 'auto' as soon as it ends. Never held for effects or idle taps. */
-function audSess(on){try{if(navigator.audioSession&&navigator.audioSession.type!=='auto')navigator.audioSession.type='auto';}catch(e){}}   /* v158: never 'playback' — words now play through the page's own sound engine, which needs no special category and leaves no player */
+function audSess(on){try{if(navigator.audioSession&&navigator.audioSession.type!=='auto')navigator.audioSession.type='auto';}catch(e){}}
+/* the silent switch is bypassed only while a word is actually sounding (a second or so), then the page goes back to 'auto' and the player is cleared */
+function audPlayback(on){try{if(navigator.audioSession)navigator.audioSession.type=on?'playback':'auto';}catch(e){}}   /* v158: never 'playback' — words now play through the page's own sound engine, which needs no special category and leaves no player */
 /* a finished online voice must not leave a player behind */
 function noPlayer(a){try{const ms=navigator.mediaSession;if(!ms)return;const clr=()=>{try{ms.metadata=null;ms.playbackState='none';}catch(e){}};if(a){a.addEventListener('ended',clr);a.addEventListener('pause',clr);}clr();}catch(e){}}
 audSess();
@@ -1888,7 +1890,7 @@ function ttsPlay(txt,tag){
     try{if(_tsrc)_tsrc.stop();}catch(e){}
     const src=CAU.ctx.createBufferSource(),g=CAU.ctx.createGain();src.buffer=buf;g.gain.value=1;
     if(rate&&rate<.9)src.playbackRate.value=Math.max(.6,rate/.9);
-    src.connect(g);g.connect(CAU.ctx.destination);_tsrc=src;src.addEventListener('ended',()=>{try{const ms=navigator.mediaSession;if(ms){ms.metadata=null;ms.playbackState='none';}}catch(e){}});src.start();return true;
+    src.connect(g);g.connect(CAU.ctx.destination);_tsrc=src;audPlayback(true);src.addEventListener('ended',()=>{if(_tsrc===src){audPlayback(false);setTimeout(()=>{try{const ms=navigator.mediaSession;if(ms){ms.metadata=null;ms.playbackState='none';}}catch(e){}},200);}});src.start();return true;
   }).catch(()=>false);
 }
 function ttsPre(txt,lang){if(!IS_IOS||!txt||!CAU.ctx)return;try{const tag=ttsTag(lang);if(tag)ttsGet(String(txt),tag).catch(()=>{});}catch(e){}}
