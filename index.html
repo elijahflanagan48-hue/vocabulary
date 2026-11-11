@@ -9040,7 +9040,6 @@ async function startSent(review){
       $('#sxsp').onclick=()=>speak(g.s,lg);
       $('#nx').onclick=()=>{i++;next();};
       setTimeout(()=>{const b=$('#nx');if(b)b.focus();},40);
-      speak(g.s,lg);
     };
     if(kind==='mc')qb.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
       if(done)return;const x=[w,...opts].find(o=>String(o.id)===b.dataset.id);const ok=x===w;
