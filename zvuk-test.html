@@ -17,6 +17,7 @@ button b{display:inline-block;width:28px;color:#7db4ff}button small{display:bloc
 <button onclick="t7()"><b>7</b>Тихий фоновый сигнал + встроенный голос<small>голос на 3 секунды позже включения сигнала</small></button>
 <button onclick="t8()"><b>8</b>Запись из словаря через звуковой движок</button>
 <button onclick="t9()"><b>9</b>Запись Google через звуковой движок</button>
+<button onclick="t10()"><b>10</b>Слово через сервер приложения → звуковой движок</button>
 <div id="log"></div>
 <script>
 const L=m=>{document.getElementById('log').textContent+=m+'\n';};
@@ -37,4 +38,5 @@ function t7(){AS(false);const c=ctx();const o=c.createOscillator(),g=c.createGai
 async function viaCtx(url,n){AS(false);const c=ctx();try{const r=await fetch(url);if(!r.ok)return L(n+': HTTP '+r.status);const ab=await r.arrayBuffer();const buf=await new Promise((ok,no)=>c.decodeAudioData(ab,ok,no));const s=c.createBufferSource();s.buffer=buf;s.connect(c.destination);s.start();L(n+': играет ('+buf.duration.toFixed(1)+' с)');}catch(e){L(n+': '+(e&&e.message||e));}}
 async function t8(){try{const j=await (await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/hello')).json();const u=j.flatMap(e=>e.phonetics||[]).map(p=>p.audio).find(Boolean);if(!u)return L('словарь: нет записи');L('адрес: '+u);viaCtx(u,'словарь→движок');}catch(e){L('словарь: '+e.message);}}
 function t9(){viaCtx('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=hello%2C%20this%20is%20a%20test','Google→движок');}
+function t10(){viaCtx('https://sbpqwwsnvbpfwqoxfpza.supabase.co/functions/v1/tts?tl=en-US&q=hello','сервер→движок');}
 </script></body></html>

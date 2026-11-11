@@ -1863,6 +1863,35 @@ function noPlayer(a){try{const ms=navigator.mediaSession;if(!ms)return;const clr
 audSess();
 function audHold(ms){audSess(true);clearTimeout(_asT);_asT=setTimeout(()=>audSess(false),ms||20000);}
 function audRelease(){}
+/* iPhone: the built-in voice and <audio> files are muted by the silent switch (and files from other sites do not load there), but the page's own
+   sound engine is not. So the spoken word is fetched through our own small server function as an audio file and played by that engine. */
+const TTSB=new Map();
+function ttsUrl(txt,tag){const base=(tag||'en').split('-')[0];const tl=base==='en'?(tag==='en-GB'?'en-GB':'en-US'):base;return SB_URL+'/functions/v1/tts?tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(txt);}
+function ttsGet(txt,tag){
+  const k=(tag||'')+'|'+txt;const hit=TTSB.get(k);if(hit)return hit;
+  const c=CAU.ctx;if(!c)return Promise.reject(new Error('no engine'));
+  const p=(async()=>{
+    const ac=new AbortController(),to=setTimeout(()=>ac.abort(),6000);
+    try{const r=await fetch(ttsUrl(txt,tag),{signal:ac.signal});if(!r.ok)throw new Error('http '+r.status);
+      const ab=await r.arrayBuffer();return await new Promise((ok,no)=>c.decodeAudioData(ab,ok,no));}
+    finally{clearTimeout(to);}
+  })();
+  TTSB.set(k,p);p.catch(()=>TTSB.delete(k));
+  if(TTSB.size>150)TTSB.delete(TTSB.keys().next().value);
+  return p;
+}
+let _tsrc=null;
+function ttsPlay(txt,tag){
+  if(!CAU.ensure())return Promise.resolve(false);          /* inside the tap: wakes the engine */
+  const rate=(typeof RATE_OV!=='undefined'&&RATE_OV)||0;
+  return ttsGet(txt,tag).then(buf=>{
+    try{if(_tsrc)_tsrc.stop();}catch(e){}
+    const src=CAU.ctx.createBufferSource(),g=CAU.ctx.createGain();src.buffer=buf;g.gain.value=1;
+    if(rate&&rate<.9)src.playbackRate.value=Math.max(.6,rate/.9);
+    src.connect(g);g.connect(CAU.ctx.destination);_tsrc=src;src.start();return true;
+  }).catch(()=>false);
+}
+function ttsPre(txt,lang){if(!IS_IOS||!txt||!CAU.ctx)return;try{const tag=ttsTag(lang);if(tag)ttsGet(String(txt),tag).catch(()=>{});}catch(e){}}
 /* iPhone: the built-in voice obeys the silent switch unless the page is in the media category at the moment of the tap.
    A short silent clip (once per tap, never looping) puts it there; it ends by itself in a fraction of a second, so no player stays on screen. */
 let _kick=null;
@@ -1900,6 +1929,11 @@ function speak(txt,lang){try{
   audHold();
   const tag=ttsTag(lang);if(!tag)return;            /* Latin and the like: no voice to ask for */
   const pick=chosenVoice(tag),v=bestVoice(tag);
+  if(IS_IOS&&navigator.onLine!==false){            /* see ttsPlay */
+    try{speechSynthesis.cancel();}catch(e){}
+    ttsPlay(txt,tag).then(ok=>{if(!ok)speakDevice(txt,tag,v);});
+    return;
+  }
   const weak=pick==='online'||(!pick&&(!v||(IS_WIN&&vScore(v)<30&&!/online|natural/i.test(v.name||''))||(IS_IOS&&!navigator.audioSession)));
   if(weak&&!IS_IOS&&navigator.onLine!==false){   /* iPhone never uses the online file: it does not play there, and the fallback after a failed try loses the tap that allows speech */
     speechSynthesis.cancel();
@@ -5993,6 +6027,7 @@ function qLabel(q){
     :(multiLang()?t('Choose the word')+' '+langPrep(lg):t('Choose the word'));
 }
 function renderQ(box,q,o){
+  ttsPre(q.w.en,q.lg||langOf(q.w));
   const w=q.w,en2ru=q.dir==='en2ru',prompt=en2ru?w.en:w.ru,answer=en2ru?w.ru:w.en;
   let lbl=qLabel(q);
   let h=`<div class="card" style="min-height:min(34vh,200px)"><div class="lbl">${lbl}</div>
@@ -6044,7 +6079,7 @@ function startCards(review){
       celPlay();
       if(unknown.length)$('#rep').onclick=()=>{deck=shuffle(unknown);unknown=[];i=0;total=deck.length;flip=false;draw();};return;
     }
-    const w=deck[i];const front=dir==='en'?w.en:w.ru,back=dir==='en'?w.ru:w.en;
+    const w=deck[i];const front=dir==='en'?w.en:w.ru,back=dir==='en'?w.ru:w.en;ttsPre(w.en,langOf(w));
     app.innerHTML=hdr(t('Flashcards'),"render()",`<button class="ic" aria-label="Flip side" onclick="window._flip()">${ic('swap')}</button>`)+
      `<div class="topbar"><div class="pbar"><i style="width:${i/deck.length*100}%"></i></div><span class="stat">${i+1}/${deck.length}</span></div>
       <div class="fc"><div class="card" id="cd">
