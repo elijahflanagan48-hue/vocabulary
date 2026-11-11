@@ -1855,12 +1855,14 @@ function bestVoice(tag){
 const IS_WIN=/Windows/i.test(navigator.userAgent||'');
 /* the ring/silent switch of a phone must not mute words: ask the system for the "playback" audio category while we speak */
 let _asT=0;
-/* v145: never switch the page to the 'playback' audio category — iOS then shows a “now playing” player. The session stays on 'auto'. */
-function audSess(on){try{if(navigator.audioSession&&navigator.audioSession.type!=='auto')navigator.audioSession.type='auto';}catch(e){}}
+/* v147: the 'playback' audio category lets a spoken word be heard with the iPhone silent switch on, but iOS shows a “now playing” player while it is active —
+   so it is switched on only for the moment a word is being spoken and back to 'auto' as soon as it ends. Never held for effects or idle taps. */
+function audSess(on){try{if(navigator.audioSession)navigator.audioSession.type=on?'playback':'auto';}catch(e){}}
 /* a finished online voice must not leave a player behind */
 function noPlayer(a){try{const ms=navigator.mediaSession;if(!ms)return;const clr=()=>{try{ms.metadata=null;ms.playbackState='none';}catch(e){}};if(a){a.addEventListener('ended',clr);a.addEventListener('pause',clr);}clr();}catch(e){}}
 audSess();
-function audHold(ms){audSess(true);clearTimeout(_asT);_asT=setTimeout(()=>audSess(false),ms||20000);}
+function audHold(ms){audSess(true);clearTimeout(_asT);_asT=setTimeout(()=>audSess(false),ms||9000);}
+function audRelease(){clearTimeout(_asT);_asT=setTimeout(()=>{audSess(false);noPlayer();},350);}
 const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let _aud=null;
 function speakOnline(txt,tag){
@@ -1869,7 +1871,7 @@ function speakOnline(txt,tag){
     const tl=base==='en'?(tag==='en-GB'?'en-GB':'en-US'):base;
     if(_aud){try{_aud.pause();}catch(e){}}
     const a=new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(txt));
-    _aud=a;a.volume=1;audHold();noPlayer(a);
+    _aud=a;a.volume=1;audHold();noPlayer(a);a.addEventListener('ended',audRelease);a.addEventListener('error',audRelease);
     return a.play().then(()=>true).catch(()=>false);
   }catch(e){return Promise.resolve(false);}
 }
@@ -1877,7 +1879,7 @@ function speakDevice(txt,tag,v){
   audHold();
   const u=new SpeechSynthesisUtterance(txt);
   u.lang=(v&&v.lang)||tag;u.rate=rateNow();u.pitch=1;
-  if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);
+  if(v)u.voice=v;u.onend=u.onerror=audRelease;speechSynthesis.cancel();speechSynthesis.speak(u);
 }
 function speak(txt,lang){try{
   audHold();
@@ -1891,7 +1893,7 @@ function speak(txt,lang){try{
   }
   const u=new SpeechSynthesisUtterance(txt);
   u.lang=(v&&v.lang)||tag;u.rate=rateNow();u.pitch=1;
-  if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+  if(v)u.voice=v;u.onend=u.onerror=audRelease;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 /* speak a word in the language of the list it belongs to */
 function speakWord(id){const f=findWord(id);if(f)speak(f.w.en,setLangOf(f.s));}
 
@@ -6386,7 +6388,7 @@ const cStarP=(x,y,s)=>(x=+x,y=+y,s=+s,`M${x} ${y-s}L${x+s*.26} ${y-s*.26}L${x+s}
 /* ---------- sound: everything is synthesised, nothing is downloaded ---------- */
 const CAU={ctx:null,out:null,nb:null,
   ensure(){
-    audHold(30000);unmuteIOS();   /* the silent switch must not mute effects either */
+    unmuteIOS();
     if(this.ctx){if(this.ctx.state==='suspended')try{this.ctx.resume();}catch(e){}return true;}
     const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
     try{this.use(new AC());}catch(e){return false;}return true;
