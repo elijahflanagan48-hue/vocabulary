@@ -216,6 +216,11 @@ header h1{flex:1;min-width:0;margin:0;font-family:var(--ff-serif);font-size:25px
 .aklist{max-height:44vh;overflow:auto;margin:10px 0 14px}
 .chk{width:24px;height:24px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none}
 .spk{width:34px;height:34px;flex:none;border-radius:9px;background:transparent;border:1px solid var(--line);color:var(--mut);display:flex;align-items:center;justify-content:center}
+.spkb{width:52px;height:52px;flex:none;border-radius:50%;border:0;background:var(--pri-soft);color:var(--pri);display:flex;align-items:center;justify-content:center;margin:0 auto;cursor:pointer;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pri) 28%,transparent);transition:transform .25s cubic-bezier(.33,1,.68,1),background-color .18s ease}
+.row2>.spkb{flex:none;margin:0}
+.spkb:active{transform:scale(.92);background:var(--pri);color:var(--on-pri)}
+.spkb.pl{animation:spkp .9s ease-out}
+@keyframes spkp{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--pri) 45%,transparent)}100%{box-shadow:0 0 0 16px transparent}}
 .spk{transition:transform .3s cubic-bezier(.33,1,.68,1),background-color .18s ease}
 .spk:active{background:var(--pri-soft);color:var(--pri);transform:scale(.95);transition-duration:.12s}
 
@@ -5218,7 +5223,6 @@ function startConf(key){
         if(ans)return;ans=true;
         const pick=b.dataset.k==='a'?A:B,ok=pick===q.x;
         bumpStudy(q.x.id,ok);
-        speak(q.x.en,lg);
         const right=app.querySelector(`.cftwo [data-k="${q.x===A?'a':'b'}"]`);
         right.classList.remove('ghost');right.classList.add('tfy');
         if(ok){good++;right.classList.add('selp');i++;setTimeout(step,650);return;}
@@ -5989,7 +5993,7 @@ function renderQ(box,q,o){
     const ans=esc(q.type==='tf'?(q.isTrue?t('the match is correct'):t('the match is wrong')):answer);
     f.innerHTML=`<div class="fb ${cls}">${title}${(ok&&!near)?'':`<small>${near?t('Correct spelling: '):t('Answer: ')}${ans}</small>`}</div>`+
       (ok?'':`<button class="btn pri" id="nx">${t("Next")}</button>`);
-    if(!en2ru||q.type==='tf')speak(w.en,q.lg||langOf(w));
+    if(!ok&&(!en2ru||q.type==='tf')){f.insertAdjacentHTML('beforeend',`<button class="spkb" id="fsp" aria-label="${t('Pronounce')}" style="margin:10px auto 0">${ic('sound',24)}</button>`);$('#fsp').onclick=()=>speak(w.en,q.lg||langOf(w));}
     if(ok)setTimeout(()=>o.onDone(ok,given,near),near?1500:620);else $('#nx').onclick=()=>o.onDone(ok,given,near);
   };
   if(q.type==='mc')box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
@@ -6028,7 +6032,7 @@ function startCards(review){
           :`<div class="word">${esc(front)}</div><div class="tip">${t('tap to flip')}</div>`}
       </div></div>
       <div class="row2"><button class="btn" id="no" style="color:var(--bad)">${ic('close',17)}${t("Don't know")}</button><button class="btn" id="yes" style="color:var(--ok)">${ic('check',17,2)}${t('Know')}</button></div>
-      <div style="height:9px"></div><button class="btn ghost" id="sp">${ic('sound')}${t('Pronounce')}</button>`;
+      <div style="height:9px"></div><button class="spkb" id="sp" aria-label="${t('Pronounce')}">${ic('sound',24)}</button>`;
     $('#cd').onclick=()=>{
       const c=$('#cd');
       if(!c||c.classList.contains('fout')){flip=!flip;draw();return;}
@@ -6043,7 +6047,6 @@ function startCards(review){
       step();
     };
     $('#no').onclick=()=>{if(!review){award(w,false);save();}unknown.push(w);i++;flip=false;draw();};
-    if(!flip&&dir==='en')speak(w.en,langOf(w));
   }
   window._flip=()=>{dir=dir==='en'?'ru':'en';flip=false;draw();};
   draw();
@@ -9037,7 +9040,7 @@ async function startSent(review){
       const f=$('#fbx');
       f.innerHTML=`<div class="fb ${ok?'ok':'bad'}">${ok?t('Correct ✓'):t('Wrong')}${ok?'':`<small>${t('Answer: ')}${esc(g.form)}${canonQ(g.form)!==canonQ(w.en)?' ('+esc(w.en)+')':''}</small>`}</div>`+
         (g.ru?`<div class="sxru">${esc(g.ru)}</div>`:'')+
-        `<div class="row2" style="margin-top:12px"><button class="btn ghost" id="sxsp">${ic('sound',18)}${t('Pronounce')}</button><button class="btn pri" id="nx">${t('Next')}</button></div>`;
+        `<div class="row2" style="margin-top:12px"><button class="spkb" id="sxsp" aria-label="${t('Pronounce')}">${ic('sound',24)}</button><button class="btn pri" id="nx">${t('Next')}</button></div>`;
       $('#sxsp').onclick=()=>speak(g.s,lg);
       $('#nx').onclick=()=>{i++;next();};
       setTimeout(()=>{const b=$('#nx');if(b)b.focus();},40);
@@ -9202,7 +9205,7 @@ function bossRun(lg){
       `<div class="ancard" id="bdex" style="display:none"></div><div class="ancard" id="bdfam" style="display:none"></div>
       <button class="btn pri" id="bgo" style="margin-top:6px">${t('Practise · 3 questions')}</button>`;
     window.scrollTo(0,0);
-    $('#bsp').onclick=()=>speak(w.en,lg2);speak(w.en,lg2);
+    $('#bsp').onclick=()=>speak(w.en,lg2);
     const fillEx=g=>{const el=$('#bdex');if(!g||!el)return;el.style.display='';el.innerHTML=`<div class="bdk">${t('In the sentence')}</div><div class="bds">${esc(g.s.slice(0,g.at))}<b>${esc(g.s.substr(g.at,g.len))}</b>${esc(g.s.slice(g.at+g.len))}</div>${g.ru?`<div class="bdsr">${esc(g.ru)}</div>`:''}`;};
     const own=sxOwn(w);if(own)fillEx(own);else sxGet(w).then(g=>{if(L[wi]===w)fillEx(g);}).catch(()=>{});
     if(lg2==='en')famOf(w.en).then(f=>{const el=$('#bdfam');if(!el||L[wi]!==w||!f||!f.length)return;el.style.display='';el.innerHTML=`<div class="bdk">${t('Word family')}</div><div class="bdf">${f.slice(0,8).map(x=>esc(x.w)).join(', ')}</div>`;}).catch(()=>{});
