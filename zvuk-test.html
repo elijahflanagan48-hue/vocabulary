@@ -13,6 +13,10 @@ button b{display:inline-block;width:28px;color:#7db4ff}button small{display:bloc
 <button onclick="t4()"><b>4</b>Аудиозапись из словаря</button>
 <button onclick="t5()"><b>5</b>Сигнал (звук эффектов)</button>
 <button onclick="t6()"><b>6</b>Сигнал + режим «воспроизведение»</button>
+<p style="margin-top:22px">Ещё три проверки (тоже в беззвучном режиме):</p>
+<button onclick="t7()"><b>7</b>Тихий фоновый сигнал + встроенный голос<small>голос на 3 секунды позже включения сигнала</small></button>
+<button onclick="t8()"><b>8</b>Запись из словаря через звуковой движок</button>
+<button onclick="t9()"><b>9</b>Запись Google через звуковой движок</button>
 <div id="log"></div>
 <script>
 const L=m=>{document.getElementById('log').textContent+=m+'\n';};
@@ -27,4 +31,10 @@ async function t4(){AS(false);try{const j=await (await fetch('https://api.dictio
 let C=null;function beep(){const A=window.AudioContext||window.webkitAudioContext;C=C||new A();C.resume();const o=C.createOscillator(),g=C.createGain();o.frequency.value=660;g.gain.value=.2;o.connect(g);g.connect(C.destination);o.start();o.stop(C.currentTime+.4);L('сигнал: '+C.state);}
 function t5(){AS(false);beep();}
 function t6(){AS(true);beep();}
+let Q=null;
+function ctx(){const A=window.AudioContext||window.webkitAudioContext;Q=Q||new A();Q.resume();return Q;}
+function t7(){AS(false);const c=ctx();const o=c.createOscillator(),g=c.createGain();g.gain.value=0.0005;o.connect(g);g.connect(c.destination);o.start();L('тихий сигнал: '+c.state);setTimeout(say,400);setTimeout(()=>{try{o.stop();}catch(e){}},6000);}
+async function viaCtx(url,n){AS(false);const c=ctx();try{const r=await fetch(url);if(!r.ok)return L(n+': HTTP '+r.status);const ab=await r.arrayBuffer();const buf=await new Promise((ok,no)=>c.decodeAudioData(ab,ok,no));const s=c.createBufferSource();s.buffer=buf;s.connect(c.destination);s.start();L(n+': играет ('+buf.duration.toFixed(1)+' с)');}catch(e){L(n+': '+(e&&e.message||e));}}
+async function t8(){try{const j=await (await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/hello')).json();const u=j.flatMap(e=>e.phonetics||[]).map(p=>p.audio).find(Boolean);if(!u)return L('словарь: нет записи');L('адрес: '+u);viaCtx(u,'словарь→движок');}catch(e){L('словарь: '+e.message);}}
+function t9(){viaCtx('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=hello%2C%20this%20is%20a%20test','Google→движок');}
 </script></body></html>
