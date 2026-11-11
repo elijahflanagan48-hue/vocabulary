@@ -1891,13 +1891,13 @@ function speakOnline(txt,tag){
   }catch(e){return Promise.resolve(false);}
 }
 function speakDevice(txt,tag,v){
-  audHold();iosKick();
+  audHold();
   const u=new SpeechSynthesisUtterance(txt);
   u.lang=(v&&v.lang)||tag;u.rate=rateNow();u.pitch=1;
   if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);
 }
 function speak(txt,lang){try{
-  audHold();iosKick();
+  audHold();
   const tag=ttsTag(lang);if(!tag)return;            /* Latin and the like: no voice to ask for */
   const pick=chosenVoice(tag),v=bestVoice(tag);
   const weak=pick==='online'||(!pick&&(!v||(IS_WIN&&vScore(v)<30&&!/online|natural/i.test(v.name||''))||(IS_IOS&&!navigator.audioSession)));

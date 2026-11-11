@@ -1,0 +1,30 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Проверка звука</title>
+<style>body{font-family:-apple-system,system-ui,sans-serif;background:#0b1120;color:#e6edf7;margin:0;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 6px}p{color:#9fb0c8;font-size:15px;line-height:1.4}
+button{display:block;width:100%;text-align:left;margin:10px 0;padding:16px;border-radius:14px;border:1px solid #2a3a5c;background:#14213d;color:#e6edf7;font-size:17px}
+button b{display:inline-block;width:28px;color:#7db4ff}button small{display:block;color:#9fb0c8;font-size:13px;margin:4px 0 0 28px}
+#log{margin-top:16px;font-size:13px;color:#9fb0c8;white-space:pre-wrap}</style></head><body>
+<h1>Проверка звука</h1>
+<p>Включи <b>беззвучный режим</b> и нажми каждую кнопку по очереди. Запиши номера тех, где слово было слышно.</p>
+<button onclick="t1()"><b>1</b>Встроенный голос<small>как сейчас в приложении</small></button>
+<button onclick="t2()"><b>2</b>Встроенный голос + режим «воспроизведение»</button>
+<button onclick="t3()"><b>3</b>Аудиозапись Google</button>
+<button onclick="t4()"><b>4</b>Аудиозапись из словаря</button>
+<button onclick="t5()"><b>5</b>Сигнал (звук эффектов)</button>
+<button onclick="t6()"><b>6</b>Сигнал + режим «воспроизведение»</button>
+<div id="log"></div>
+<script>
+const L=m=>{document.getElementById('log').textContent+=m+'\n';};
+const AS=on=>{try{if(navigator.audioSession){navigator.audioSession.type=on?'playback':'auto';}}catch(e){L('audioSession: '+e.message);}};
+L('iOS audioSession: '+(navigator.audioSession?'есть':'нет')+' · '+navigator.userAgent.replace(/.*OS ([\d_]+).*/,'iOS $1'));
+function say(){const u=new SpeechSynthesisUtterance('Hello, this is a test');u.lang='en-US';u.onerror=e=>L('голос: ошибка '+e.error);u.onend=()=>L('голос: закончил');speechSynthesis.cancel();speechSynthesis.speak(u);}
+function t1(){AS(false);say();}
+function t2(){AS(true);say();}
+function play(url,n){AS(false);const a=new Audio(url);a.onerror=()=>L(n+': не загрузилось');a.play().then(()=>L(n+': играет')).catch(e=>L(n+': '+e.message));}
+function t3(){play('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=hello%2C%20this%20is%20a%20test','Google');}
+async function t4(){AS(false);try{const j=await (await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/hello')).json();const u=j.flatMap(e=>e.phonetics||[]).map(p=>p.audio).find(Boolean);if(!u)return L('словарь: нет записи');play(u,'словарь');}catch(e){L('словарь: '+e.message);}}
+let C=null;function beep(){const A=window.AudioContext||window.webkitAudioContext;C=C||new A();C.resume();const o=C.createOscillator(),g=C.createGain();o.frequency.value=660;g.gain.value=.2;o.connect(g);g.connect(C.destination);o.start();o.stop(C.currentTime+.4);L('сигнал: '+C.state);}
+function t5(){AS(false);beep();}
+function t6(){AS(true);beep();}
+</script></body></html>

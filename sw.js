@@ -1,4 +1,4 @@
-const CACHE = 'vocab-v154';
+const CACHE = 'vocab-v155';
 const FILES = ['./', './index.html', './manifest.json', './icon-180-v3.png', './icon-512-v3.png', './icon-mask-512-v3.png', './favicon-32-v3.png', './favicon-192-v3.png',
   './lib/supabase-2.45.4.js', './lib/591.supabase.js', './wixd-lat.woff2', './wixd-cyr.woff2', './wixt-lat.woff2', './wixt-cyr.woff2'];
 const OCR_CACHE = 'noeon-ocr-v1';
@@ -102,6 +102,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  if (req.mode === 'navigate' && /zvuk-test\.html$/.test(url.pathname)) return;   /* the sound check page opens as itself */
   /* opening the app: the saved page first (instant start), the network only in the background */
   if (req.mode === 'navigate') {
     e.respondWith(caches.match(SHELL).then(hit => {
