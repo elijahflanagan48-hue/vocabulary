@@ -116,7 +116,7 @@ button,select,summary,[onclick],.rowlink,.setcard,.tabs a{touch-action:manipulat
 .vtb .tr{height:12px;border-radius:6px;background:var(--line);overflow:hidden}.vtb .tr i{display:block;height:100%;border-radius:6px;background:var(--pri)}.vtb .tr i.lo{background:#7aa5f5}.vtb b{text-align:right}
 .vtk{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.vtk .more{background:var(--surf);color:var(--mut);border:1px solid var(--line2)}
 .vtl .it{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}.vtl .it:first-child{border-top:0}
-.vtl input{width:22px;height:22px;accent-color:var(--pri);flex:none}.vtl span{display:flex;flex-direction:column}.vtl small{color:var(--mut);font-size:14px}
+.vtl input{width:22px;height:22px;accent-color:var(--pri);flex:none}.vtl .it.dup{opacity:.55}.vtl span{display:flex;flex-direction:column}.vtl small{color:var(--mut);font-size:14px}
 .vtc1{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.vtc1 .n{font-family:var(--ff-serif);font-size:38px;font-weight:700;margin-top:2px}
 .vthist>div{display:grid;grid-template-columns:1fr auto 44px;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:15px}.vthist span,.vthist em{color:var(--mut);font-style:normal}.vthist em{text-align:right}
 .bosl .it{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.bosl .it:first-child{border-top:0}
@@ -9386,7 +9386,8 @@ function anVtHtml(D){
       `<div class="vth" style="margin-top:14px">${t('History')}</div><div class="vthist">${h.slice().reverse().slice(0,8).map(x=>`<div><span>${vtDate(x.t)}</span><b>${vtFmt(x.n)}</b><em>${vtLevel(x.n)}</em></div>`).join('')}</div>`;
   }else out+=`<div class="vth">${t('Vocabulary size')}</div><p class="hint" style="margin:6px 0 0">${t('The test has not been taken yet.')}</p>`;
   out+='</div>';
-  if(k.length)out+=`<div class="ancard"><div class="vth">${t('Words from the test')} · ${k.length}</div><div class="vtk">${k.slice(0,24).map(x=>`<span class="chip" title="${esc(x[1])}">${esc(x[0])}</span>`).join('')}</div></div>`;
+  if(k.length)out+=`<div class="ancard"><div class="vth">${t('Words from the test')} · ${k.length}</div><div class="vtk">${k.slice(0,24).map(x=>`<span class="chip" title="${esc(x[1])}">${esc(x[0])}</span>`).join('')}</div>`+
+    (D.own?'':`<button class="btn ghost" style="margin-top:12px" onclick="tVtAddSheet('${D.sid}')">${ic('plus',18)}${t('Add to the student’s dictionary')}</button>`)+`</div>`;
   if(D.own)out+=`<button class="btn ${last?'ghost':'pri'}" onclick="vtStart()">${last?t('Take it again'):t('Take the test')}</button>${last?`<div class="hint" style="margin:6px 4px 0;text-align:center">${t('We recommend once a month.')}</div>`:''}`;
   else out+=`<button class="btn pri" onclick="vtAsk('${D.sid}')">${t('Ask to take the test')}</button>`;
   const B=(D.boss&&typeof D.boss==='object')?D.boss:{};
@@ -9400,6 +9401,57 @@ function anVtHtml(D){
   return out;
 }
 
+
+/* the teacher adds the words from a student's vocabulary test to that student's dictionary */
+Object.assign(RU_DICT,{"Add to the student’s dictionary":"Добавить в словарь ученика","Already in the dictionary":"Уже есть в словаре","Add to":"Куда добавить","New list":"Новый список",
+"Add {n} words":"Добавить слова ({n})","Nothing to add: all these words are already in the dictionary.":"Добавлять нечего: все эти слова уже есть в словаре.","Added {n} words":"Добавлено слов: {n}"});
+async function tVtWords(sid){
+  let c=TC.owner[sid];
+  if(!c||!c.words||!c.sets){const r=await fetchOwner(sid);c=TC.owner[sid]={sets:r.sets,words:r.words};}
+  return c;
+}
+async function tVtAddSheet(sid){
+  const s=(AUTH.students||[]).find(x=>x.id===sid)||{},st=s.stats||{},v=(st.vt&&typeof st.vt==='object')?st.vt:{};
+  const k=Array.isArray(v.k)?v.k:[];if(!k.length)return;
+  sheet(`<h2>${t('Words from the test')}</h2>${skel(2)}`);
+  const c=await tVtWords(sid).catch(()=>({sets:[],words:[]}));
+  const sets=(c.sets||[]).filter(x=>!x.deleted&&x.name!==ARCH_NAME&&(x.lang||DEF_LANG)==='en');
+  const have=new Set((c.words||[]).filter(w=>!w.deleted).map(w=>fold(w.en)));
+  const rows=k.map((x,i)=>{const dup=have.has(fold(x[0]));return `<label class="it${dup?' dup':''}"><input type="checkbox" class="tvc" data-i="${i}" ${dup?'disabled':'checked'}><span><b>${esc(x[0])}</b><small>${dup?t('Already in the dictionary'):esc(x[1])}</small></span></label>`;}).join('');
+  const n=k.filter(x=>!have.has(fold(x[0]))).length;
+  sheet(`<h2>${t('Words from the test')}</h2>
+    <div class="field"><label>${t('Add to')}</label><select class="inp" id="tvSet"><option value="">${t('New list')}: ${esc(t('Vocabulary test')+' · '+vtDate(Date.now()))}</option>${sets.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select></div>
+    <div class="vtl" style="max-height:46vh;overflow:auto;margin:4px 0 12px">${rows}</div>
+    <div class="err" id="tvErr"></div>
+    ${n?`<button class="btn pri" id="tvBtn" onclick="tVtAdd('${sid}')">${ic('plus',18)}${t('Add {n} words').replace('{n}',n)}</button>`:`<p class="hint">${t('Nothing to add: all these words are already in the dictionary.')}</p>`}`);
+  document.querySelectorAll('.tvc').forEach(cb=>cb.onchange=()=>{const m=document.querySelectorAll('.tvc:checked').length;const b=$('#tvBtn');if(b){b.disabled=!m;b.innerHTML=ic('plus',18)+t('Add {n} words').replace('{n}',m);}});
+}
+async function tVtAdd(sid){
+  const s=(AUTH.students||[]).find(x=>x.id===sid)||{},v=(s.stats&&s.stats.vt)||{},k=Array.isArray(v.k)?v.k:[];
+  const pick=[...document.querySelectorAll('.tvc:checked')].map(cb=>k[+cb.dataset.i]).filter(Boolean);
+  if(!pick.length)return;
+  const btn=$('#tvBtn');btn.disabled=true;btn.textContent=t('Saving…');
+  try{
+    const c=await tVtWords(sid);
+    let setId=($('#tvSet')||{}).value||'';
+    const now=new Date().toISOString();
+    if(!setId){
+      const base={id:uid(),owner_id:sid,name:t('Vocabulary test')+' · '+vtDate(Date.now()),position:(c.sets||[]).length,deleted:false,updated_at:now};
+      let {error}=await sb.from('sets').insert(noLangCol?base:Object.assign({},base,{lang:'en'}));
+      if(error&&!noLangCol&&missingLangCol(error)){noLangCol=true;({error}=await sb.from('sets').insert(base));}
+      if(error)throw error;
+      setId=base.id;c.sets=(c.sets||[]).concat([Object.assign({},base,{lang:'en'})]);
+    }
+    const rows=pick.map((x,i)=>({id:uid(),set_id:setId,owner_id:sid,en:x[0],ru:x[1],ex:'',box:0,arch:false,ok:0,bad:0,position:posNow(i,pick.length),deleted:false,updated_at:now}));
+    const {error}=await aatRetry(()=>sb.from('words').insert(rows.map(withAat)));
+    if(error)throw error;
+    rows.forEach(r=>{if(noAatCol)delete r.aat;c.words.push(r);});
+    closeSheet();toast(t('Added {n} words').replace('{n}',rows.length)+' ✓');
+  }catch(e){
+    const er=$('#tvErr');if(er)er.textContent=srvMsg(e,t('Couldn’t save — check your connection'));
+    if(btn){btn.disabled=false;btn.innerHTML=ic('plus',18)+t('Add {n} words').replace('{n}',pick.length);}
+  }
+}
 /* ================= reminders (v111): Web Push ================= */
 const PUSHK='noeon_push';
 const PUSH_DEF={on:false,daily:true,asg:true,dh:21,period:'week',up:''};
