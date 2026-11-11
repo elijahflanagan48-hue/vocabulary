@@ -5525,7 +5525,7 @@ function ipaPlay(word,kind){
   const tag=kind==='uk'?'en-GB':'en-US';
   const fb=()=>{try{speechSynthesis.cancel();}catch(e){}speakOnline(word,tag).then(ok=>{if(!ok)speak(word,'en');});};
   if(!url||navigator.onLine===false){fb();return;}
-  try{if(_aud){try{_aud.pause();}catch(e){}}const a=new Audio(url);_aud=a;a.play().catch(fb);}catch(e){fb();}
+  try{if(_aud){try{_aud.pause();}catch(e){}}const a=new Audio(url);_aud=a;noPlayer(a);a.play().catch(fb);}catch(e){fb();}
 }
 
 /* ---- word family: a small built-in table, loaded the first time it is needed ---- */
