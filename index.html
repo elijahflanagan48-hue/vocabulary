@@ -1885,7 +1885,7 @@ function speak(txt,lang){try{
   audHold();
   const tag=ttsTag(lang);if(!tag)return;            /* Latin and the like: no voice to ask for */
   const pick=chosenVoice(tag),v=bestVoice(tag);
-  const weak=pick==='online'||IS_IOS||(!pick&&(!v||(IS_WIN&&vScore(v)<30&&!/online|natural/i.test(v.name||''))));   /* iPhone (above, whatever voice is chosen): an audio element is heard even with the silent switch on; the built-in speech engine is not */
+  const weak=pick==='online'||(!pick&&(!v||(IS_WIN&&vScore(v)<30&&!/online|natural/i.test(v.name||''))||(IS_IOS&&!navigator.audioSession)));
   if(weak&&navigator.onLine!==false){
     speechSynthesis.cancel();
     speakOnline(txt,tag).then(ok=>{if(!ok&&v)speakDevice(txt,tag,v);else if(!ok)speakDevice(txt,tag,null);});
