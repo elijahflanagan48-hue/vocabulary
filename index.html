@@ -1861,8 +1861,8 @@ function audSess(on){try{if(navigator.audioSession)navigator.audioSession.type=o
 /* a finished online voice must not leave a player behind */
 function noPlayer(a){try{const ms=navigator.mediaSession;if(!ms)return;const clr=()=>{try{ms.metadata=null;ms.playbackState='none';}catch(e){}};if(a){a.addEventListener('ended',clr);a.addEventListener('pause',clr);}clr();}catch(e){}}
 audSess();
-function audHold(ms){audSess(true);clearTimeout(_asT);_asT=setTimeout(()=>audSess(false),ms||9000);}
-function audRelease(){clearTimeout(_asT);_asT=setTimeout(()=>{audSess(false);noPlayer();},350);}
+function audHold(ms){audSess(true);clearTimeout(_asT);_asT=setTimeout(()=>audSess(false),ms||20000);}
+function audRelease(){}
 const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let _aud=null;
 function speakOnline(txt,tag){
@@ -1871,7 +1871,7 @@ function speakOnline(txt,tag){
     const tl=base==='en'?(tag==='en-GB'?'en-GB':'en-US'):base;
     if(_aud){try{_aud.pause();}catch(e){}}
     const a=new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(txt));
-    _aud=a;a.volume=1;audHold();noPlayer(a);a.addEventListener('ended',audRelease);a.addEventListener('error',audRelease);
+    _aud=a;a.volume=1;audHold();
     return a.play().then(()=>true).catch(()=>false);
   }catch(e){return Promise.resolve(false);}
 }
@@ -1879,7 +1879,7 @@ function speakDevice(txt,tag,v){
   audHold();
   const u=new SpeechSynthesisUtterance(txt);
   u.lang=(v&&v.lang)||tag;u.rate=rateNow();u.pitch=1;
-  if(v)u.voice=v;u.onend=u.onerror=audRelease;speechSynthesis.cancel();speechSynthesis.speak(u);
+  if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);
 }
 function speak(txt,lang){try{
   audHold();
@@ -1893,7 +1893,7 @@ function speak(txt,lang){try{
   }
   const u=new SpeechSynthesisUtterance(txt);
   u.lang=(v&&v.lang)||tag;u.rate=rateNow();u.pitch=1;
-  if(v)u.voice=v;u.onend=u.onerror=audRelease;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+  if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 /* speak a word in the language of the list it belongs to */
 function speakWord(id){const f=findWord(id);if(f)speak(f.w.en,setLangOf(f.s));}
 
@@ -5527,7 +5527,7 @@ function ipaPlay(word,kind){
   const tag=kind==='uk'?'en-GB':'en-US';
   const fb=()=>{try{speechSynthesis.cancel();}catch(e){}speakOnline(word,tag).then(ok=>{if(!ok)speak(word,'en');});};
   if(!url||navigator.onLine===false){fb();return;}
-  try{if(_aud){try{_aud.pause();}catch(e){}}const a=new Audio(url);_aud=a;noPlayer(a);a.play().catch(fb);}catch(e){fb();}
+  try{if(_aud){try{_aud.pause();}catch(e){}}const a=new Audio(url);_aud=a;a.play().catch(fb);}catch(e){fb();}
 }
 
 /* ---- word family: a small built-in table, loaded the first time it is needed ---- */
