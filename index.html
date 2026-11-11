@@ -1855,7 +1855,11 @@ function bestVoice(tag){
 const IS_WIN=/Windows/i.test(navigator.userAgent||'');
 /* the ring/silent switch of a phone must not mute words: ask the system for the "playback" audio category while we speak */
 let _asT=0;
-function audSess(on){try{if(navigator.audioSession)navigator.audioSession.type=on?'playback':'auto';}catch(e){}}
+/* v145: never switch the page to the 'playback' audio category — iOS then shows a “now playing” player. The session stays on 'auto'. */
+function audSess(on){try{if(navigator.audioSession&&navigator.audioSession.type!=='auto')navigator.audioSession.type='auto';}catch(e){}}
+/* a finished online voice must not leave a player behind */
+function noPlayer(a){try{const ms=navigator.mediaSession;if(!ms)return;const clr=()=>{try{ms.metadata=null;ms.playbackState='none';}catch(e){}};if(a){a.addEventListener('ended',clr);a.addEventListener('pause',clr);}clr();}catch(e){}}
+audSess();
 function audHold(ms){audSess(true);clearTimeout(_asT);_asT=setTimeout(()=>audSess(false),ms||20000);}
 const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 let _aud=null;
@@ -1865,7 +1869,7 @@ function speakOnline(txt,tag){
     const tl=base==='en'?(tag==='en-GB'?'en-GB':'en-US'):base;
     if(_aud){try{_aud.pause();}catch(e){}}
     const a=new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='+encodeURIComponent(tl)+'&q='+encodeURIComponent(txt));
-    _aud=a;a.volume=1;audHold();
+    _aud=a;a.volume=1;audHold();noPlayer(a);
     return a.play().then(()=>true).catch(()=>false);
   }catch(e){return Promise.resolve(false);}
 }
