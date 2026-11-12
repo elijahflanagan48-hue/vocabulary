@@ -3826,8 +3826,8 @@ function tsetsHtml(){
   const weekN=words.filter(w=>+new Date(w.updated_at)>Date.now()-7*DAY).length;
   const dueN=words.filter(w=>w.arch&&w.due&&w.due<=Date.now()).length;
   const tricky=words.filter(w=>(w.bad||0)>=2&&(w.bad||0)>(w.ok||0)).sort((a,b)=>((b.bad||0)-(b.ok||0))-((a.bad||0)-(a.ok||0))).slice(0,6);
-  /* v167: the lists come first, everything else below */
-  return (sets.filter(x=>x.name!==ARCH_NAME).length
+  /* v168: assignments at the very top, then the lists, everything else below */
+  return `<div id="tAsg"></div>`+(setTimeout(()=>asgTRefresh(sid),0),'')+(sets.filter(x=>x.name!==ARCH_NAME).length
     ?`<div class="subhead"><span class="t">${t('Lists')}</span></div>`+sets.filter(x=>x.name!==ARCH_NAME).map(s=>{
         const a=words.filter(w=>w.set_id===s.id&&!w.arch).length,lr=words.filter(w=>w.set_id===s.id&&w.arch).length;
         return `<div class="setcard" onclick="go('twords',{sid:'${sid}',sname:'${q1(sname)}',setId:'${s.id}',setName:'${q1(s.name)}'})">
@@ -3846,7 +3846,6 @@ function tsetsHtml(){
       <div class="meta" id="seenLn" style="color:var(--mut);font-size:13.5px;margin-top:5px">${t('Last visit')}: <b style="color:var(--tx)">${esc(fmtDT(last))}</b></div>
       <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:5px">
         ${archN} ${t('learned')} · ${weekN} ${t('this week')}${dueN?` · ${dueN} ${t('due for review')}`:''}</div></div></div>`+
-   `<div id="tAsg"></div>`+(setTimeout(()=>asgTRefresh(sid),0),'')+
    (tricky.length?`<div class="subhead"><span class="t">${t('Needs work')}</span></div>`+
      '<div class="wlist">'+tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
@@ -10099,7 +10098,7 @@ Object.assign(RU_DICT,{
  "One code — one teacher. Send it to the person; they tick “I am a teacher” when signing up.":"Один код — один учитель. Отправьте его человеку: при регистрации он отмечает «Я учитель» и вводит код.",
  "Who is it for? (only you see this)":"Для кого код? (видите только вы)","e.g. Anna, colleague":"например, Анна, коллега","Valid for":"Срок действия",
  "Copy message for the teacher":"Скопировать сообщение для учителя","Revoke this code? It will stop working.":"Отозвать код? Он перестанет работать.","Code revoked":"Код отозван",
- "Registered":"Зарегистрирован","Activity":"Активность","Library sets":"Наборов в библиотеке","Assignments":"Заданий","Teacher code":"Код учителя для учеников",
+ "Registered":"Зарегистрирован","Activity":"Активность","Library sets":"Наборов в библиотеке","Assignments":"Задания","Teacher code":"Код учителя для учеников",
  "Remove teacher rights":"Снять права учителя","Teacher rights removed":"Права учителя сняты",
  "Remove teacher rights? The account becomes a regular student account, its students are unlinked (their words stay with them). To restore it you will need a new invite code.":"Снять права учителя? Аккаунт станет обычным ученическим, его ученики будут отвязаны (слова остаются у них). Чтобы вернуть права, понадобится новый код приглашения."
 });
