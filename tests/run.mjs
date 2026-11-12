@@ -170,6 +170,30 @@ await check('пример всегда с переводом: запасные �
   return w.ex;
 }, SEED.toString()));
 
+await check('обновление: применяется само только в безопасный момент', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  let applied = 0; const real = updApply; updApply = () => { applied++; return true; };
+  go('today'); await sleep(50);
+  assert(updSafe(), 'главный экран должен считаться безопасным');
+  UPD_SHOWN = Date.now(); UPD_LAST = 0; updNow();
+  assert(applied === 1, 'сразу после открытия обновление не применилось');
+  /* in the middle of an exercise: never */
+  go('set', { id: 's1' }); await sleep(50); launchMode('set', 's1', 'learn'); await sleep(200);
+  assert(!updSafe(), 'упражнение считается безопасным');
+  applied = 0; UPD_SHOWN = Date.now(); UPD_LAST = 0; updNow();
+  assert(applied === 0, 'обновление применилось посреди упражнения');
+  /* an open form with something typed: never */
+  render(); go('today'); await sleep(50);
+  wordForm(); await sleep(150);
+  const inp = document.querySelector('#scrim input');
+  if (inp) { inp.value = 'stea'; inp.focus(); assert(!updSafe(), 'открытая форма считается безопасной'); closeSheet(); await sleep(250); }
+  /* touched recently, normal screen: no reload, the banner instead */
+  applied = 0; UPD_SHOWN = Date.now() - 60000; UPD_LAST = Date.now(); updNow();
+  assert(applied === 0, 'перезагрузка, когда ученик пользуется приложением');
+  updApply = real; UPD_READY = false; const b = document.getElementById('updb'); if (b) b.remove();
+  return 'ok';
+}, SEED.toString()));
+
 await check('серия: разные тексты и реакции', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
   const heads = new Set(), reacts = new Set();

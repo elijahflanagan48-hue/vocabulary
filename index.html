@@ -9898,20 +9898,58 @@ function deepBoot(){
   }catch(e){return false;}
 }
 try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='noeon-go')deepGo(e.data.go);});}catch(e){}
-/* the app opens from the saved copy, so a newer release is announced instead of being waited for */
+/* ---------- updates apply themselves ----------
+   An app on the iPhone home screen almost never really restarts, so it checks for a new release itself: on every return to the app and every 30 minutes.
+   A downloaded release is applied at a safe moment — when the app goes to the background, or right after it is opened again before anything was touched —
+   never in the middle of an exercise, typing, or an open form. If no safe moment comes, the student sees the “Update” banner after the exercise. */
+let UPD_READY=false,UPD_LAST=0,UPD_SHOWN=Date.now();
+function updSafe(){
+  try{
+    if(studyBusy||inl||dnd)return false;
+    if(document.querySelector('#app #qb,#app #sxload,#scrim,#celeb,.cel-ov'))return false;
+    const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&String(a.value||'').trim())return false;
+    if(document.querySelector('#app input:not([type=checkbox]):not([type=radio]),#app textarea')&&[...document.querySelectorAll('#app input,#app textarea')].some(x=>x.type!=='checkbox'&&x.type!=='radio'&&String(x.value||'').trim()&&!x.readOnly&&x.id!=='q'))return false;
+    return true;
+  }catch(e){return false;}
+}
+function updApply(){
+  if(!UPD_READY)return false;
+  let n=0;try{n=+(sessionStorage.getItem('noeon.updn')||0);}catch(e){}
+  if(n>=3)return false;                                  /* never loop */
+  try{sessionStorage.setItem('noeon.updn',String(n+1));}catch(e){}
+  try{if(_wT)writeNow();}catch(e){}
+  try{viewSave();}catch(e){}
+  location.reload();return true;
+}
 function updBanner(){
   if(document.getElementById('updb'))return;
   const d=document.createElement('div');d.id='updb';
-  d.innerHTML=`<span>${t('A new version is ready')}</span><button class="go" onclick="location.reload()">${t('Update')}</button><button class="x" aria-label="Close" onclick="this.parentNode.remove()">×</button>`;
+  d.innerHTML=`<span>${t('A new version is ready')}</span><button class="go" onclick="UPD_READY=true;updApply()||location.reload()">${t('Update')}</button><button class="x" aria-label="Close" onclick="this.parentNode.remove()">×</button>`;
   document.body.appendChild(d);
 }
+function updNow(){                                         /* a release has just become active */
+  UPD_READY=true;
+  if(document.visibilityState==='hidden'){if(updSafe())updApply();return;}
+  if(Date.now()-UPD_LAST>4000&&Date.now()-UPD_SHOWN<4000&&updSafe()){updApply();return;}   /* just opened, nothing touched yet */
+  /* otherwise: applied when the app is put away, or the banner appears once the exercise is over */
+}
+function updCheck(){try{navigator.serviceWorker&&navigator.serviceWorker.getRegistration&&navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{});}catch(e){}}
 try{
   if('serviceWorker' in navigator){
-    const had=!!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)updBanner();});
-    navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='noeon-update')updBanner();});
+    let had=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)updNow();had=true;});   /* the very first install is not an update */
+    navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='noeon-update')updNow();});
+    ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{UPD_LAST=Date.now();},{capture:true,passive:true}));
+    document.addEventListener('visibilitychange',()=>{
+      if(document.visibilityState==='hidden'){if(UPD_READY&&updSafe())updApply();}
+      else{UPD_SHOWN=Date.now();UPD_LAST=0;updCheck();}
+    });
+    setInterval(()=>{if(document.visibilityState==='visible')updCheck();},30*60000);
+    /* a release that waited for the exercise to finish: offer it on the next normal screen */
+    setInterval(()=>{if(UPD_READY&&document.visibilityState==='visible'&&!studyBusy&&!document.querySelector('#app #qb,#app #sxload,#celeb'))updBanner();},5000);
   }
 }catch(e){}
+addEventListener('load',()=>{setTimeout(()=>{try{sessionStorage.removeItem('noeon.updn');}catch(e){}},20000);});
 Object.assign(RU_DICT,{"A new version is ready":"Вышла новая версия","Update":"Обновить"});
 {const _osi=onSignedIn;onSignedIn=async function(){const r=await _osi.apply(this,arguments);setTimeout(pushResync,2500);return r;};}
 Object.assign(RU_DICT,{"Reminders":"Напоминания","Sign in to get reminders.":"Войдите в аккаунт, чтобы получать напоминания.","Reminders for teachers will come later.":"Напоминания для учителей появятся позже.","On iPhone, reminders work only for the app added to the Home Screen: in Safari tap Share → Add to Home Screen, open the app from there and come back here.":"На iPhone напоминания работают только у приложения на экране «Домой»: в Safari нажмите «Поделиться» → «На экран Домой», откройте приложение оттуда и вернитесь сюда.","This browser does not support notifications.":"Этот браузер не поддерживает уведомления.","Notifications are blocked. Allow them in the browser or phone settings.":"Уведомления запрещены. Разрешите их в настройках браузера или телефона.","We remind you at 21:00 if today’s goal is still open, and send your weekly summary with the charts.":"Напомним в 21:00, если цель дня ещё не закрыта, и пришлём итоги недели с графиками.","Turn on reminders":"Включить напоминания","Daily reminder":"Ежедневное напоминание","On":"Вкл","Off":"Выкл","Comes only if you have not reached today’s goal yet. Time:":"Придёт, только если вы ещё не достигли цели дня. Время:","Summary with analytics":"Итоги с аналитикой","Weekly":"Раз в неделю","Monthly":"Раз в месяц","Never":"Не присылать","Sunday at 20:00.":"В воскресенье в 20:00.","On the 1st at 10:00, for the month that ended.":"1-го числа в 10:00, за прошедший месяц.","No summaries.":"Итоги не приходят.","Tap the notification and your analytics open at once.":"Нажмите на уведомление, и сразу откроется ваша аналитика.","Send a test":"Отправить пробное","Turn off on this device":"Выключить на этом устройстве","Reminders on":"Напоминания включены","Sent — check your notifications":"Отправлено — проверьте уведомления","No device is subscribed yet":"Устройство ещё не подписано","The notification server is not set up yet. See the setup instructions.":"Сервер уведомлений ещё не настроен. Смотрите инструкцию по установке.","on":"вкл","off":"выкл"});
