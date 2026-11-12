@@ -6553,7 +6553,7 @@ const celPal=()=>celDark()
   :{spark:['#ffb400','#ffcf4a','#2f86f5','#1a56db'],soft:['#ffcf4a','#7db4ff'],gold:['#ffb400','#ff9a00','#ffd25a']};
 function mkFx(z){
   const comp=celDark()?'lighter':'source-over',dpr=Math.min(2,window.devicePixelRatio||1);
-  let cv=null,cx=null,ps=[],raf=0,last=0,pend=0,W=0,H=0;const spr={};
+  let cv=null,cx=null,ps=[],raf=0,last=0,pend=0,W=0,H=0,dead=false;const spr={};
   const rnd=(a,b)=>a+Math.random()*(b-a);
   function sprite(color,kind){
     const k=color+kind;if(spr[k])return spr[k];
@@ -6590,7 +6590,7 @@ function mkFx(z){
   }
   const api={
     burst(o){
-      if(celRM)return;attach();
+      if(celRM||dead)return;attach();
       for(let i=0;i<o.n;i++){
         const a=(o.angle+rnd(-o.spread,o.spread))*Math.PI/180,sp=rnd(o.speed[0],o.speed[1]);
         ps.push({x:o.x+rnd(-(o.jx||0),o.jx||0),y:o.y+rnd(-(o.jy||0),o.jy||0),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,age:0,life:rnd(o.life[0],o.life[1]),size:rnd(o.size[0],o.size[1]),
@@ -6600,7 +6600,7 @@ function mkFx(z){
     },
     later(ms,fn){if(celRM){return;}pend++;setTimeout(()=>{pend--;try{fn();}catch(e){}if(!raf&&!ps.length&&cv){cv.remove();cv=null;}},ms);},
     trickle(o,ms,every){if(celRM)return;for(let i=1;i<=Math.floor(ms/every);i++)api.later(i*every,()=>api.burst(o));},
-    stop(){ps=[];pend=0;if(raf)cancelAnimationFrame(raf);raf=0;if(cv){cv.remove();cv=null;}}
+    stop(){dead=true;ps=[];pend=0;if(raf)cancelAnimationFrame(raf);raf=0;if(cv){cv.remove();cv=null;}}
   };
   return api;
 }
@@ -6718,6 +6718,86 @@ function celSky(){
     (dark?'':`<div class="cel-cloud" style="left:-8%;top:8%;width:55%;height:11%"></div><div class="cel-cloud" style="right:-10%;top:58%;width:60%;height:12%;animation-delay:-9s"></div><div class="cel-cloud" style="left:12%;bottom:6%;width:46%;height:9%;animation-delay:-16s;opacity:.5"></div>`);
 }
 
+/* ---------- streak texts and reactions: different every day ---------- */
+/* each line is [Russian, English]; {n} = days in a row, {b} = best streak, {w} = words today, {d} = days left to the next milestone */
+const CEL_TX={
+  first:[['Первая звезда!','The first star!'],['Начало положено ✨','And so it begins ✨'],['Старт дан','You’re off'],['Есть первый день!','Day one, done!']],
+  back:[['С возвращением! 👋','Welcome back! 👋'],['Новая серия пошла','A new streak begins'],['Снова в деле','Back in the game'],['Перезапуск засчитан 🔄','Restart: counted 🔄'],['Привет снова!','Hello again!']],
+  two:[['Два дня подряд!','Two days in a row!'],['Уже не случайность 😉','Not a fluke anymore 😉'],['Вторая звезда!','Star number two!'],['Дубль!','Double!']],
+  best:[['Новый рекорд! 🏆','New personal best! 🏆'],['Это ваш рекорд!','That’s your record!'],['Выше, чем когда-либо','Higher than ever'],['Рекорд побит 💥','Record broken 💥']],
+  morn:[['Ранняя пташка 🐦','Early bird 🐦'],['Утро началось правильно ☕','The morning started right ☕'],['Ещё до обеда — красота','Before lunch, nice']],
+  night:[['Ночная смена 🌙','Night shift 🌙'],['Успели до полуночи!','Made it before midnight!'],['Полуночник засчитан 🦉','Night owl: counted 🦉']],
+  wknd:[['Даже в выходной! 🙌','Even on the weekend! 🙌'],['Выходной, а вы тут','Day off, and here you are']],
+  gen:[['Зажглась новая звезда','A new star lights up'],['Так держать!','Keep it up!'],['Огонь! 🔥','On fire! 🔥'],['Есть контакт!','Contact!'],['Серия растёт','The streak grows'],['Ещё один день в копилку','One more day in the bank'],
+    ['Красиво идёте ✨','Looking good ✨'],['Мозг говорит спасибо 🧠','Your brain says thanks 🧠'],['Слово за словом','Word by word'],['Ни дня без слова','Not a day without a word'],
+    ['Стабильность — это вы','Consistency is you'],['Звёзд всё больше','More and more stars'],['Вот это дисциплина 💪','Now that’s discipline 💪'],['Сегодня тоже да!','Today: yes, too!'],['Цепочку не рвём ⛓️','Don’t break the chain ⛓️'],
+    ['Минус один повод не учить','One fewer excuse not to study'],['Норм темп! 🚀','Nice pace! 🚀'],['Сделано. Можно гордиться','Done. Be proud'],['Вы сегодня молодец','You did great today'],['И ещё одна!','And another one!']],
+  long:[['Уже привычка 😎','It’s a habit now 😎'],['Вас уже не остановить','No stopping you now'],['Машина! 🏎️','Unstoppable! 🏎️'],['Серьёзная серия','A serious streak'],['Легенда в процессе','A legend in the making']],
+  sub:[['Дневная цель выполнена · {w}','Daily goal reached · {w}'],['{w} сегодня — звезда ваша','{w} today — the star is yours'],['Завтра будет {n1}-й день','Tomorrow will be day {n1}'],
+    ['До следующего рубежа — {d}','{d} to the next milestone'],['Рекорд — {b}. Догоняйте!','Best: {b}. Catch up!'],['Увидимся завтра 👋','See you tomorrow 👋'],['Слова сами себя не выучат, но вы справились','Words don’t learn themselves, but you did it']],
+  subBest:[['Прежний рекорд позади','The old record is behind you'],['{n} — новый личный рекорд','{n} — a new personal best']],
+  subBack:[['Главное — вернуться. Вы вернулись','What matters is coming back. You did'],['Серия заново, опыт остался','New streak, same skills']]
+};
+const CEL_MIL={7:[['Целая неделя подряд!','A whole week in a row!'],['Неделя без пропусков! 🎉','A week, no gaps! 🎉']],14:[['Две недели подряд!','Two weeks in a row!'],['Две недели — серьёзно! 🔥','Two weeks, seriously! 🔥']],21:[['Три недели! Это уже привычка','Three weeks! That’s a habit']],
+  30:[['Месяц без пропусков!','A month with no gaps!'],['Целый месяц! 🏅','A whole month! 🏅']],50:[['Полсотни дней! 🎯','Fifty days! 🎯']],75:[['75 дней — впечатляет','75 days — impressive']],100:[['Сотня дней! 💯','One hundred days! 💯']],150:[['150 дней! 🌟','150 days! 🌟']],200:[['200 дней подряд!','200 days in a row!']],365:[['Целый год! 🎆','A whole year! 🎆']]};
+const celEn=()=>{try{return S.settings.lang==='en';}catch(e){return false;}};
+function celPick(pool,tag){
+  /* never the same line twice in a row */
+  let last='';try{last=localStorage.getItem('noeon_cel_'+tag)||'';}catch(e){}
+  const opts=pool.length>1?pool.filter(x=>x[0]!==last):pool,x=opts[(Math.random()*opts.length)|0];
+  try{localStorage.setItem('noeon_cel_'+tag,x[0]);}catch(e){}
+  return x[celEn()?1:0];
+}
+function celNextMil(n){return [7,14,21,30,50,75,100,150,200,365].find(m=>m>n)||(Math.floor(n/100)+1)*100;}
+function celTexts(n,st){
+  let prevBest=0;try{prevBest=+(localStorage.getItem('noeon_cel_best')||0);}catch(e){}
+  try{localStorage.setItem('noeon_cel_best',String(Math.max(prevBest,n)));}catch(e){}
+  const h=new Date().getHours(),dw=new Date().getDay(),best=st.best||n;
+  const isBest=n>2&&n>prevBest&&prevBest>0&&n>=best,back=n===1&&best>1,first=n===1&&best<=1;
+  let head,kind,sub;
+  if(celMil(n)){const p=CEL_MIL[n];head=p?celPick(p,'m'):(celEn()?'A new milestone!':'Новый рубеж!');kind='mil';}
+  else if(first){head=celPick(CEL_TX.first,'h');kind='first';}
+  else if(back){head=celPick(CEL_TX.back,'h');kind='back';}
+  else if(isBest){head=celPick(CEL_TX.best,'h');kind='best';}
+  else if(n===2){head=celPick(CEL_TX.two,'h');kind='gen';}
+  else{
+    const r=Math.random(),pool=h<9&&h>=4&&r<.5?CEL_TX.morn:(h>=23||h<4)&&r<.6?CEL_TX.night:(dw===0||dw===6)&&r<.35?CEL_TX.wknd:n>=10&&r<.3?CEL_TX.long:CEL_TX.gen;
+    head=celPick(pool,'h');kind='gen';
+  }
+  const dl=celNextMil(n)-n;
+  const fill=x=>x.replace('{n1}',n+1).replace('{n}',n).replace('{b}',plr(best,t('day'),t('day2'),t('days')).replace(/^/,best+' ')).replace('{w}',nWords(st.goal||10)).replace('{d}',dl+' '+plr(dl,t('day'),t('day2'),t('days')));
+  if(kind==='best')sub=fill(celPick(CEL_TX.subBest,'s'));
+  else if(kind==='back')sub=fill(celPick(CEL_TX.subBack,'s'));
+  else{
+    let pool=CEL_TX.sub;
+    if(best<=n)pool=pool.filter(x=>!/\{b\}/.test(x[0]));         /* no “catch up with the record” when this is the record */
+    if(dl>30)pool=pool.filter(x=>!/\{d\}/.test(x[0]));
+    sub=fill(celPick(pool,'s'));
+  }
+  /* the reaction: milestones and records get the big ones, ordinary days rotate */
+  let react=kind==='mil'?'fireworks':kind==='best'?'fountain':kind==='first'||kind==='back'?'sparks':null;
+  if(!react){let lr='';try{lr=localStorage.getItem('noeon_cel_r')||'';}catch(e){}const rs=['sparks','rain','comets','fountain','halo'].filter(x=>x!==lr);react=rs[(Math.random()*rs.length)|0];}
+  try{localStorage.setItem('noeon_cel_r',react);}catch(e){}
+  return {head,sub,react};
+}
+/* the different reactions, all drawn with the same particle layer */
+function celReact(fx,kind,at,mil,tm){
+  if(celRM)return;
+  const P=celPal(),W=innerWidth,H=innerHeight;
+  if(kind==='rain'){
+    for(let i=0;i<26;i++)fx.later(tm(1000+i*70),()=>fx.burst({x:Math.random()*W,y:-10,n:2,speed:[40,110],angle:90,spread:12,life:[2.2,3.4],size:[1.2,2.6],colors:P.spark,g:40,drag:.99,kind:'spark',sway:22}));
+  }else if(kind==='fountain'){
+    for(let i=0;i<14;i++)fx.later(tm(950+i*90),()=>fx.burst({x:W/2,y:H+6,n:7,speed:[260,520],angle:-90,spread:20,life:[1.6,2.4],size:[1.2,2.8],colors:P.spark,g:260,drag:.985,kind:'spark'}));
+  }else if(kind==='comets'){
+    for(let i=0;i<5;i++)fx.later(tm(1000+i*260),()=>{const y=H*(.1+Math.random()*.4);fx.burst({x:-20,y,n:16,speed:[380,520],angle:18,spread:3,life:[1.1,1.6],size:[1.2,2.4],colors:P.spark,drag:.995,kind:'spark',jx:30,jy:3});});
+  }else if(kind==='halo'){
+    const p=at();fx.later(tm(930),()=>{for(let k=0;k<3;k++)fx.later(k*260,()=>fx.burst({x:p.x,y:p.y,n:36,speed:[150+k*40,160+k*40],angle:0,spread:180,life:[1,1.4],size:[1.2,2.2],colors:k%2?P.soft:P.spark,drag:.95,kind:'spark'}));});
+  }else if(kind==='fireworks'){
+    for(let i=0;i<6;i++)fx.later(tm(1100+i*380),()=>{const x=W*(.15+Math.random()*.7),y=H*(.12+Math.random()*.35);sparkAt(fx,{x,y},38,true);});
+  }
+  /* the star always gives its own small sparkle, so every reaction starts from it */
+  fx.later(tm(930),()=>{const p=at();sparkAt(fx,p,kind==='sparks'?(mil?46:30):14,kind==='sparks');});
+}
 /* ---------- the streak overlay ---------- */
 function celShow(){
   if(CEL.open)return;
@@ -6725,14 +6805,15 @@ function celShow(){
   try{localStorage.setItem('noeon_cel',JSON.stringify({day:st.day,shown:true}));}catch(e){}
   CEL.open=true;
   const ov=document.createElement('div');ov.id='celeb';ov.className='celeb';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
-  const head=(mil?celMilTitle(n):t('A new star lights up')).split(' ').map(x=>`<i>${esc(x)}</i>`).join(' ');
+  const CT=celTexts(n,st);
+  const head=CT.head.split(' ').map(x=>`<i>${esc(x)}</i>`).join(' ');
   ov.innerHTML=`<div class="cel-bg"></div>${celSky()}<div class="cel-glow" id="cglow"></div>
     <div class="cel-col">
       <div class="cel-hero" id="chero2">${cstSvg({id:'c',st:w.st,idx:w.idx,ignite:true,flare:true,view:'0 30 340 176',cls:'cel-svg'})}</div>
       <div class="cel-num" id="cnum"><div class="tr"><span>${n-1}</span><span>${n}</span></div></div>
       <div class="cel-lbl" id="clbl">${plr(n,t('day'),t('day2'),t('days'))} ${t('in a row')}</div>
       <div class="cel-hl" id="chl">${head}</div>
-      <div class="cel-sub" id="csub">${t('Daily goal reached')} · ${nWords(st.goal||10)}</div>
+      <div class="cel-sub" id="csub">${esc(CT.sub)}</div>
     </div>
     <div class="cel-cta"><button type="button" id="cgo">${t('Continue')}</button></div>`;
   document.body.appendChild(ov);
@@ -6784,7 +6865,7 @@ function celShow(){
   setTimeout(()=>{const b=$('#cgo');if(b&&!closed)b.focus({preventScroll:true});},celRM?50:3000);
   /* sparks come from the star itself */
   const at=()=>{const e=ts||q('#ctgl');return e?cen(e):{x:innerWidth/2,y:innerHeight/3};};
-  fx.later(tm(930),()=>{const p=at();sparkAt(fx,p,mil?46:30,true);});
+  celReact(fx,CT.react,at,mil,tm);
   if(!celRM){
     for(let i=1;i<=Math.floor(1900/110);i++)fx.later(930+1200+i*110,()=>{const p=at();fx.burst({x:p.x,y:p.y,n:1,speed:[10,70],angle:0,spread:180,life:[1.2,2],size:[.9,1.8],colors:celPal().soft,drag:.98,kind:'spark',jx:26,jy:26});});
     if(mil)fx.later(2150,()=>qa('.nd').forEach((g,i)=>fx.later(i*110,()=>{const p=cen(g);fx.burst({x:p.x,y:p.y,n:9,speed:[30,120],angle:0,spread:180,life:[.8,1.4],size:[1.2,2.4],colors:celPal().spark,drag:.97,kind:'spark'});})));
@@ -9056,19 +9137,73 @@ function gapFind(s,w){
   return null;
 }
 function sxOwn(w){const en=exEn(w);if(!en)return null;const g=gapFind(en,w);return g?Object.assign(g,{ru:exRu(w)||''}):null;}
+/* built-in bank: two checked sentences with a Russian translation for ~7,500 common words, loaded once (≈300 KB), works offline */
+let SXB=null,SXBP=null;
+function sxBank(){
+  if(SXB)return Promise.resolve(SXB);
+  if(!SXBP)SXBP=fetch('lib/sx.json?v=1').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>(SXB=(j&&j.w)||{})).catch(()=>{SXBP=null;return {};});
+  return SXBP;
+}
+/* the key the bank is looked up by: "to steady" → steady, "bite bit bitten" → bite, "steadied" → steady */
+function sxKeys(w){
+  const x=String(w.en||'').toLowerCase().trim().replace(/^\(?to\)?\s+/,'').replace(/\s+(sth|sb|smth|smb|something|somebody|someone)$/,'').trim();
+  const ir=irregOf(w.en),out=[];
+  if(ir)out.push(ir.base);
+  if(x&&!/\s/.test(x)){out.push(x);try{const li=lemIrr(x);if(li)out.push(li);lemCands(x).forEach(([c])=>out.push(c));}catch(e){}}
+  return [...new Set(out)];
+}
+function sxFromBank(w){
+  if(!SXB||langOf(w)!=='en')return null;
+  for(const k of sxKeys(w)){
+    const l=SXB[k];if(!l)continue;
+    for(const x of shuffle(l.slice())){const g=gapFind(x[0],w);if(g)return Object.assign(g,{ru:x[1]||''});}
+  }
+  return null;
+}
+function sxFromCache(w){
+  const c=sxCache()[langOf(w)+'|'+String(w.en||'').toLowerCase().trim()];
+  if(!c)return undefined;if(!c.s)return null;
+  const g=gapFind(c.s,w);return g?Object.assign(g,{ru:c.r||''}):null;
+}
+/* everything that is known without the internet */
+function sxNow(w){return sxOwn(w)||sxFromBank(w)||sxFromCache(w)||null;}
+/* the network, fastest source first: the translator's usage examples (≈0.3 s), then all dictionaries */
 async function sxGet(w){
-  const own=sxOwn(w);if(own)return own;
-  const lg=langOf(w),k=lg+'|'+String(w.en||'').toLowerCase().trim();
-  const c=sxCache()[k];
-  if(c){if(!c.s)return null;const g=gapFind(c.s,w);return g?Object.assign(g,{ru:c.r||''}):null;}
+  const now=sxNow(w);if(now)return now;
+  if(sxFromCache(w)===null)return null;           /* looked before and found nothing */
   if(navigator.onLine===false)return null;
+  const lg=langOf(w),k=lg+'|'+String(w.en||'').toLowerCase().trim();
+  const keep=(en,ru)=>{sxPut(k,{s:en,r:ru||''});const g=gapFind(en,w);return g?Object.assign(g,{ru:ru||''}):null;};
   try{
-    const r=await Promise.race([fetchExamples(w.en,lg,irregOf(w.en),w.ru||''),new Promise(res=>setTimeout(()=>res(null),8000))]);
+    if(lg==='en'){
+      const ir=irregOf(w.en),base=ir?ir.base:String(w.en).toLowerCase().trim().replace(/^to\s+/,'');
+      const forms=ir?ir.forms.split(' '):exForms(base);
+      const c=await exGoogle(base,forms).catch(()=>null);
+      if(c&&c.length){
+        const sc=[];
+        for(const relax of [0,1,2]){c.forEach(x=>{if(!gapFind(x.en,w))return;const q=exQuality(x,forms,[],relax);if(q!=null)sc.push([q,x]);});if(sc.length)break;}
+        if(sc.length){sc.sort((p,q)=>p[0]-q[0]);const x=sc[0][1];const ru=await Promise.race([trSentence(x.en).catch(()=>''),new Promise(r=>setTimeout(()=>r(''),2500))]);return keep(x.en,ru);}
+      }
+    }
+    const r=await Promise.race([fetchExamples(w.en,lg,irregOf(w.en),w.ru||''),new Promise(res=>setTimeout(()=>res(null),7000))]);
     const list=(r&&r.list)||[];
-    for(const x of list){const g=gapFind(x.en,w);if(g){sxPut(k,{s:x.en,r:x.ru||''});return Object.assign(g,{ru:x.ru||''});}}
+    for(const x of list){if(gapFind(x.en,w))return keep(x.en,x.ru||'');}
     if(r&&!r.failed)sxPut(k,{s:''});
   }catch(e){}
   return null;
+}
+/* quietly, when the app is idle: find sentences for the student's words that have none yet, so “In a sentence” opens at once next time */
+let SXW=0;
+async function sxWarm(){
+  if(SXW||navigator.onLine===false)return;SXW=1;
+  try{
+    await sxBank();
+    const ws=S.sets.flatMap(s=>s.words||[]).filter(w=>w&&w.en&&!w.arch);
+    const need=shuffle(ws.filter(w=>!sxNow(w)&&sxFromCache(w)===undefined)).slice(0,40);
+    let i=0;
+    await Promise.all([0,1,2].map(async()=>{while(i<need.length){const w=need[i++];if(document.hidden||studyBusy)await new Promise(r=>setTimeout(r,4000));await sxGet(w).catch(()=>null);}}));
+  }catch(e){}
+  setTimeout(()=>{SXW=0;},10*60000);
 }
 /* the look-alikes from the student's own words make the best options */
 function lookAlikes(pool,w,n){
@@ -9081,33 +9216,53 @@ const sxHint=f=>f.split('').map((ch,i)=>i===0||ch===' '||ch==='-'||ch==="'"?ch:'
 async function startSent(review){
   const pool=poolNow();if(!pool.length)return toast(t('No words'));
   const app=$('#app'),tok=++SXT;tabWanted=false;syncTabs();
-  app.innerHTML=hdr(t('In a sentence'),'render()')+`<div id="sxload">${skel(2)}<p class="hint" style="text-align:center;margin-top:14px">${t('Finding sentences with your words…')}</p></div>`;
-  const cand=shuffle(pool).slice(0,60),N=Math.min(12,cand.length),items=[];
-  cand.forEach(w=>{const g=sxOwn(w);if(g&&items.length<N)items.push({w,g});});
-  const rest=cand.filter(w=>!items.some(it=>it.w===w));
-  for(let i=0;i<rest.length&&items.length<N&&i<36;i+=6){
-    const part=rest.slice(i,i+6),gs=await Promise.all(part.map(w=>sxGet(w).catch(()=>null)));
-    if(tok!==SXT||!$('#sxload'))return;
-    part.forEach((w,j)=>{if(gs[j]&&items.length<N)items.push({w,g:gs[j]});});
+  if(!SXB){app.innerHTML=hdr(t('In a sentence'),'render()')+`<div id="sxload">${skel(2)}</div>`;await sxBank();}
+  if(tok!==SXT)return;
+  const cand=shuffle(pool).slice(0,60),N=Math.min(12,cand.length);
+  const list=[],used=new Set();
+  cand.forEach(w=>{if(list.length>=N)return;const g=sxNow(w);if(g){list.push({w,g});used.add(w);}});
+  /* the rest is searched in the background and joins the queue as it arrives — the first question never waits for all of them */
+  const rest=cand.filter(w=>!used.has(w)&&sxFromCache(w)!==null).slice(0,24);
+  let pending=0,wake=null;
+  const more=()=>{if(wake){const f=wake;wake=null;f();}};
+  if(list.length<N&&rest.length){
+    let j=0;
+    const worker=async()=>{pending++;try{while(j<rest.length&&list.length<N&&tok===SXT){const w=rest[j++];const g=await sxGet(w).catch(()=>null);if(g&&list.length<N&&tok===SXT)list.push({w,g});more();}}finally{pending--;more();}};
+    for(let k=0;k<6;k++)worker();
   }
-  if(tok!==SXT||!$('#sxload'))return;
-  if(!items.length){app.innerHTML=hdr(t('In a sentence'),'render()')+`<div class="empty"><div class="big">${ic('text',26)}</div><p>${t('No sentences found for these words yet. Add your own examples to the words or try again online.')}</p></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;return;}
-  const list=shuffle(items);let i=0,okN=0;
+  if(!list.length){
+    app.innerHTML=hdr(t('In a sentence'),'render()')+`<div id="sxload">${skel(2)}<p class="hint" style="text-align:center;margin-top:14px">${t('Finding sentences with your words…')}</p></div>`;
+    while(!list.length&&pending>0&&tok===SXT)await new Promise(r=>{wake=r;setTimeout(r,400);});
+    if(tok!==SXT||!$('#sxload'))return;
+  }
+  if(!list.length){app.innerHTML=hdr(t('In a sentence'),'render()')+`<div class="empty"><div class="big">${ic('text',26)}</div><p>${t('No sentences found for these words yet. Add your own examples to the words or try again online.')}</p></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;return;}
+  let i=0,okN=0;
+  const total=()=>Math.max(list.length,i+1,pending>0?N:0);
   const all=S.sets.flatMap(s=>s.words).concat(pool);
   function finish(){
     app.innerHTML=hdr(t('In a sentence'),'render()')+celHero('learn',{n:list.length,title:t('Well done!'),sub:`${okN} / ${list.length} ${t('correct')}`})+
       `<div style="height:14px"></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;
     celPlay();
   }
+  async function nextOrWait(){
+    if(i<list.length)return next();
+    if(pending>0){
+      app.innerHTML=studyTop(t('In a sentence'),100,i+'/'+list.length);$('#qb').innerHTML=skel(1);
+      const t0=Date.now();
+      while(i>=list.length&&pending>0&&Date.now()-t0<6000&&tok===SXT)await new Promise(r=>{wake=r;setTimeout(r,300);});
+      if(tok!==SXT)return;
+      if(i<list.length)return next();
+    }
+    finish();
+  }
   function next(){
-    if(i>=list.length)return finish();
     const {w,g}=list[i],lg=langOf(w);
     const opts=lookAlikes(all,w,3);
     const kind=(review||(w.box||0)>=2||opts.length<3)?'type':'mc';
     const pre=esc(g.s.slice(0,g.at)),post=esc(g.s.slice(g.at+g.len));
     const card=gap=>`<div class="card sxcard"><div class="lbl">${kind==='mc'?t('Choose the word'):t('Type the missing word')}</div><div class="sxs">${pre}${gap}${post}</div>`+
       (kind==='type'?`<div class="sxh" id="sxh">${ic('target',15)}${esc(w.ru||'')}</div>`:'')+`</div>`;
-    app.innerHTML=studyTop(t('In a sentence'),i/list.length*100,(i+1)+'/'+list.length);
+    app.innerHTML=studyTop(t('In a sentence'),i/total()*100,(i+1)+'/'+total());
     const qb=$('#qb');
     qb.innerHTML=card(`<span class="sxg">${kind==='mc'?'?':esc(sxHint(g.form))}</span>`)+
       (kind==='mc'?`<div class="sxo">${shuffle([w,...opts]).map(x=>`<button class="opt" data-id="${esc(x.id)}">${esc(x.en)}</button>`).join('')}</div>`
@@ -9122,10 +9277,12 @@ async function startSent(review){
       qb.querySelector('.sxs').innerHTML=`${pre}<span class="sxg ${ok?'ok':'bad'}">${esc(g.form)}</span>${post}`;
       const f=$('#fbx');
       f.innerHTML=`<div class="fb ${ok?'ok':'bad'}">${ok?t('Correct ✓'):t('Wrong')}${ok?'':`<small>${t('Answer: ')}${esc(g.form)}${canonQ(g.form)!==canonQ(w.en)?' ('+esc(w.en)+')':''}</small>`}</div>`+
-        (g.ru?`<div class="sxru">${esc(g.ru)}</div>`:'')+
+        `<div class="sxru" id="sxru"${g.ru?'':' hidden'}>${esc(g.ru||'')}</div>`+
         `<div class="row2" style="margin-top:12px"><button class="spkb" id="sxsp" aria-label="${t('Pronounce')}">${ic('sound',24)}</button><button class="btn pri" id="nx">${t('Next')}</button></div>`;
       $('#sxsp').onclick=()=>speak(g.s,lg);
-      $('#nx').onclick=()=>{i++;next();};
+      /* sentences from the built-in bank come without Russian: translate when the answer is shown */
+      if(!g.ru&&lg==='en'&&navigator.onLine!==false)trSentence(g.s).then(r=>{if(!r)return;g.ru=r;const e=$('#sxru');if(e&&qb.isConnected){e.textContent=r;e.hidden=false;}}).catch(()=>{});
+      $('#nx').onclick=()=>{i++;nextOrWait();};
       setTimeout(()=>{const b=$('#nx');if(b)b.focus();},40);
     };
     if(kind==='mc')qb.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
@@ -9998,6 +10155,7 @@ try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.
 authInit();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled()){cloudPull().then(softRender);setTimeout(pingSeen,1500);}});
 setInterval(pingSeen,120000);
+setTimeout(()=>{try{sxWarm();}catch(e){}},9000);setInterval(()=>{if(document.visibilityState==='visible')try{sxWarm();}catch(e){}},11*60000);
 setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(softRender);},150000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
 if('serviceWorker' in navigator){const reg=()=>navigator.serviceWorker.register('sw.js').catch(()=>{});if(document.readyState==='complete')reg();else addEventListener('load',reg);}

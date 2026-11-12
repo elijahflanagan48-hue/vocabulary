@@ -105,6 +105,37 @@ for (const m of ['cards', 'learn', 'test', 'match', 'sent', 'dict']) {
   }, [SEED.toString(), m]));
 }
 
+await check('«В предложении»: первый вопрос сразу, даже если сеть молчит', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  /* words without their own example: only the built-in bank can help; the network never answers */
+  S.sets[0].words.push(newWord('steady', 'устойчивый'), newWord('to abandon', 'покидать'), newWord('bite bit bitten', 'кусать'));
+  S.sets[0].words.forEach(w => { if (!['steady', 'to abandon', 'bite bit bitten'].includes(w.en)) w.ex = ''; }); save();
+  await sxBank(); assert(Object.keys(SXB).length > 4000, 'встроенный банк предложений не загрузился');
+  const real = window.fetch; window.fetch = (u, o) => String(u).includes('lib/') ? real(u, o) : new Promise(() => {});          /* a network that hangs */
+  go('set', { id: 's1' }); await sleep(50);
+  const t0 = performance.now(); launchMode('set', 's1', 'sent');
+  for (let k = 0; k < 40 && !document.querySelector('.sxs'); k++) await sleep(25);
+  const ms = Math.round(performance.now() - t0);
+  assert(document.querySelector('.sxs'), 'вопрос не появился');
+  assert(ms < 800, 'слишком долго: ' + ms + ' мс');
+  return ms + ' мс';
+}, SEED.toString()));
+
+await check('серия: разные тексты и реакции', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  const heads = new Set(), reacts = new Set();
+  for (let k = 0; k < 30; k++) { const r = celTexts(5, { best: 9, goal: 10 }); heads.add(r.head); reacts.add(r.react); assert(r.sub && !/\{/.test(r.sub), 'плохой подзаголовок ' + r.sub); }
+  assert(heads.size >= 8, 'мало разных заголовков: ' + heads.size);
+  assert(reacts.size >= 4, 'мало реакций: ' + reacts.size);
+  localStorage.setItem('noeon_cel_best', '6');
+  assert(celTexts(7, { best: 7, goal: 10 }).react === 'fireworks', 'рубеж 7 дней без салюта');
+  const b = celTexts(9, { best: 9, goal: 10 }); assert(b.react === 'fountain', 'рекорд без фонтана');
+  S.stats.streak = 12; S.stats.best = 20; S.stats.met = true; celShow(); await sleep(100);
+  assert(document.querySelector('#celeb #chl') && document.querySelector('#csub').textContent.length > 5, 'нет экрана серии');
+  document.querySelector('#cgo').click(); await sleep(400);
+  return heads.size + ' заголовков, ' + reacts.size + ' реакций';
+}, SEED.toString()));
+
 await check('тест словарного запаса: полный проход и результат', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
   assert(await vtLoad(), 'банк слов не загрузился');
