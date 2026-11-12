@@ -110,7 +110,8 @@ await check('«В предложении»: первый вопрос сразу
   /* words without their own example: only the built-in bank can help; the network never answers */
   S.sets[0].words.push(newWord('steady', 'устойчивый'), newWord('to abandon', 'покидать'), newWord('bite bit bitten', 'кусать'));
   S.sets[0].words.forEach(w => { if (!['steady', 'to abandon', 'bite bit bitten'].includes(w.en)) w.ex = ''; }); save();
-  await sxBank(); assert(Object.keys(SXB).length > 4000, 'встроенный банк предложений не загрузился');
+  await sxBank([{ en: 'steady' }, { en: 'abandon' }, { en: 'bite' }]); assert(SXB.steady && SXB.abandon, 'встроенный банк предложений не загрузился');
+  SXB = null; for (const k in SXL) delete SXL[k];          /* the mode must load what it needs itself */
   const real = window.fetch; window.fetch = (u, o) => String(u).includes('lib/') ? real(u, o) : new Promise(() => {});          /* a network that hangs */
   go('set', { id: 's1' }); await sleep(50);
   const t0 = performance.now(); launchMode('set', 's1', 'sent');
@@ -123,7 +124,6 @@ await check('«В предложении»: первый вопрос сразу
 
 await check('«В предложении»: после ответа не выкидывает в список', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
-  await sxBank();
   S.sets[0].words.push(newWord('steady', 'устойчивый'), newWord('to abandon', 'покидать'), newWord('reluctant', 'неохотный'), newWord('acquaintance', 'знакомство')); save();
   go('set', { id: 's1' }); await sleep(50);
   launchMode('set', 's1', 'sent');
@@ -138,6 +138,20 @@ await check('«В предложении»: после ответа не вык�
     assert(document.querySelector('.sxs') || document.querySelector('#chero, .cel-hero, .chero'), 'после «Дальше» выкинуло из режима');
   }
   return 'ok';
+}, SEED.toString()));
+
+await check('примеры при добавлении: банк и запасной вариант', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  const real = window.fetch;
+  window.fetch = (u, o) => String(u).includes('lib/') ? real(u, o) : Promise.reject(new Error('offline'));
+  const a = await fetchExamples('reluctant', 'en', null, 'неохотный');
+  assert(a.list.length && /reluctant/i.test(a.list[0].en), 'нет примера из банка для reluctant');
+  /* only short dictionary phrases are found: show them instead of “no examples” */
+  const ex0 = exWiki; exWiki = async () => [{ en: 'a gripping action film', ru: '', s: 50 }];
+  const b = await fetchExamples('gripping', 'en', null, 'захватывающий');
+  exWiki = ex0; window.fetch = real;
+  assert(b.list.length && /gripping/i.test(b.list[0].en), 'для gripping ничего не показано');
+  return a.list.length + ' / ' + b.list[0].en;
 }, SEED.toString()));
 
 await check('серия: разные тексты и реакции', async pg => pg.evaluate(async (seed) => {

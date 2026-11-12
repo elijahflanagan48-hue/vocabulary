@@ -5682,9 +5682,14 @@ function exStems(r){
   vals.join(', ').split(/[,;]\s*|\s+/).forEach(v=>{v=v.toLowerCase().replace(/[^а-яё]/g,'');if(v.length>=4)st.add(v.slice(0,Math.max(4,Math.min(6,v.length-2))));});
   return [...st];
 }
+/* Tatoeba stopped answering browsers directly (CORS), so it goes through the app's server function `ex`; if neither answers, it is skipped for 30 minutes instead of costing 5 seconds per word */
+let TAT_DEAD=0;try{TAT_DEAD=+(sessionStorage.getItem('noeon.tatdead')||0);}catch(e){}
 async function tatQuery(q,code,sort,page){
-  const j=await getJson('https://tatoeba.org/en/api_v0/search?from='+code+'&to=rus&query='+encodeURIComponent(q)+'&orphans=no&unapproved=no&sort='+sort+(page>1?'&page='+page:''),5500);
-  if(!j)return null;
+  if(Date.now()-TAT_DEAD<30*60000)return null;
+  const qs='from='+code+'&query='+encodeURIComponent(q)+'&sort='+sort+(page>1?'&page='+page:'');
+  let j=await getJson(SB_URL+'/functions/v1/ex?src=tat&'+qs,4500);
+  if(!j)j=await getJson('https://tatoeba.org/en/api_v0/search?to=rus&orphans=no&unapproved=no&'+qs,3500);
+  if(!j){TAT_DEAD=Date.now();try{sessionStorage.setItem('noeon.tatdead',String(TAT_DEAD));}catch(e){}return null;}
   return (j.results||[]).map(r=>{
     const tr=[].concat(...(r.translations||[])).filter(y=>y&&y.lang==='rus'&&y.text);
     const ru=(tr.find(y=>y.isDirect)||tr[0]||{}).text||'';
@@ -5693,7 +5698,8 @@ async function tatQuery(q,code,sort,page){
 }
 /* the translator's own usage examples: quick, and there is almost always something for a common word */
 async function exGoogle(q,forms){
-  const j=await getJson('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=ex&q='+encodeURIComponent(q),5000);
+  let j=await getJson('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=ex&q='+encodeURIComponent(q),3500);
+  if(!j)j=await getJson(SB_URL+'/functions/v1/ex?src=gex&q='+encodeURIComponent(q),4000);
   if(!j)return null;
   const out=[];
   const walk=a=>{if(typeof a==='string'){if(/<b>/i.test(a))out.push(a);}else if(Array.isArray(a))a.forEach(walk);};
@@ -5735,6 +5741,8 @@ async function fetchExamples(word,lang,irr,tr,onList){
   const take=r=>{if(r){net=true;cand=cand.concat(r);emit();}};
   const jobs=[];
   if(lang==='en'&&code){
+    /* the built-in sentence bank: instant and offline (sentences that really contain this form of the word) */
+    jobs.push(sxBank([{en:base}]).then(B=>{const ks=sxKeys({en:base}),seen=new Set(),r=[];ks.forEach(k=>(B[k]||[]).forEach(x=>{if(!seen.has(x[0])&&usesForm(x[0],forms)){seen.add(x[0]);r.push({en:x[0],ru:x[1]||'',pen:2});}}));if(r.length)take(r);}).catch(()=>{}));
     jobs.push(tatQuery(base,code,'relevance').then(take).catch(()=>{}));
     jobs.push(tatQuery(base,code,'relevance',2).then(take).catch(()=>{}));
     jobs.push(exGoogle(base,forms).then(take).catch(()=>{}));
@@ -5747,7 +5755,9 @@ async function fetchExamples(word,lang,irr,tr,onList){
   }else if(code){
     take(await tatQuery(q,code,'relevance').catch(()=>null));
   }
-  const list=best();
+  let list=best();
+  /* nothing passed the strict filters: a short dictionary phrase with the word is still better than “no examples” */
+  if(!list.length){const seen=new Set();list=cand.filter(x=>{const e=String(x.en||'').trim(),k=e.toLowerCase();if(!e||seen.has(k)||e.length>160||!usesForm(e,forms)||/https?:|[@#\\]/.test(e))return false;seen.add(k);return true;}).sort((a,b)=>Math.abs(a.en.length-60)-Math.abs(b.en.length-60)).slice(0,3).map(x=>Object.assign(x,{en:x.en.charAt(0).toUpperCase()+x.en.slice(1)}));if(list.length&&onList)onList(list);}
   await Promise.all(list.filter(x=>!x.ru).map(async x=>{x.ru=await exRu2(x.en);}));
   const out={list,failed:!list.length&&!net};
   if(list.length)EXC[k]=out;
@@ -9139,11 +9149,18 @@ function gapFind(s,w){
 }
 function sxOwn(w){const en=exEn(w);if(!en)return null;const g=gapFind(en,w);return g?Object.assign(g,{ru:exRu(w)||''}):null;}
 /* built-in bank: two checked sentences with a Russian translation for ~7,500 common words, loaded once (≈300 KB), works offline */
-let SXB=null,SXBP=null;
-function sxBank(){
-  if(SXB)return Promise.resolve(SXB);
-  if(!SXBP)SXBP=fetch('lib/sx.json?v=1').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>(SXB=(j&&j.w)||{})).catch(()=>{SXBP=null;return {};});
-  return SXBP;
+let SXB=null;const SXL={};
+/* the bank is split by first letter (lib/sx/a.json …), only the letters that are needed get loaded; each stays in the offline cache */
+function sxShard(c){
+  c=/[a-z]/.test(c)?c:'_';
+  if(!SXL[c])SXL[c]=fetch('lib/sx/'+c+'.json?v=2').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{SXB=Object.assign(SXB||{},(j&&j.w)||{});return true;}).catch(()=>{delete SXL[c];return false;});
+  return SXL[c];
+}
+function sxBank(words){
+  const cs=new Set();
+  (words||S.sets.flatMap(s=>s.words||[])).forEach(w=>{if(w&&w.en&&langOf(w)==='en')sxKeys(w).forEach(k=>k&&cs.add(k[0]));});
+  if(!SXB)SXB={};
+  return Promise.all([...cs].map(sxShard)).then(()=>SXB);
 }
 /* the key the bank is looked up by: "to steady" → steady, "bite bit bitten" → bite, "steadied" → steady */
 function sxKeys(w){
@@ -9217,7 +9234,7 @@ const sxHint=f=>f.split('').map((ch,i)=>i===0||ch===' '||ch==='-'||ch==="'"?ch:'
 async function startSent(review){
   const pool=poolNow();if(!pool.length)return toast(t('No words'));
   const app=$('#app'),tok=++SXT;studyBusy=true;tabWanted=false;syncTabs();
-  if(!SXB){app.innerHTML=hdr(t('In a sentence'),'render()')+`<div id="sxload">${skel(2)}</div>`;await sxBank();}
+  {const pr=sxBank(pool);let shown=false;const tm=setTimeout(()=>{shown=true;app.innerHTML=hdr(t('In a sentence'),'render()')+`<div id="sxload">${skel(2)}</div>`;},120);await pr;clearTimeout(tm);}
   if(tok!==SXT)return;
   const cand=shuffle(pool).slice(0,60),N=Math.min(12,cand.length);
   const list=[],used=new Set();
