@@ -3015,7 +3015,8 @@ let softMode=false;
     if(softMode){window.scrollTo(0,y);requestAnimationFrame(()=>{this.style.minHeight='';});}
   }});
 })();
-function softRender(){if(studyBusy||inl||dnd)return;softMode=true;try{render();}finally{softMode=false;}}
+function softRender(){if(studyBusy||inl||dnd||document.querySelector('#app #qb,#app #sxload'))return;   /* never pull the student out of an exercise */
+softMode=true;try{render();}finally{softMode=false;}}
 const pulse=el=>{if(!el)return;el.classList.remove('viewin');void el.offsetWidth;el.classList.add('viewin');};
 const hdr=(title,back,right='')=>{
   try{document.title=(title&&title!=='Vocabulary'&&title!==t('Vocabulary'))?title+' · NOEON Words':'NOEON Words';}catch(e){}
@@ -9215,7 +9216,7 @@ function lookAlikes(pool,w,n){
 const sxHint=f=>f.split('').map((ch,i)=>i===0||ch===' '||ch==='-'||ch==="'"?ch:'_').join('');
 async function startSent(review){
   const pool=poolNow();if(!pool.length)return toast(t('No words'));
-  const app=$('#app'),tok=++SXT;tabWanted=false;syncTabs();
+  const app=$('#app'),tok=++SXT;studyBusy=true;tabWanted=false;syncTabs();
   if(!SXB){app.innerHTML=hdr(t('In a sentence'),'render()')+`<div id="sxload">${skel(2)}</div>`;await sxBank();}
   if(tok!==SXT)return;
   const cand=shuffle(pool).slice(0,60),N=Math.min(12,cand.length);
@@ -9320,7 +9321,7 @@ function lettersDiff(a,b){
 function startDict(review){
   const pool=poolNow().filter(w=>w.en&&ttsTag(langOf(w)));if(!pool.length)return toast(t('No words'));
   const list=shuffle(pool).slice(0,15),app=$('#app');let i=0,okN=0;
-  tabWanted=false;syncTabs();
+  studyBusy=true;tabWanted=false;syncTabs();
   function finish(){
     app.innerHTML=hdr(t('Dictation'),'render()')+celHero('learn',{n:list.length,title:t('Well done!'),sub:`${okN} / ${list.length} ${t('correct')}`})+
       `<div style="height:14px"></div><button class="btn pri" onclick="render()">${t('Done')}</button>`;
@@ -9430,7 +9431,7 @@ function bossPartners(w){
 }
 function bossRun(lg){
   const L=bossList(lg||null).slice(0,4);if(!L.length)return render();
-  const app=$('#app');tabWanted=false;syncTabs();BOSS_WON=[];
+  const app=$('#app');studyBusy=true;tabWanted=false;syncTabs();BOSS_WON=[];
   const pool=S.sets.flatMap(s=>s.words);let wi=0;
   function screen(){
     if(wi>=L.length)return end();
@@ -9508,7 +9509,7 @@ let VTR=null;
 const vtToks=s=>String(s||'').toLowerCase().split(/[^а-яё]+/).filter(x=>x.length>2).map(x=>x.slice(0,5));
 function vtQuit(){if(VTR&&VTR.asked.length&&!confirm(t('Exit the test? The answers so far will be lost.')))return;VTR=null;render();}
 async function vtStart(){
-  const app=$('#app');tabWanted=false;syncTabs();
+  const app=$('#app');studyBusy=true;tabWanted=false;syncTabs();
   app.innerHTML=hdr(t('Vocabulary size'),'render()')+skel(3);
   if(!(await vtLoad())){toast(t('Couldn’t load the test. Check the connection and try again.'));return render();}
   app.innerHTML=hdr(t('Vocabulary size'),'render()')+`<div class="vtintro"><div class="ic">${ic('book',30)}</div>

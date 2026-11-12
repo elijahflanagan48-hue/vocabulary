@@ -121,6 +121,25 @@ await check('«В предложении»: первый вопрос сразу
   return ms + ' мс';
 }, SEED.toString()));
 
+await check('«В предложении»: после ответа не выкидывает в список', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  await sxBank();
+  S.sets[0].words.push(newWord('steady', 'устойчивый'), newWord('to abandon', 'покидать'), newWord('reluctant', 'неохотный'), newWord('acquaintance', 'знакомство')); save();
+  go('set', { id: 's1' }); await sleep(50);
+  launchMode('set', 's1', 'sent');
+  for (let k = 0; k < 40 && !document.querySelector('.sxs'); k++) await sleep(25);
+  for (let q = 0; q < 3; q++) {
+    const o = document.querySelector('.sxo .opt');
+    if (o) o.click(); else { const ta = document.querySelector('#ta'); ta.value = 'xyz'; document.querySelector('#tsub').click(); }
+    await sleep(60);
+    softRender(); liveCheck && await Promise.resolve(); await sleep(1500);          /* what a sync or a list update does in the background */
+    assert(document.querySelector('#nx'), 'после ответа ' + (q + 1) + ' экран сбросился');
+    document.querySelector('#nx').click(); await sleep(150);
+    assert(document.querySelector('.sxs') || document.querySelector('#chero, .cel-hero, .chero'), 'после «Дальше» выкинуло из режима');
+  }
+  return 'ok';
+}, SEED.toString()));
+
 await check('серия: разные тексты и реакции', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
   const heads = new Set(), reacts = new Set();
