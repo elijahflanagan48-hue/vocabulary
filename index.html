@@ -5687,9 +5687,11 @@ let TAT_DEAD=0;try{TAT_DEAD=+(sessionStorage.getItem('noeon.tatdead')||0);}catch
 async function tatQuery(q,code,sort,page){
   if(Date.now()-TAT_DEAD<30*60000)return null;
   const qs='from='+code+'&query='+encodeURIComponent(q)+'&sort='+sort+(page>1?'&page='+page:'');
-  let j=await getJson(SB_URL+'/functions/v1/ex?src=tat&'+qs,4500);
-  if(!j)j=await getJson('https://tatoeba.org/en/api_v0/search?to=rus&orphans=no&unapproved=no&'+qs,3500);
-  if(!j){TAT_DEAD=Date.now();try{sessionStorage.setItem('noeon.tatdead',String(TAT_DEAD));}catch(e){}return null;}
+  /* Tatoeba itself is slow (often 10–30 s); the server caches answers for a week, so repeated words come back at once */
+  const t0=Date.now();
+  let j=await getJson(SB_URL+'/functions/v1/ex?src=tat&'+qs,30000);
+  if(!j&&Date.now()-t0<3000)j=await getJson('https://tatoeba.org/en/api_v0/search?to=rus&orphans=no&unapproved=no&'+qs,3500);
+  if(!j){if(Date.now()-t0<3000){TAT_DEAD=Date.now();try{sessionStorage.setItem('noeon.tatdead',String(TAT_DEAD));}catch(e){}}return null;}
   return (j.results||[]).map(r=>{
     const tr=[].concat(...(r.translations||[])).filter(y=>y&&y.lang==='rus'&&y.text);
     const ru=(tr.find(y=>y.isDirect)||tr[0]||{}).text||'';
@@ -5739,19 +5741,17 @@ async function fetchExamples(word,lang,irr,tr,onList){
     l.filter(x=>!x.ru).forEach(x=>{exRu2(x.en).then(r=>{if(r&&!x.ru){x.ru=r;last='';emit();}});});
   };
   const take=r=>{if(r){net=true;cand=cand.concat(r);emit();}};
-  const jobs=[];
+  const jobs=[],slow=[];
   if(lang==='en'&&code){
     /* the built-in sentence bank: instant and offline (sentences that really contain this form of the word) */
     jobs.push(sxBank([{en:base}]).then(B=>{const ks=sxKeys({en:base}),seen=new Set(),r=[];ks.forEach(k=>(B[k]||[]).forEach(x=>{if(!seen.has(x[0])&&usesForm(x[0],forms)){seen.add(x[0]);r.push({en:x[0],ru:x[1]||'',pen:2});}}));if(r.length)take(r);}).catch(()=>{}));
-    jobs.push(tatQuery(base,code,'relevance').then(take).catch(()=>{}));
-    jobs.push(tatQuery(base,code,'relevance',2).then(take).catch(()=>{}));
+    slow.push(tatQuery(base,code,'relevance').then(take).catch(()=>{}));
     jobs.push(exGoogle(base,forms).then(take).catch(()=>{}));
     jobs.push(exWiki(base,forms).then(r=>take(r&&r.map(x=>({en:x.en,ru:'',pen:12})))).catch(()=>{}));
     jobs.push(exDict(base,forms).then(r=>take(r&&r.map(x=>({en:x.en,ru:'',pen:12})))).catch(()=>{}));
     await Promise.all(jobs);
-    if(best().length<3&&!irr){
-      await Promise.all(forms.filter(f=>f!==base).slice(0,3).map(f=>tatQuery(f,code,'relevance').then(take).catch(()=>{})));
-    }
+    /* the fast sources already gave something: answer now; Tatoeba keeps improving the list on screen when it arrives */
+    if(best().length<2)await Promise.all(slow);
   }else if(code){
     take(await tatQuery(q,code,'relevance').catch(()=>null));
   }
