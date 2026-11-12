@@ -154,6 +154,22 @@ await check('примеры при добавлении: банк и запас�
   return a.list.length + ' / ' + b.list[0].en;
 }, SEED.toString()));
 
+await check('пример всегда с переводом: запасные пути и дозаполнение старых слов', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  const real = window.fetch; const hits = [];
+  /* Google answers nothing (rate-limited), the app's server answers */
+  window.fetch = (u, o) => { u = String(u); hits.push(u.slice(0, 40));
+    if (u.includes('/functions/v1/tr')) return Promise.resolve(new Response(JSON.stringify([[['Держите лестницу ровно.', 'x']]]), { status: 200 }));
+    if (u.includes('lib/')) return real(u, o);
+    return Promise.reject(new Error('429')); };
+  const w = newWord('steady', 'устойчивый', 'Hold the ladder steady.'); S.sets[0].words.push(w); save();
+  await exFixAll();
+  window.fetch = real;
+  assert(exParse(w.ex).ru === 'Держите лестницу ровно.', 'старый пример не получил перевод: ' + w.ex);
+  assert(trsCache()['Hold the ladder steady.'], 'перевод не запомнен');
+  return w.ex;
+}, SEED.toString()));
+
 await check('серия: разные тексты и реакции', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
   const heads = new Set(), reacts = new Set();

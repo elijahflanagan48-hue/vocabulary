@@ -4338,7 +4338,7 @@ async function tInfoDraw(id,st){
   el.innerHTML=(ipa?`<div class="ipa">${ipa}</div>`:'')+(fl||pos?`<div class="tags">${pos?`<span class="tag">${esc(pos)}</span>`:''}</div>`:'')+(fl?`<div class="fql" style="display:flex;align-items:center;gap:8px;margin:6px 0">${fl}</div>`:'')+ffNote(w)+(ex.en?`<div class="ex">${esc(ex.en)}${ex.ru?`<small style="display:block;opacity:.8;margin-top:4px">${esc(ex.ru)}</small>`:''}</div>`:'')+((fam&&fam.length)?`<div class="chips" style="margin-top:8px">${fam.map(m=>`<span class="chip fam">${esc(m.w)}<em>${t(POSL[m.p]||'')}</em></span>`).join('')}</div>`:'');
 }
 async function tSaveWord(id){
-  const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim();let ex=exVal('tEx');{const p=exParse(ex);if(p.en&&!p.ru){const r=await Promise.race([trSentence(p.en).catch(()=>''),new Promise(z=>setTimeout(()=>z(''),2500))]);ex=exJoin(p.en,r);}}
+  const en=($('#tEn').value||'').trim(),ru=($('#tRu').value||'').trim();let ex=exVal('tEx');{const p=exParse(ex);if(p.en&&!p.ru){const r=await Promise.race([trSentence(p.en).catch(()=>''),new Promise(z=>setTimeout(()=>z(''),9000))]);ex=exJoin(p.en,r);}}
   const err=$('#tErr');
   if(!en){err.textContent=t('Enter a word');return;}
   tmLearn(en,ru,TV.setId==='archive'?tArchLg:tSetLang(TV.setId));
@@ -5546,9 +5546,45 @@ const exEn=w=>exParse(w&&w.ex).en;
 const exRu=w=>exParse(w&&w.ex).ru;
 const exJoin=(en,ru)=>{en=String(en||'').trim();ru=String(ru||'').trim();return en?(ru?en+' '+EXSEP+' '+ru:en):'';};
 function exVal(id){const el=$('#'+id);if(!el)return '';const en=el.value.trim();return exJoin(en,en&&el.dataset.en===en?el.dataset.ru:'');}
+/* a sentence → Russian. Several routes, because one of them is often rate-limited on a given phone: Google directly, its second address, the app's server, and MyMemory for whole sentences; answers are kept on the device */
+const TRSK='noeon.trs.v1';let TRSC=null;
+function trsCache(){if(!TRSC){try{TRSC=JSON.parse(localStorage.getItem(TRSK)||'{}')||{};}catch(e){TRSC={};}}return TRSC;}
+function trsPut(k,v){const c=trsCache();c[k]=v;const ks=Object.keys(c);if(ks.length>800)ks.slice(0,ks.length-800).forEach(x=>delete c[x]);try{localStorage.setItem(TRSK,JSON.stringify(c));}catch(e){}}
 async function trSentence(x){
-  const j=await getJson('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&q='+encodeURIComponent(x),6000);
-  return ((j&&j[0])||[]).map(a=>a[0]).join('').trim();
+  x=String(x||'').trim();if(!x)return '';
+  const c=trsCache()[x];if(c)return c;
+  const q=encodeURIComponent(x),join=j=>((j&&j[0])||[]).map(a=>a&&a[0]).join('').trim();
+  const routes=[
+    ()=>getJson('https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ru&dt=t&q='+q,4000).then(join),
+    ()=>getJson('https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=en&tl=ru&dt=t&q='+q,4000).then(join),
+    ()=>getJson(SB_URL+'/functions/v1/tr?sl=en&tl=ru&q='+q,6000).then(join),
+    ()=>getJson('https://api.mymemory.translated.net/get?langpair=en|ru&q='+q,5000).then(j=>{const r=String((j&&j.responseData&&j.responseData.translatedText)||'').trim();return /[а-яё]/i.test(r)&&!/MYMEMORY WARNING/i.test(r)?r:'';})
+  ];
+  for(const f of routes){
+    try{const r=await f();if(r&&/[а-яё]/i.test(r)&&r.toLowerCase()!==x.toLowerCase()){trsPut(x,r);return r;}}catch(e){}
+  }
+  return '';
+}
+/* every saved example gets its Russian: words whose example is still English-only are translated quietly in the background */
+const EXFIX_TRY={};
+async function exFixWord(w){
+  if(!w||!w.ex||langOf(w)!=='en')return false;
+  const p=exParse(w.ex);if(!p.en||p.ru||EXFIX_TRY[p.en]>2)return false;
+  EXFIX_TRY[p.en]=(EXFIX_TRY[p.en]||0)+1;
+  const r=await trSentence(p.en);if(!r)return false;
+  const now=exParse(w.ex);if(now.en!==p.en||now.ru)return false;   /* edited meanwhile */
+  w.ex=exJoin(p.en,r);touch(w);return true;
+}
+let EXFIXR=0;
+async function exFixAll(){
+  if(EXFIXR||navigator.onLine===false)return;EXFIXR=1;
+  try{
+    const need=S.sets.flatMap(s=>s.words||[]).filter(w=>w&&w.ex&&!exParse(w.ex).ru&&langOf(w)==='en').slice(0,40);
+    let n=0,i=0;
+    await Promise.all([0,1].map(async()=>{while(i<need.length){const w=need[i++];if(await exFixWord(w).catch(()=>false))n++;}}));
+    if(n){save();softRender();}
+  }catch(e){}
+  EXFIXR=0;
 }
 const SPK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 const CKS='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>';
@@ -5882,10 +5918,11 @@ async function saveWord(){
     const dup=dupGroupsFor(formArch.lang,en);
     if(dup){toast('“'+en+'” '+t('is already in the Archive'));return;}
     const h=holderFor(formArch.lang),w=mk();w.arch=true;w.box=3;w.mark=0;w.aat=archStamp();srStart(w);h.words.unshift(w);
-    save();render();toast(t('Added to the Archive ✓'));clearNewForm();return;
+    save();render();if(ex&&!exParse(ex).ru)exFixWord(w).then(ok=>{if(ok){save();softRender();}});toast(t('Added to the Archive ✓'));clearNewForm();return;
   }
-  target=addTarget();S.settings.lastSet=target.id;target.words.unshift(mk());save();render();toast(t('Added ✓'));
+  target=addTarget();S.settings.lastSet=target.id;const nw=mk();target.words.unshift(nw);save();render();toast(t('Added ✓'));
   clearNewForm();
+  if(ex&&!exParse(ex).ru)exFixWord(nw).then(ok=>{if(ok){save();softRender();}});
   if(fam.length)addFamily(target,fam,formLang);
 }
 
@@ -5895,6 +5932,7 @@ function wordView(id){
   const f=findWord(id);if(!f)return;
   editId=id;VW={id,tr:false,ex:false,fam:[],tags:''};
   vwDraw(true);vwLoad();
+  if(f.w.ex&&!exParse(f.w.ex).ru)exFixWord(f.w).then(ok=>{if(ok){save();if(VW.id===id&&!VW.ex)vwDraw();}});
 }
 const POS_DICT={noun:'существительное',verb:'глагол',adjective:'прилагательное',adverb:'наречие',pronoun:'местоимение',preposition:'предлог',conjunction:'союз',interjection:'междометие',exclamation:'междометие',determiner:'определитель',numeral:'числительное',article:'артикль'};
 function vwDraw(first){
@@ -5964,7 +6002,7 @@ function vwAuto(k){clearTimeout(_vwT);_vwT=setTimeout(()=>vwAfter(k),500);}
 function vwAfter(k){
   const f=findWord(VW.id);if(!f)return;const w=f.w;
   if(k==='ru'||!k){const v=(($('#vRu')||{}).value||'').trim();if(v&&v!==w.ru){w.ru=v;touch(w);save();render();tmLearn(w.en,v,setLangOf(f.s));}}
-  if(k==='ex'||!k){const v=exVal('vEx');if(v!==(w.ex||'')){w.ex=v;touch(w);save();}}
+  if(k==='ex'||!k){const v=exVal('vEx');if(v!==(w.ex||'')){w.ex=v;touch(w);save();if(v&&!exParse(v).ru)exFixWord(w).then(ok=>{if(ok){save();if(VW.id===w.id&&!VW.ex)vwDraw();}});}}
 }
 async function vwFam(b){
   const f=findWord(VW.id);if(!f)return;const w=b.dataset.w;
@@ -10173,7 +10211,7 @@ try{if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme:dark)');mq.
 authInit();
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudEnabled()){cloudPull().then(softRender);setTimeout(pingSeen,1500);}});
 setInterval(pingSeen,120000);
-setTimeout(()=>{try{sxWarm();}catch(e){}},9000);setInterval(()=>{if(document.visibilityState==='visible')try{sxWarm();}catch(e){}},11*60000);
+setTimeout(()=>{try{sxWarm();}catch(e){}},9000);setTimeout(()=>{try{exFixAll();}catch(e){}},4000);setInterval(()=>{if(document.visibilityState==='visible')try{exFixAll();}catch(e){}},3*60000);setInterval(()=>{if(document.visibilityState==='visible')try{sxWarm();}catch(e){}},11*60000);
 setInterval(()=>{if(cloudEnabled()&&document.visibilityState==='visible')cloudPull().then(softRender);},150000);
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
 if('serviceWorker' in navigator){const reg=()=>navigator.serviceWorker.register('sw.js').catch(()=>{});if(document.readyState==='complete')reg();else addEventListener('load',reg);}
