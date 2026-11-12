@@ -3131,7 +3131,7 @@ vocab(app){
   const hardN=hardWords().length,ls=langsUsed(),multi=ls.length>1;
   /* one Archive while a single language is in use, one per language once a second appears */
   const archive=(multi?ls:[null]).map((c,i)=>archCard(c,i===0)).join('');
-  app.innerHTML=hdr(t('Vocabulary'),'',`<button class="ic" aria-label="New list" onclick="newSet()">${ic('plus')}</button>`)+testBanner()+
+  app.innerHTML=hdr(t('Vocabulary'),'',`<button class="ic" aria-label="New list" onclick="newSet()">${ic('plus')}</button>`)+
    (S.sets.length?sbox('vocabSearch')+'<div id="vres"></div>':'')+'<div id="vmain">'+
    (S.sets.length?
      lists().map(s=>{const a=active(s).length,learned=s.words.filter(w=>w.arch).length;return(
@@ -3140,7 +3140,7 @@ vocab(app){
          <div class="t"><div class="nm">${esc(s.name)}</div>
          <div class="meta">${multi?esc(langName(setLangOf(s)))+' · ':''}${a} ${t('learning')}${learned?` · ${learned} ${t('learned')}`:''}</div></div>
          ${ic('right',18)}</div>`)}).join('')+
-     libEntry()+archive+
+     archive+testBanner()+libEntry()+
      (hardN>=3?`<div class="setcard" onclick="go('hard')">
         <div class="arch-ic" style="background:var(--bad-soft);border-color:transparent;color:var(--bad)">${ic('zap')}</div>
         <div class="t"><div class="nm">${t('Tricky words')}</div>
@@ -3826,21 +3826,8 @@ function tsetsHtml(){
   const weekN=words.filter(w=>+new Date(w.updated_at)>Date.now()-7*DAY).length;
   const dueN=words.filter(w=>w.arch&&w.due&&w.due<=Date.now()).length;
   const tricky=words.filter(w=>(w.bad||0)>=2&&(w.bad||0)>(w.ok||0)).sort((a,b)=>((b.bad||0)-(b.ok||0))-((a.bad||0)-(a.ok||0))).slice(0,6);
-  return `<div class="daycard" style="align-items:flex-start">
-      <div class="t"><div class="lbl"><span id="seenTx">${esc(seenTxt(last))}</span><b>${nWords(words.length)}</b></div>
-      <div class="meta" id="seenLn" style="color:var(--mut);font-size:13.5px;margin-top:5px">${t('Last visit')}: <b style="color:var(--tx)">${esc(fmtDT(last))}</b></div>
-      <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:5px">
-        ${archN} ${t('learned')} · ${weekN} ${t('this week')}${dueN?` · ${dueN} ${t('due for review')}`:''}</div></div></div>`+
-   `<div id="tAsg"></div>`+(setTimeout(()=>asgTRefresh(sid),0),'')+
-   (tricky.length?`<div class="subhead"><span class="t">${t('Needs work')}</span></div>`+
-     '<div class="wlist">'+tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
-       <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
-       <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}</div></div>
-       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'+
-     `<div style="height:14px"></div>`:'')+
-   `<div id="tLearn"></div>`+(setTimeout(()=>tLearnDraw(sid),0),'')+
-   `<div class="subhead"><span class="t">${t('Exam lists')}</span></div>`+libCardHtml('target',t('Access to exam lists'),t('Choose which exam lists this student sees'),'',`go('tsaccess',{sid:'${sid}',sname:'${q1(sname)}'})`)+`<div style="height:14px"></div>`+
-   (sets.filter(x=>x.name!==ARCH_NAME).length
+  /* v167: the lists come first, everything else below */
+  return (sets.filter(x=>x.name!==ARCH_NAME).length
     ?`<div class="subhead"><span class="t">${t('Lists')}</span></div>`+sets.filter(x=>x.name!==ARCH_NAME).map(s=>{
         const a=words.filter(w=>w.set_id===s.id&&!w.arch).length,lr=words.filter(w=>w.set_id===s.id&&w.arch).length;
         return `<div class="setcard" onclick="go('twords',{sid:'${sid}',sname:'${q1(sname)}',setId:'${s.id}',setName:'${q1(s.name)}'})">
@@ -3853,7 +3840,21 @@ function tsetsHtml(){
       <div class="arch-ic">${ic('archive')}</div>
       <div class="t"><div class="nm">${t('Archive')}${multi?' · '+esc(langName(lg)):''}</div><div class="meta">${n?nWords(n):t('learned words')}</div></div>
       <span style="color:var(--fade);font-size:22px">›</span></div>`;}).join('')+`
-    <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">${ic('plus',18)}${t('New list for')} ${esc(sname)}</button>`;
+    <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">${ic('plus',18)}${t('New list for')} ${esc(sname)}</button>`+`<div style="height:18px"></div>`+
+   `<div class="daycard" style="align-items:flex-start">
+      <div class="t"><div class="lbl"><span id="seenTx">${esc(seenTxt(last))}</span><b>${nWords(words.length)}</b></div>
+      <div class="meta" id="seenLn" style="color:var(--mut);font-size:13.5px;margin-top:5px">${t('Last visit')}: <b style="color:var(--tx)">${esc(fmtDT(last))}</b></div>
+      <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:5px">
+        ${archN} ${t('learned')} · ${weekN} ${t('this week')}${dueN?` · ${dueN} ${t('due for review')}`:''}</div></div></div>`+
+   `<div id="tAsg"></div>`+(setTimeout(()=>asgTRefresh(sid),0),'')+
+   (tricky.length?`<div class="subhead"><span class="t">${t('Needs work')}</span></div>`+
+     '<div class="wlist">'+tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
+       <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
+       <div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru||'')}</div></div>
+       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${tSetLang(w.set_id)}')">${ic('sound',17)}</button></div>`).join('')+'</div>'+
+     `<div style="height:14px"></div>`:'')+
+   `<div id="tLearn"></div>`+(setTimeout(()=>tLearnDraw(sid),0),'')+
+   `<div class="subhead"><span class="t">${t('Exam lists')}</span></div>`+libCardHtml('target',t('Access to exam lists'),t('Choose which exam lists this student sees'),'',`go('tsaccess',{sid:'${sid}',sname:'${q1(sname)}'})`)+`<div style="height:14px"></div>`;
 }
 /* find a word anywhere in this student's lists and Archive */
 function tsSearch(v){
