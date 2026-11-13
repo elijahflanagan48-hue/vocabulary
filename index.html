@@ -1808,6 +1808,25 @@ function rollDay(){
   if(!(st.day===y&&st.met))st.streak=0;
   st.day=k;st.ids=[];st.met=false;st.upd=Date.now();
 }
+/* v171: the day may already have been rolled by an older version (streak reset, no rescue offered).
+   Rebuild the chance from the activity journal: yesterday below the goal, the day before and earlier at or above it. */
+function rsRecover(){
+  try{
+    const st=S.stats,k=dayKey();
+    if(st.day!==k||st.rsChk===k)return;
+    st.rsChk=k;
+    if(st.rs&&st.rs.day===k)return;
+    if((st.streak||0)>1)return;
+    const a=actAll(),t0=dIdx(),goal=st.goal||10,ans=i=>(a[i]&&+a[i][0])||0;
+    if(ans(t0-1)>=goal)return;
+    let n=0;for(let i=t0-2;ans(i)>=goal;i--)n++;
+    if(n<1)return;
+    const first=Math.min(...Object.keys(a).map(Number));
+    if(t0-1-n<=first)n=Math.max(n,st.best||0);      /* the run goes back to where the journal begins */
+    st.rs={n,day:k,done:false};st.upd=Date.now();
+    if(st.ids.length>=2*goal)rsCheck();
+  }catch(e){}
+}
 /* the rescue is open today and not finished yet */
 function rsOpen(){const r=S.stats.rs;return !!(r&&r.day===S.stats.day&&!r.done&&r.n>0);}
 function rsCheck(){
@@ -2387,7 +2406,7 @@ function permBlocked(e){const m=errText(e);return m.indexOf('row-level')>=0||m.i
 const dayNum=k=>{if(!k)return 0;const p=String(k).split('-');return (+p[0]||0)*10000+(+p[1]||0)*100+(+p[2]||0);};
 
 let SEEN=0,_seenT=0;
-function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,rs:st.rs||null,seen:SEEN||0,conf:st.conf||{},wf:st.wf||{},act:st.act||{},asg:st.asg||{},vt:st.vt||{},boss:st.boss||{}};}
+function statsBlob(){const st=S.stats;return {day:st.day||'',ids:st.ids||[],streak:st.streak||0,best:st.best||0,met:!!st.met,goal:st.goal||10,upd:st.upd||0,rs:st.rs||null,rsChk:st.rsChk||'',seen:SEEN||0,conf:st.conf||{},wf:st.wf||{},act:st.act||{},asg:st.asg||{},vt:st.vt||{},boss:st.boss||{}};}
 /* a student's device tells the teacher it was opened: at most once every ~2 minutes while visible */
 function pingSeen(){
   try{
@@ -6727,6 +6746,7 @@ function cstSvg(o){
 function dayStrip(){
   const total=S.sets.reduce((n,s)=>n+s.words.length,0);
   if(!total)return '';
+  rsRecover();
   const goal=S.stats.goal||10,done=todayCount(),st=S.stats.streak||0,met=!!S.stats.met;
   const pct=Math.min(100,done/goal*100),w=cstWeek(met?Math.max(0,st-1):st,met);
   const left=Math.max(0,goal-done);
