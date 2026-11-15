@@ -3887,6 +3887,7 @@ function tsetsHtml(){
       <div class="t"><div class="nm">${t('Archive')}${multi?' · '+esc(langName(lg)):''}</div><div class="meta">${n?nWords(n):t('learned words')}</div></div>
       <span style="color:var(--fade);font-size:22px">›</span></div>`;}).join('')+`
     <button class="btn pri" style="margin-top:12px" onclick="tNewSet()">${ic('plus',18)}${t('New list for')} ${esc(sname)}</button>`+`<div style="height:18px"></div>`+
+   `<div id="tLearn2"></div>`+
    (tricky.length?`<div class="subhead"><span class="t">${t('Needs work')}</span></div>`+
      '<div class="wlist">'+tricky.map(w=>`<div class="item" onclick="tWordForm('${w.id}')">
        <span class="chk" style="background:var(--bad-soft);color:var(--bad)">${w.bad}</span>
@@ -3931,11 +3932,12 @@ function tLearnDraw(sid){
   const wf=st.wf&&typeof st.wf==='object'&&st.wf.d&&typeof st.wf.d==='object'?st.wf:null;
   const lvs=wf?WF_LVS.map(x=>x[0]).filter(l=>wf.d[l]&&Object.keys(wf.d[l]).length):[];
   const stLink=`<button class="rowlink" onclick="go('tprog',{sid:'${sid}',tab:'cal',back:'tsets',sname:'${q1((stu&&stu.display_name)||TV.sname||'')}'})"><span>${ic('trend',19)}${t('Student statistics')}</span>${ic('right',18)}</button>`;
-  h=stLink+'<div style="height:6px"></div>'+h;
+  el.innerHTML=stLink+'<div style="height:6px"></div>';
+  const el2=$('#tLearn2');const put=x=>{if(el2)el2.innerHTML=x;};
   if(lvs.length){
     h+=`<div class="subhead"><span class="t">${t('Word formation')}</span></div><div id="tWf"><div class="hint" style="margin:6px 2px">${t('Loading…')}</div></div>
       <button class="rowlink" style="margin-top:8px" onclick="go('tprog',{sid:'${sid}',tab:'wf',back:'tsets',sname:'${q1((stu&&stu.display_name)||TV.sname||'')}'})"><span>${ic('pen',19)}${t('All texts and statistics')}</span>${ic('right',18)}</button><div style="height:14px"></div>`;
-    el.innerHTML=h;
+    put(h);
     Promise.all(lvs.map(l=>wfLoad(l).then(()=>l))).then(()=>{
       const box=$('#tWf');if(!box||!TV||TV.sid!==sid)return;
       const rows0=[['neg','Negatives (un-, in-, dis-, -less)'],['noun','Nouns'],['adj','Adjectives'],['adv','Adverbs'],['verb','Verbs'],['num','Numerals'],['end','Plural and verb endings']];
@@ -3947,7 +3949,7 @@ function tLearnDraw(sid){
           rows.map(r=>{const [aa,nn]=sts[r[0]],p=Math.round(aa/nn*100);return `<div class="r${p<65&&nn>=6?' low':''}"><span>${t(r[1])}</span><div class="tr"><i style="width:${p}%"></i></div><span class="p">${p}%</span></div>`;}).join('')+'</div>';
       }).join('');
     }).catch(()=>{const box=$('#tWf');if(box)box.innerHTML='';});
-  }else el.innerHTML=h;
+  }else put(h);
 }
 /* the student's own latest heartbeat, fetched fresh each time the card opens */
 async function tSeenRefresh(sid){
