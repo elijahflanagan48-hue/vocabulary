@@ -647,8 +647,8 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
 .ra:hover{background:var(--surf2);color:var(--pri)}
 .ra.del:hover{background:var(--bad-soft);color:var(--bad)}
 .ra.del.sure,.ra.del.sure:hover{background:var(--bad);color:#fff;width:auto;padding:0 11px;white-space:nowrap}
-.dgrip{display:none;position:absolute;left:0;top:0;bottom:0;width:26px;align-items:center;justify-content:center;color:var(--fade);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.dgrip svg{width:15px;height:15px}
+.dgrip{display:none;position:absolute;left:0;top:0;bottom:0;width:34px;align-items:center;justify-content:center;color:var(--fade);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.dgrip svg{width:19px;height:19px}
 .dgrip:hover{color:var(--pri)}
 .item.editing{background:var(--surf2);cursor:default}
 .inl{display:block;width:100%;border:1px solid var(--line2);background:var(--surf);color:var(--tx);border-radius:9px;padding:6px 10px;font:inherit;outline:none;min-width:0}
@@ -663,6 +663,9 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   .item:hover .racts,.item.editing .racts,.item:focus-within .racts{opacity:1;pointer-events:auto}
   .item.editing .racts{display:none}
   .item:hover .dgrip{display:flex}
+  /* the number next to the word is a handle too: a much bigger target than the dots */
+  .item[data-dr] .numx{cursor:grab}
+  .item[data-dr]:hover .numx{background:color-mix(in srgb,var(--pri) 14%,var(--surf2,var(--line)));color:var(--pri)}
   .wlist .item[data-m]:hover .racts{background:linear-gradient(to right,transparent,var(--surf) 20px)}
 }
 .swact{display:none}
@@ -3573,9 +3576,10 @@ function dragEnd(commit){
   if(!dnd)return;
   const d=dnd;dnd=null;cancelAnimationFrame(d.raf);
   try{d.grip.releasePointerCapture(d.pid);}catch(x){}
-  d.row.classList.remove('dragging');d.row.style.transform='';document.body.classList.remove('dnding');noClickUntil=Date.now()+400;swReset();
+  d.row.classList.remove('dragging');d.row.style.transform='';document.body.classList.remove('dnding');if(Math.abs(d.y-d.y0)>4||d.grip.classList.contains('dgrip'))noClickUntil=Date.now()+400;swReset();   /* a plain click on the number still opens the word */
   const ids=[...d.list.children].filter(r=>r.classList&&r.classList.contains('item')).map(r=>r.dataset.id);
   const moved=ids.join()!==d.ids.join();
+  if(!moved&&!d.grip.classList.contains('dgrip'))return;   /* only pressed the number: leave the row alone so the click opens the word */
   if(commit&&moved){if(isTeacherList())tReorder(ids);else reorderSet(ids);}
   else if(moved){   /* cancelled: put the rows back where they were */
     const m=new Map([...d.list.children].map(r=>[r.dataset&&r.dataset.id,r]));
@@ -3588,7 +3592,7 @@ function dragEnd(commit){
 function dragBegin(row,cap,e,y){
   if(inl)inlineCommit();
   const list=row.parentElement;
-  dnd={row,list,grip:cap,pid:e.pointerId,y:y,startY:y+window.scrollY,top0:row.offsetTop,raf:0,
+  dnd={row,list,grip:cap,pid:e.pointerId,y:y,y0:y,startY:y+window.scrollY,top0:row.offsetTop,raf:0,
        ids:[...list.children].filter(r=>r.classList&&r.classList.contains('item')).map(r=>r.dataset.id)};
   try{cap.setPointerCapture(e.pointerId);}catch(x){}
   row.classList.add('dragging');document.body.classList.add('dnding');
@@ -3603,7 +3607,8 @@ function swClose(){
 }
 function swReset(){if(SW){clearTimeout(SW.timer);SW=null;}}
 document.addEventListener('pointerdown',e=>{
-  const g=e.target.closest&&e.target.closest('.dgrip');
+  let g=e.target.closest&&e.target.closest('.dgrip');
+  if(!g&&e.pointerType==='mouse'&&!selMode&&!markMode&&e.target.closest){const nx=e.target.closest('.item[data-dr] .numx');if(nx)g=nx;}
   if(g){
     if(dnd||(e.pointerType==='mouse'&&e.button!==0))return;
     const row=g.closest('.item');if(!row)return;
