@@ -2372,6 +2372,8 @@ Object.assign(RU_DICT,{"verified":"проверено","your choice":"ваш в�
 const SB_URL='https://sbpqwwsnvbpfwqoxfpza.supabase.co';
 const SB_KEY='sb_publishable_H3ue62zAaSeDFN2UGcfcWA_HlMlw2-5';
 let sb=null;
+/* the e-mail link lands here with #type=recovery (or an error such as otp_expired); the client clears the address while it starts, so it is read first */
+const AUTH_URL=String(location.hash||'')+'&'+String(location.search||'');
 try{sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_KEY):null;}catch(e){sb=null;}
 let AUTH={user:null,profile:null,ready:false,students:[]};
 let syncing=false;
@@ -2707,6 +2709,13 @@ async function authInit(){
   }catch(e){}
   restorePending();
   try{
+    if(/type=recovery/.test(AUTH_URL)&&AUTH.user)setTimeout(newPassSheet,300);
+    else if(/error_code=otp_expired|error=access_denied|One-time|invalid.or.has.expired/i.test(decodeURIComponent(AUTH_URL.replace(/\+/g,' ')))){
+      try{history.replaceState(null,'',location.pathname);}catch(e){}
+      setTimeout(()=>forgotSheet('expired'),300);
+    }
+  }catch(e){}
+  try{
     sb.auth.onAuthStateChange((ev,sess)=>{
       if(ev==='SIGNED_IN'&&sess&&(!AUTH.user||AUTH.user.id!==sess.user.id))onSignedIn(sess.user);
       if(ev==='PASSWORD_RECOVERY'){setTimeout(newPassSheet,300);}
@@ -2878,29 +2887,76 @@ function drawAuth(){
    <div class="hint" style="text-align:center;margin-top:12px">${t('An account syncs your words across devices. Using the app without one keeps everything on this device only.')}</div>`);
   setTimeout(()=>{const e=$('#'+(authTab==='signup'?'aName':'aEmail'));if(e)e.focus();},60);
 }
-function forgotSheet(){
-  const em=(($('#aEmail')||{}).value||'').trim();
+/* Password reset. The e-mail has a link and (once the template includes it) a code. The code is the reliable way:
+   mail services (Mail.ru, Yandex, Gmail) often open links themselves to check them, which uses up the one-time link,
+   and on a phone the link opens in the browser rather than in the installed app. */
+let FG_EMAIL='';
+function forgotSheet(why){
+  const em=FG_EMAIL||(($('#aEmail')||{}).value||'').trim();
   sheet(`<h2>${t('Reset password')}</h2>
-   <div class="hint" style="margin-bottom:10px">${t('We’ll email you a link to set a new password.')}</div>
+   ${why==='expired'?`<div class="hint" style="margin-bottom:10px;color:var(--bad)">${t('This link has expired or was already used. Request a new one — or use the code from the e-mail.')}</div>`:''}
+   <div class="hint" style="margin-bottom:10px">${t('We’ll e-mail you a code (and a link) to set a new password.')}</div>
    <div class="field"><label>${t('Email')}</label><input class="inp" id="fEmail" type="email" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(em)}" placeholder="${t('you@example.com')}"></div>
    <div class="err" id="fErr"></div>
-   <button class="btn pri" id="fBtn" onclick="sendReset()">${t('Send link')}</button>
+   <button class="btn pri" id="fBtn" onclick="sendReset()">${t('Send')}</button>
    <div style="height:9px"></div>
+   ${em?`<button class="btn ghost" onclick="FG_EMAIL=(($('#fEmail')||{}).value||'').trim();codeSheet()">${t('I already have a code')}</button><div style="height:9px"></div>`:''}
    <button class="btn ghost" onclick="authTab='signin';drawAuth()">${t('Back to sign in')}</button>`);
   setTimeout(()=>{const e=$('#fEmail');if(e&&!e.value)e.focus();},60);
 }
 async function sendReset(){
   const email=(($('#fEmail')||{}).value||'').trim(),err=$('#fErr'),btn=$('#fBtn');
   if(err)err.textContent='';
-  if(!email){if(err)err.textContent=t('That email address doesn’t look right.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){if(err)err.textContent=t('That email address doesn’t look right.');return;}
   const label=btn.textContent;btn.textContent=t('Please wait…');btn.disabled=true;
   try{
     const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
     if(error)throw error;
-    err.style.color='var(--ok)';err.textContent=t('Check your email — the link is on its way.');
-    btn.textContent=label;
-  }catch(e){err.style.color='';err.textContent=authErrMsg(e);btn.textContent=label;btn.disabled=false;}
+    FG_EMAIL=email;codeSheet(true);
+  }catch(e){
+    err.style.color='';
+    err.textContent=/rate|security purposes|too many|after \d+ seconds/i.test((e&&e.message)||'')?t('A letter was sent a moment ago. Wait a minute and try again, or use the code from that letter.'):authErrMsg(e);
+    btn.textContent=label;btn.disabled=false;
+  }
 }
+function codeSheet(sent){
+  sheet(`<h2>${t('Set a new password')}</h2>
+   <div class="hint" style="margin-bottom:10px">${sent?t('We sent a letter to')+' <b>'+esc(FG_EMAIL)+'</b>. ':''}${t('Enter the code from the letter. Only the newest letter counts. Check Spam if there is nothing in a minute.')}</div>
+   <div class="field"><label>${t('Code from the letter')}</label><input class="inp" id="cdCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456" style="letter-spacing:.2em;font-size:20px"></div>
+   <div class="field"><label>${t('New password')}</label><input class="inp" id="npA" type="password" autocomplete="new-password" placeholder="${t('At least 8 characters')}"></div>
+   <div class="field"><label>${t('Repeat password')}</label><input class="inp" id="npB" type="password" autocomplete="new-password"></div>
+   <div class="err" id="npErr"></div>
+   <button class="btn pri" id="npBtn" onclick="codeSave()">${t('Save password')}</button>
+   <div style="height:9px"></div>
+   <button class="btn ghost" onclick="forgotSheet()">${t('Send the letter again')}</button>`);
+  setTimeout(()=>{const e=$('#cdCode');if(e)e.focus();},60);
+}
+async function codeSave(){
+  const code=((($('#cdCode')||{}).value)||'').replace(/\D/g,''),a=($('#npA')||{}).value||'',b=($('#npB')||{}).value||'',err=$('#npErr'),btn=$('#npBtn');
+  err.textContent='';
+  if(code.length<6){err.textContent=t('Enter the code from the letter.');return;}
+  if(a.length<8){err.textContent=t('Password must be at least 8 characters.');return;}
+  if(a!==b){err.textContent=t('Passwords don’t match');return;}
+  btn.disabled=true;const label=btn.textContent;btn.textContent=t('Please wait…');
+  try{
+    const {data,error}=await sb.auth.verifyOtp({email:FG_EMAIL,token:code,type:'recovery'});
+    if(error)throw error;
+    const r=await sb.auth.updateUser({password:a});
+    if(r.error)throw r.error;
+    closeSheet();toast(t('Password changed ✓'));
+    if(data&&data.session&&(!AUTH.user||AUTH.user.id!==data.session.user.id))onSignedIn(data.session.user);
+  }catch(e){
+    const m=(e&&e.message)||'';
+    err.textContent=/expired|invalid|not found|otp/i.test(m)?t('The code is wrong or has expired. Use the code from the newest letter, or send a new one.'):authErrMsg(e);
+    btn.disabled=false;btn.textContent=label;
+  }
+}
+Object.assign(RU_DICT,{"This link has expired or was already used. Request a new one — or use the code from the e-mail.":"Ссылка устарела или уже была использована. Запросите новую — или введите код из письма.",
+ "We’ll e-mail you a code (and a link) to set a new password.":"Мы пришлём на почту код (и ссылку), чтобы задать новый пароль.","Send":"Отправить","I already have a code":"У меня уже есть код",
+ "A letter was sent a moment ago. Wait a minute and try again, or use the code from that letter.":"Письмо уже отправлено только что. Подождите минуту и попробуйте снова или введите код из того письма.",
+ "We sent a letter to":"Мы отправили письмо на","Enter the code from the letter. Only the newest letter counts. Check Spam if there is nothing in a minute.":"Введите код из письма. Действует только код из самого нового письма. Если письма нет через минуту — загляните в «Спам».",
+ "Code from the letter":"Код из письма","Send the letter again":"Отправить письмо ещё раз","Enter the code from the letter.":"Введите код из письма.",
+ "The code is wrong or has expired. Use the code from the newest letter, or send a new one.":"Код неверный или устарел. Введите код из самого нового письма или отправьте новое."});
 /* opened from the e-mail link: choose a new password */
 function newPassSheet(){
   sheet(`<h2>${t('Set a new password')}</h2>

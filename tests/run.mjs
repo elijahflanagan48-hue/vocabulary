@@ -194,6 +194,25 @@ await check('обновление: применяется само только 
   return 'ok';
 }, SEED.toString()));
 
+await check('восстановление пароля по коду из письма', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  const calls = []; const auth0 = sb && sb.auth;
+  sb = { auth: Object.assign(Object.create(auth0 || {}), {
+    resetPasswordForEmail: async (e, o) => { calls.push(['reset', e]); return { error: null }; },
+    verifyOtp: async o => { calls.push(['verify', o.email, o.token, o.type]); return o.token === '123456' ? { data: { session: null }, error: null } : { data: {}, error: { message: 'Token has expired or is invalid' } }; },
+    updateUser: async o => { calls.push(['pass', o.password.length]); return { error: null }; } }) };
+  forgotSheet(); await sleep(80);
+  document.querySelector('#fEmail').value = 'stud@example.com'; await sendReset(); await sleep(80);
+  assert(document.querySelector('#cdCode'), 'после отправки нет поля для кода');
+  document.querySelector('#cdCode').value = '111111'; document.querySelector('#npA').value = 'newpass123'; document.querySelector('#npB').value = 'newpass123';
+  await codeSave(); await sleep(50);
+  assert(/устарел|expired/i.test(document.querySelector('#npErr').textContent), 'нет понятной ошибки для неверного кода');
+  document.querySelector('#cdCode').value = '123 456'; await codeSave(); await sleep(300);
+  assert(calls.some(c => c[0] === 'pass'), 'пароль не сменился: ' + JSON.stringify(calls));
+  assert(!document.querySelector('#cdCode'), 'окно не закрылось');
+  return JSON.stringify(calls);
+}, SEED.toString()));
+
 await check('серия: разные тексты и реакции', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
   const heads = new Set(), reacts = new Set();
