@@ -663,6 +663,7 @@ textarea.inp{resize:vertical;line-height:1.5;min-height:120px;font-size:15px}
   .item:hover .racts,.item.editing .racts,.item:focus-within .racts{opacity:1;pointer-events:auto}
   .item.editing .racts{display:none}
   .item:hover .dgrip{display:flex}
+  .item[data-dr]:has(.numx) .dgrip{display:none}   /* the number itself is the handle: no dots sticking out next to it */
   /* the number next to the word is a handle too: a much bigger target than the dots */
   .item[data-dr] .numx{cursor:grab}
   .item[data-dr]:hover .numx{background:color-mix(in srgb,var(--pri) 14%,var(--surf2,var(--line)));color:var(--pri)}
