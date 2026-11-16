@@ -237,6 +237,9 @@ header h1{flex:1;min-width:0;margin:0;font-family:var(--ff-serif);font-size:25px
   background:linear-gradient(transparent,var(--bg) 34%);
   padding:20px 16px calc(14px + env(safe-area-inset-bottom))}
 .selbar .in{max-width:680px;margin:0 auto}
+/* while the selection bar is open, the list ends above it — the last word stays fully visible */
+body:has(.selbar){padding-bottom:calc(196px + env(safe-area-inset-bottom))}
+body:has(.markbar){padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 .btn:disabled{opacity:.5;box-shadow:none}
 .rv{display:block;padding:13px 15px}
 .rv .q{display:flex;align-items:center;gap:10px;margin-bottom:9px}
