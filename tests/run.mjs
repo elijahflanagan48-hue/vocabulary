@@ -250,16 +250,35 @@ await check('серия: разные тексты и реакции', async pg 
   return heads.size + ' заголовков, ' + reacts.size + ' реакций';
 }, SEED.toString()));
 
-await check('тест словарного запаса: полный проход и результат', async pg => pg.evaluate(async (seed) => {
+await check('тест словарного запаса: адаптивный, честный и «угадывающий» получают близкий результат', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
-  assert(await vtLoad(), 'банк слов не загрузился');
-  vtBegin(); let g = 0;
-  while (VTR && g < 60) { const b = VTR.cur.b; const ok = b <= 3; const btn = ok ? [...document.querySelectorAll('.vto .opt')].find(x => x.dataset.ok === '1') : document.querySelector('#vtdk'); btn.click(); g++; await sleep(ok ? 170 : 10); }
-  await sleep(100);
-  const h = S.stats.vt.h.slice(-1)[0]; assert(h && h.n > 1500 && h.n < 6500, 'странный результат ' + (h && h.n));
-  assert(txt().includes('Сколько слов'), 'нет экрана результата');
-  const used = Object.values(S.stats.vt.u).flat().length; assert(used === h.q, 'не запомнились заданные слова');
-  return h.n + ' слов за ' + h.q + ' вопросов';
+  assert(await vt3Load(), 'банк слов не загрузился');
+  const run = async guess => {
+    const N = 3500;   /* this learner knows words up to rank ~3500 */
+    VTR = null; vtBegin(); await sleep(30);
+    document.querySelectorAll('.vtck .chip').forEach((b, i) => { const it = VTR.screen[i]; if (it.rank && it.rank < N) b.click(); else if (guess && Math.random() < .35) b.click(); });
+    document.querySelector('#vtgo').click(); await sleep(30);
+    let g = 0;
+    while (VTR && g < 80) {
+      const it = VTR.cur, kn = it.rank && it.rank < N * (0.6 + Math.random() * 0.8);
+      if (it.kind === 'mc') {
+        if (kn) document.querySelector('.vto .opt[data-ok="1"]').click();
+        else if (guess) { const o = [...document.querySelectorAll('.vto .opt')]; (Math.random() < .4 && o.find(x => x.dataset.ok) || o[0]).click(); }
+        else document.querySelector('#vtdk').click();
+        await sleep(160);
+      } else { (kn || (guess && Math.random() < .3) ? document.querySelector('#vtyes') : document.querySelector('#vtno')).click(); await sleep(5); }
+      g++;
+    }
+    await sleep(80);
+    return S.stats.vt.h.slice(-1)[0];
+  };
+  const a = await run(false), b = await run(true);
+  assert(a && a.m === 3 && a.n > 2000 && a.n < 5500, 'честный: странный результат ' + (a && a.n));
+  assert(b.n < a.n * 1.7, 'угадывание сильно завышает: ' + a.n + ' → ' + b.n);
+  assert(a.lo <= a.n && a.hi >= a.n, 'нет диапазона');
+  assert(txt().includes('Ваш словарный запас'), 'нет экрана результата');
+  assert(Array.isArray(S.stats.vt.u3) && S.stats.vt.u3.length >= a.q, 'не запомнились заданные слова');
+  return 'честный ' + a.n + ' (' + a.lo + '–' + a.hi + ', ' + a.q + ' вопр.), угадывающий ' + b.n;
 }, SEED.toString()));
 
 await check('боссы: карточка на «Сегодня» и разбор', async pg => pg.evaluate(async (seed) => {

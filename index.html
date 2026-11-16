@@ -109,6 +109,7 @@ button,select,summary,[onclick],.rowlink,.setcard,.tabs a{touch-action:manipulat
 .vtq{background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:26px 16px;text-align:center;margin:14px 0}
 .vtq .lbl{color:var(--mut);font-weight:600;font-size:15px}.vtq .w{font-family:var(--ff-serif);font-size:40px;font-weight:700;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:10px;overflow-wrap:anywhere}
 .vto .opt.sel{border-color:var(--pri);background:var(--pri-soft)}
+.vtck{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}.vtck .chip{font-size:16px;padding:9px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surf);color:var(--tx);font-weight:600;cursor:pointer;transition:all .12s}.vtck .chip.on{border-color:var(--pri);background:var(--pri);color:#fff}
 .vtres{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 14px}
 .vtres .k{color:var(--mut);font-weight:600}.vtres .n{font-family:var(--ff-serif);font-size:58px;font-weight:800;letter-spacing:-.03em;line-height:1.05}
 .vtres .m{color:var(--mut);font-size:16.5px;display:flex;align-items:center;gap:8px}.vtres .d{font-weight:700;font-size:15.5px}
@@ -9713,123 +9714,266 @@ function bossRun(lg){
 }
 
 /* ---------- vocabulary size test ---------- */
-const VT={bank:null,ready:null};
-function vtLoad(){
-  if(!VT.ready)VT.ready=fetch('lib/vt.json?v=2').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{VT.bank=j.b;VT.pseudo=Array.isArray(j.p)?j.p:[];return true;}).catch(()=>{VT.ready=null;return false;});
-  return VT.ready;
-}
 function vtSt(){const st=S.stats;if(!st.vt||typeof st.vt!=='object'||Array.isArray(st.vt))st.vt={};const v=st.vt;if(!Array.isArray(v.h))v.h=[];if(!v.u||typeof v.u!=='object'||Array.isArray(v.u))v.u={};return v;}
 const VT_LV=[[1500,'A1'],[2500,'A2'],[3500,'B1'],[5000,'B2'],[7000,'C1']];
 function vtLevel(n){let lo=0;for(const [hi,l] of VT_LV){if(n<hi)return l+((n-lo)/(hi-lo)>=.5&&lo>0?'+':'');lo=hi;}return 'C2';}
-const vtFmt=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const vtFmt=n=>(n>=19500?'20 000+':String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' '));
 const vtDate=ms=>new Date(ms).toLocaleDateString(anLoc(),{day:'numeric',month:'short'});
-let VTR=null;
 const vtToks=s=>String(s||'').toLowerCase().split(/[^а-яё]+/).filter(x=>x.length>2).map(x=>x.slice(0,5));
-function vtQuit(){if(VTR&&VTR.asked.length&&!confirm(t('Exit the test? The answers so far will be lost.')))return;VTR=null;render();}
+/*VT3-ENGINE-START*/
+/* Vocabulary size test v3 — an adaptive test built like the level test (placetest): a Bayesian estimate that is updated after
+   every answer, the next word is chosen where the answer tells the most, the test stops when the estimate is precise enough.
+   The person is described by three numbers:
+     θ  — log of the vocabulary size: a word of frequency rank r is known with probability σ(a·(θ − ln r − δ));
+     h  — how readily this person picks an option instead of “I don’t know” when the word is unknown;
+     q  — how readily this person says “I know it” about a word they do not know (seen through invented words).
+   Guessing is therefore not a fixed correction: someone who guesses a lot gets less credit for right answers on rare words. */
+const V3={
+  A:1.7,            /* how fast the known share falls with rarity (per e-fold of rank) */
+  KAPPA:.35,        /* recognising a word is a little easier than choosing its meaning */
+  EPS:.03,          /* slips: a known word answered wrongly */
+  MAXR:20000,
+  TH:[],HG:[.04,.15,.3,.5,.7,.9],HW:[1,1.2,1.2,1,.9,.8],QG:[.02,.07,.15,.28,.45],QW:[1.5,1.5,1.2,1,1],GG:[.25,.4,.55,.7],GW:[1.3,1.1,1,.9],AG:[1.6,2.2,3.0,4.2],AW:[1,1.4,1.1,.8],
+  SZ:null
+};
+for(let x=Math.log(150);x<=Math.log(40000)+1e-9;x+=.04)V3.TH.push(x);
+/* vocabulary size for each θ: the sum of the known probabilities over ranks 1..MAXR (integrated on a log grid) */
+V3.size=function(th,a){let s=0;const st=.02;for(let lr=0;lr<=Math.log(V3.MAXR);lr+=st){const r=Math.exp(lr);s+=r*st/(1+Math.exp(-a*(th-lr)));}return s;};
+V3.SZ=V3.AG.map(a=>V3.TH.map(th=>V3.size(th,a)));
+const v3sig=x=>1/(1+Math.exp(-x));
+function v3New(prior){
+  const T=V3.TH,AG=V3.AG,H=V3.HG,Q=V3.QG,G=V3.GG,m=prior&&prior.m||Math.log(3000),s=prior&&prior.s||1;
+  const P=new Float64Array(T.length*AG.length*H.length*Q.length*G.length);let k=0,z=0;
+  for(let i=0;i<T.length;i++){const pt=Math.exp(-.5*((T[i]-m)/s)**2);for(let c=0;c<AG.length;c++)for(let j=0;j<H.length;j++)for(let l=0;l<Q.length;l++)for(let u=0;u<G.length;u++){P[k]=pt*V3.AW[c]*V3.HW[j]*V3.QW[l]*V3.GW[u];z+=P[k];k++;}}
+  for(let i=0;i<P.length;i++)P[i]/=z;
+  return {P,n:0,log:[]};
+}
+/* likelihood of an outcome. it: {kind:'mc'|'yn', b: difficulty (ln rank + δ) or null for an invented word, g: lucky-pick chance}
+   out: 'ok' | 'bad' | 'dk' (mc), 'yes' | 'no' (yn) */
+function v3Lik(it,out,th,h,q,gp,a){a=a||V3.A;
+  if(it.kind==='mc'){
+    if(it.b==null)return out==='dk'?1-h:h;
+    const P=v3sig(a*(th-it.b)),g=gp*(it.g||.3)/.3,e=V3.EPS;   /* the person's own lucky-pick rate, lower when a look-alike option is among the choices */
+    if(out==='ok')return P*(1-e)+(1-P)*h*g;
+    if(out==='bad')return P*e*.5+(1-P)*h*(1-g);
+    return P*e*.5+(1-P)*(1-h);
+  }
+  if(it.b==null)return out==='yes'?q:1-q;
+  const P=v3sig(a*(th+V3.KAPPA-it.b)),y=P*(1-V3.EPS)+(1-P)*q;
+  return out==='yes'?y:1-y;
+}
+function v3Update(st,it,out){
+  const T=V3.TH,AG=V3.AG,H=V3.HG,Q=V3.QG,G=V3.GG,P=st.P;let k=0,z=0;
+  for(let i=0;i<T.length;i++)for(let c=0;c<AG.length;c++)for(let j=0;j<H.length;j++)for(let l=0;l<Q.length;l++)for(let u=0;u<G.length;u++){P[k]*=v3Lik(it,out,T[i],H[j],Q[l],G[u],AG[c]);z+=P[k];k++;}
+  if(z>0)for(let i=0;i<P.length;i++)P[i]/=z;
+  st.n++;st.log.push([it.w||'',it.kind,it.b==null?null:Math.round(it.b*100)/100,out]);
+}
+/* marginals: θ distribution, mean h and q */
+function v3Marg(st){
+  const T=V3.TH,AG=V3.AG,H=V3.HG,Q=V3.QG,G=V3.GG,P=st.P,mt=new Float64Array(T.length),mta=AG.map(()=>new Float64Array(T.length));let mh=0,mq=0,mg=0,ma=0,k=0;
+  for(let i=0;i<T.length;i++)for(let c=0;c<AG.length;c++)for(let j=0;j<H.length;j++)for(let l=0;l<Q.length;l++)for(let u=0;u<G.length;u++){const p=P[k++];mt[i]+=p;mta[c][i]+=p;mh+=p*H[j];mq+=p*Q[l];mg+=p*G[u];ma+=p*AG[c];}
+  let m=0,v=0;for(let i=0;i<T.length;i++)m+=mt[i]*T[i];for(let i=0;i<T.length;i++)v+=mt[i]*(T[i]-m)**2;
+  return {mt,mta,th:m,sd:Math.sqrt(v),h:mh,q:mq,g:mg,a:ma};
+}
+/* the vocabulary size: median and an 80 % interval of the posterior */
+function v3Result(st){
+  const M=v3Marg(st),pts=[];
+  M.mta.forEach((row,c)=>row.forEach((p,i)=>pts.push([V3.SZ[c][i],p])));pts.sort((x,y)=>x[0]-y[0]);
+  const q=p=>{let c=0;for(const [s,w] of pts){c+=w;if(c>=p)return s;}return pts[pts.length-1][0];};
+  let mean=0;for(const [s,w] of pts)mean+=s*w;
+  return {n:q(.5),lo:q(.1),hi:q(.9),mean,th:M.th,sd:M.sd,h:M.h,q:M.q,g:M.g,
+    known:r=>{let s=0;M.mta.forEach((row,c)=>row.forEach((p,i)=>{s+=p*v3sig(V3.AG[c]*(V3.TH[i]-Math.log(r)));}));return s;}};
+}
+/* how much an answer about a word of difficulty b would tell about θ (Fisher information averaged over the current posterior) */
+function v3Info(M,b,kind){
+  let I=0;const d=.05,h=M.h,q=M.q,outs=kind==='mc'?['ok','bad','dk']:['yes','no'],it={kind,b,g:.3};
+  for(let i=0;i<M.mt.length;i++){
+    const w=M.mt[i];if(w<1e-4)continue;const th=V3.TH[i];
+    for(const o of outs){const p=v3Lik(it,o,th,h,q,M.g,M.a),p2=v3Lik(it,o,th+d,h,q,M.g,M.a),dp=(p2-p)/d;if(p>1e-9)I+=w*dp*dp/p;}
+  }
+  return I;
+}
+/* the best difficulty to ask next, for each kind of question */
+function v3Target(st){
+  const M=v3Marg(st);let best={mc:null,yn:null};
+  for(let b=Math.log(80);b<=Math.log(V3.MAXR*1.1);b+=.05){
+    const im=v3Info(M,b,'mc'),iy=v3Info(M,b,'yn');
+    if(!best.mc||im>best.mc.i)best.mc={b,i:im};
+    if(!best.yn||iy>best.yn.i)best.yn={b,i:iy};
+  }
+  return {M,mc:best.mc,yn:best.yn};
+}
+/*VT3-ENGINE-END*/
+
+/*VT3-PROC-START*/
+/* the course of the test. bank: {mc:[[w,pos,ru,rank]], yn:[[w,rank]], ps:[w]}; skip: words the student already has in their lists */
+const V3P={SCREEN:16,SCREEN_PS:7,MIN:16,MAX:36,SD:.11,PS_AT:[2,8,14,21,29,36],PROBE_AT:[3,6,9,12,16,20,24,28,32],MCMAX:10000};
+function v3Begin(bank,skip,used,cal){
+  const ok=w=>!skip.has(w)&&!(used&&used.has(w));
+  const S={bank,cal:cal||{},st:v3New({m:Math.log(3000),s:1.1}),usedW:new Set(),nB:0,psMc:0,psYn:0,ynN:0,
+    mc:bank.mc.filter(r=>ok(r[0])).map(r=>({w:r[0],row:r,lr:Math.log(r[3])})).sort((a,b)=>a.lr-b.lr),
+    yn:bank.yn.filter(r=>ok(r[0])).map(r=>({w:r[0],lr:Math.log(r[1])})).sort((a,b)=>a.lr-b.lr),
+    ps:v3Shuf(bank.ps.filter(w=>!(used&&used.has(w))).length>=12?bank.ps.filter(w=>!(used&&used.has(w))):bank.ps)};
+  return S;
+}
+function v3Shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+/* a word near the wanted difficulty (ln rank), not used yet; a little randomness so retakes and different people get different words */
+function v3Near(S,list,lr){
+  const cand=list.filter(x=>!S.usedW.has(x.w)&&Math.abs(x.lr-lr)<.16);
+  let pool=cand;
+  if(pool.length<3){pool=list.filter(x=>!S.usedW.has(x.w)).sort((a,b)=>Math.abs(a.lr-lr)-Math.abs(b.lr-lr)).slice(0,6);}
+  if(!pool.length)return null;
+  const x=pool[Math.floor(Math.random()*pool.length)];S.usedW.add(x.w);return x;
+}
+const v3B=(S,w,lr)=>lr+(S.cal[w]||0);   /* difficulty: ln rank, corrected by what other students showed about this word */
+/* step 1 — a quick checklist: 16 real words from very common to rare + 6 invented ones */
+function v3Screen(S){
+  const out=[],n=V3P.SCREEN,lo=Math.log(250),hi=Math.log(19000);
+  for(let i=0;i<n;i++){
+    const lr=lo+(hi-lo)*(i+Math.random())/n;
+    const x=lr<=Math.log(9500)?v3Near(S,S.mc,lr):v3Near(S,S.yn,lr);
+    if(x)out.push({kind:'yn',w:x.w,rank:Math.round(Math.exp(x.lr)),b:v3B(S,x.w,x.lr)});
+  }
+  for(let i=0;i<V3P.SCREEN_PS&&S.ps.length;i++)out.push({kind:'yn',w:S.ps.shift(),rank:null,b:null,ps:1});
+  return v3Shuf(out);
+}
+function v3Answer(S,it,out){v3Update(S.st,it,out);if(it.stage==='B'){S.nB++;}if(it.ps&&it.kind==='mc')S.psMc++;if(it.ps&&it.kind==='yn')S.psYn++;if(it.kind==='yn'&&it.stage==='B')S.ynN++;}
+/* step 2 — one question at a time, chosen where the answer tells the most; null when the result is precise enough */
+function v3Next(S){
+  const M=v3Marg(S.st);
+  if(S.nB>=V3P.MAX||(S.nB>=V3P.MIN&&M.sd<V3P.SD&&S.psMc>=3))return null;
+  if(V3P.PS_AT.includes(S.nB)&&S.ps.length&&S.psMc<5){S.nB;return {kind:'mc',w:S.ps.shift(),rank:null,b:null,ps:1,stage:'B'};}
+  /* now and then a word well above the current estimate: right answers there show how lucky this person's picks are */
+  if(V3P.PROBE_AT.includes(S.nB)){const x=v3Near(S,S.mc,Math.min(Math.log(V3P.MCMAX),M.th+2.6));if(x)return {kind:'mc',w:x.w,row:x.row,rank:Math.round(Math.exp(x.lr)),b:v3B(S,x.w,x.lr),g:.3,stage:'B'};}
+  const T=v3Target(S.st);
+  const useMc=T.mc.b<=Math.log(V3P.MCMAX)||!S.yn.some(x=>!S.usedW.has(x.w));
+  if(useMc){
+    const x=v3Near(S,S.mc,Math.min(T.mc.b,Math.log(V3P.MCMAX)));if(!x)return null;
+    return {kind:'mc',w:x.w,row:x.row,rank:Math.round(Math.exp(x.lr)),b:v3B(S,x.w,x.lr),g:.3,stage:'B'};
+  }
+  /* the rare range: “do you know this word?” — with invented words mixed in so that saying “yes” too readily shows */
+  if(S.ps.length&&(S.ynN>=2&&S.psYn<Math.ceil((S.ynN+1)/4)))return {kind:'yn',w:S.ps.shift(),rank:null,b:null,ps:1,stage:'B'};
+  const x=v3Near(S,S.yn,T.yn.b);if(!x)return null;
+  return {kind:'yn',w:x.w,rank:Math.round(Math.exp(x.lr)),b:v3B(S,x.w,x.lr),stage:'B'};
+}
+/* used by the simulation and the tests */
+function v3Run(bank,skip,io){
+  const S=v3Begin(bank,skip);
+  for(const it of v3Screen(S)){it.stage='A';v3Answer(S,it,io.ask(it));}
+  let q=0;for(;q<200;q++){const it=v3Next(S);if(!it)break;v3Answer(S,it,io.ask(it));}
+  const R=v3Result(S.st);R.q=S.st.n;R.S=S;return R;
+}
+/*VT3-PROC-END*/
+
+/* ---------- the app side of the test ---------- */
+const VT3={bank:null,ready:null};
+function vt3Load(){
+  if(!VT3.ready)VT3.ready=fetch('lib/vt3.json?v=3').then(r=>{if(!r.ok)throw 0;return r.json();}).then(j=>{VT3.bank=j;return true;}).catch(()=>{VT3.ready=null;return false;});
+  return VT3.ready;
+}
+/* the student's own words (any list, the Archive): they were studied in the app, so they would only make the result look bigger */
+function vt3Own(){
+  const o=new Set();
+  S.sets.forEach(x=>{if((x.lang||'en')!=='en')return;(x.words||[]).forEach(w=>{const e=String(w.en||'').toLowerCase().trim().replace(/^\(?to\)?\s+/,'');const ir=irregOf(w.en);if(ir)o.add(ir.base);if(e&&!/\s/.test(e)){o.add(e);try{lemCands(e).forEach(([c])=>o.add(c));}catch(x){}}});});
+  return o;
+}
+function vt3Lev(a,b){if(Math.abs(a.length-b.length)>2)return 9;const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length];}
+/* three wrong options: if possible one is the translation of a look-alike word (adapt / adopt), the rest are words of the same part of speech and similar rarity */
+function vt3Opts(it){
+  const bank=VT3.bank.mc,row=it.row,toks=new Set(vtToks(row[2]));
+  const ok=r=>r[0]!==row[0]&&!vtToks(r[2]).some(x=>toks.has(x));
+  const posOk=r=>(r[1]===row[1])||((row[1]==='r'||row[1]==='o')&&(r[1]==='r'||r[1]==='o'));
+  const ds=[],seen=new Set();let look=false;
+  const add=r=>{const tk=vtToks(r[2]);if(tk.some(x=>seen.has(x)))return false;tk.forEach(x=>seen.add(x));ds.push(r);return true;};
+  const like=shuffle(bank.filter(r=>ok(r)&&r[0]!==row[0]&&(vt3Lev(r[0],row[0])<=2||(row[0].length>=5&&r[0].slice(0,4)===row[0].slice(0,4)))));
+  if(like.length&&add(like[0]))look=true;
+  const near=shuffle(bank.filter(r=>posOk(r)&&ok(r)&&Math.abs(Math.log(r[3])-Math.log(row[3]))<.7));
+  for(const r of near){if(ds.length>=3)break;add(r);}
+  if(ds.length<3)for(const r of shuffle(bank.filter(ok))){if(ds.length>=3)break;add(r);}
+  it.g=look?.22:.3;
+  return shuffle([row,...ds]);
+}
+let VTR=null;
+function vtQuit(){if(VTR&&VTR.S.st.n&&!confirm(t('Exit the test? The answers so far will be lost.')))return;VTR=null;render();}
 async function vtStart(){
   const app=$('#app');studyBusy=true;tabWanted=false;syncTabs();
   app.innerHTML=hdr(t('Vocabulary size'),'render()')+skel(3);
-  if(!(await vtLoad())){toast(t('Couldn’t load the test. Check the connection and try again.'));return render();}
+  if(!(await vt3Load())){toast(t('Couldn’t load the test. Check the connection and try again.'));return render();}
   app.innerHTML=hdr(t('Vocabulary size'),'render()')+`<div class="vtintro"><div class="ic">${ic('book',30)}</div>
-    <h2>${t('How many English words do you know?')}</h2><p><b>${t('About 35–40 questions, 5 minutes.')}</b></p>
-    <p>${t('Choose the translation of each word. The test adapts to you: the questions get harder or easier depending on your answers.')}</p>
-    <p>${t('If you don’t know a word, tap “I don’t know”: a lucky guess makes the result less accurate.')}</p>
-    <p>${t('Some words in the test do not exist. If you choose a translation for them, the result goes down.')}</p></div>
+    <h2>${t('How many English words do you know?')}</h2><p><b>${t('Two parts, about 8 minutes.')}</b></p>
+    <p>${t('First mark the words you know on one screen. Then answer one word at a time: the test adapts to you and stops as soon as the result is precise.')}</p>
+    <p>${t('Some words in the test do not exist. Honest “I don’t know” gives the most accurate result — guesses are noticed and do not help.')}</p></div>
     <button class="btn pri" onclick="vtBegin()">${t('Start')}</button>`;
 }
-/* v172 — the test was too generous: with 4 options a person who knows nothing still gets 25–40 % right, and over the rare thousands that added up to “thousands of known words”.
-   Now: (1) invented words are mixed in — picking a translation for a word that does not exist shows how readily this person guesses;
-   (2) every band's result is corrected for guessing with that rate; (3) words that look like Russian ones (план, семинар) are not in the bank; (4) the result carries its margin. */
-const VT_H=.33;           /* chance of a lucky hit when a person who does not know the word still picks something (4 options, some can be ruled out) */
-const VT_RHO=VT_H/(1-VT_H);   /* “formula scoring”: every wrong answer (not “I don’t know”) is evidence of about .5 lucky hits among the right ones, so it is taken off */
-const VT_REAL=36,VT_PS=8;
-function vtGuess(R){R=R||VTR;return Math.min(.95,(R.pf+.35*2)/(R.pn+2));}   /* only a reliability signal: how readily this person picked a translation for a word that does not exist */
 function vtBegin(){
-  const v=vtSt(),bank=VT.bank;
-  if(v.bv!==2){v.u={};v.bv=2;}
-  const pool=bank.map((rows,b)=>{const used=new Set((v.u[b]||[]).map(Number));let ix=rows.map((_,i)=>i).filter(i=>!used.has(i));if(ix.length<20)ix=rows.map((_,i)=>i);return shuffle(ix);});
-  const at=[];for(let i=0;i<VT_PS;i++)at.push(Math.round(3+i*(VT.pseudo.length?5.2:0)+(Math.random()*3-1.5)));
-  VTR={c:Array(10).fill(0),n:Array(10).fill(0),pn:0,pf:0,asked:[],d:Array(10).fill(0),pool,open:[0,2,4,6,8],ps:shuffle(VT.pseudo.slice()),psAt:new Set(at),seen:0};
-  vtNext();
+  const v=vtSt(),used=new Set(Array.isArray(v.u3)?v.u3:[]);
+  const S3=v3Begin(VT3.bank,vt3Own(),used,(v.cal&&typeof v.cal==='object')?v.cal:{});
+  VTR={S:S3,screen:v3Screen(S3),cur:null,t0:Date.now()};
+  vtScreen();
 }
-/* How the result is worked out. Per thousand, every right answer counts 1 and every wrong answer (not “I don’t know”) counts −.49, which takes off the lucky hits
-   (formula scoring). Those per-thousand numbers are noisy, so they are NOT cut at zero one by one (that would add a phantom few hundred words); a smooth curve
-   “known share falls from ~100 % to 0 % as words get rarer” is fitted to all of them at once, and the vocabulary is the area under it. */
-const VT_SL=[.45,.7,1,1.5,2.2,3.2];
-function vtCurve(K,sl,b){return 1/(1+Math.exp((b+.5-K)*sl));}
-function vtFit(R){
-  R=R||VTR;const raw=[];
-  for(let b=0;b<10;b++)if(R.n[b]){const w=R.n[b]-R.c[b]-R.d[b];raw.push([b,(R.c[b]-VT_RHO*w)/R.n[b],R.n[b]]);}
-  if(!raw.length)return {K:2,sl:1,f:Array.from({length:10},(_,b)=>vtCurve(2,1,b))};
-  let best=null;
-  for(let K=-.5;K<=10.5;K+=.05)for(const sl of VT_SL){let e=0;for(const [b,k,n] of raw){const d=k-vtCurve(K,sl,b);e+=n*d*d;}e+=.002*Math.abs(sl-1);if(!best||e<best.e){best={e,K,sl};}}
-  return {K:best.K,sl:best.sl,f:Array.from({length:10},(_,b)=>vtCurve(best.K,best.sl,b))};
+/* part 1 — the checklist */
+function vtScreen(){
+  const app=$('#app'),sc=VTR.screen;
+  app.innerHTML=hdr(t('Vocabulary size'),'vtQuit()')+`<div class="topbar"><div class="pbar"><i style="width:4%"></i></div><span class="stat">${t('Part 1 of 2')}</span></div>
+    <div class="vtq" style="padding:18px 14px"><div class="lbl">${t('Tap the words you know — you could translate or explain them')}</div>
+    <div class="vtck">${sc.map((it,i)=>`<button class="chip" data-i="${i}">${esc(it.w)}</button>`).join('')}</div></div>
+    <p class="hint" style="text-align:center;margin:4px 8px 12px">${t('Some of these words do not exist. Do not mark a word just because it looks familiar.')}</p>
+    <button class="btn pri" id="vtgo">${t('Next')}</button>`;
+  app.querySelectorAll('.vtck .chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+  $('#vtgo').onclick=()=>{
+    const on=new Set([...app.querySelectorAll('.vtck .chip.on')].map(b=>+b.dataset.i));
+    sc.forEach((it,i)=>{it.stage='A';v3Answer(VTR.S,it,on.has(i)?'yes':'no');});
+    vtNext();
+  };
 }
-function vtEst(R){return vtFit(R).f;}
-function vtSE(R){
-  R=R||VTR;const ft=vtFit(R),T=K=>{let t=0;for(let b=0;b<10;b++)t+=1000*vtCurve(K,ft.sl,b);return t;};
-  const dT=Math.abs(T(ft.K+.1)-T(ft.K-.1))/.2;let info=0;
-  for(let b=0;b<10;b++){const d=(vtCurve(ft.K+.1,ft.sl,b)-vtCurve(ft.K-.1,ft.sl,b))/.2;info+=(R.n[b]+.3)*d*d;}
-  return dT*Math.sqrt(.3/Math.max(.05,info));
-}
-function vtPick(R){
-  R=R||VTR;
-  while(R.open.length){const b=R.open.shift();if(R.pool[b].length)return b;}
-  const p=vtEst(R),n=R.n;let best=-1,bv=-1;
-  for(let b=0;b<10;b++){if(!R.pool[b].length)continue;const u=Math.sqrt(p[b]*(1-p[b])/(n[b]+1))+(n[b]===0?.04:0);if(u>bv+1e-9){bv=u;best=b;}}
-  return best;
-}
-/* the next question without drawing it: {ps:1,w,opts} for an invented word, or {b,idx,row,opts}; null when the test is over */
-function vtItem(R){
-  R=R||VTR;const bank=VT.bank,real=R.n.reduce((s,x)=>s+x,0);
-  if(R.psAt.has(R.seen)&&R.ps.length&&R.pn<VT_PS){
-    const rows=[];const bs=shuffle([1,2,3,4,5,6,7,8,9,0,2,4]);for(const b of bs){if(rows.length>=4)break;const r=bank[b][Math.floor(Math.random()*bank[b].length)];if(!rows.some(x=>x[2]===r[2]))rows.push(r);}
-    return {ps:1,w:R.ps.shift(),opts:rows};
-  }
-  if(real>=VT_REAL||(real>=28&&R.pn>=6&&vtSE(R)<200))return null;
-  const b=vtPick(R);if(b<0)return null;
-  const idx=R.pool[b].shift(),row=bank[b][idx],toks=new Set(vtToks(row[2]));
-  const ok=r=>r[0]!==row[0]&&!vtToks(r[2]).some(x=>toks.has(x));
-  const posOk=r=>(r[1]===row[1])||((row[1]==='r'||row[1]==='o')&&(r[1]==='r'||r[1]==='o'));
-  const cand=[];[b,b-1,b+1,b-2,b+2].forEach(x=>{if(x<0||x>9)return;bank[x].forEach(r=>{if(posOk(r)&&ok(r))cand.push(r);});});
-  const ds=[],seen=new Set();
-  for(const r of shuffle(cand)){const tk=vtToks(r[2]);if(tk.some(x=>seen.has(x)))continue;tk.forEach(x=>seen.add(x));ds.push(r);if(ds.length>=3)break;}
-  return {b,idx,row,w:row[0],opts:shuffle([row,...ds])};
-}
-/* record an answer: choice is the chosen option row, or null for “I don’t know” */
-function vtApply(R,it,choice){
-  R.seen++;
-  if(it.ps){R.pn++;if(choice)R.pf++;R.asked.push({ps:1,f:choice?1:0});return;}
-  const okk=!!choice&&choice===it.row;R.n[it.b]++;if(okk)R.c[it.b]++;if(!choice)R.d[it.b]++;R.asked.push({b:it.b,i:it.idx,ok:okk?1:0});
-}
+/* part 2 — one word at a time */
 function vtNext(){
-  const it=vtItem();if(!it)return vtFinish();
+  const it=v3Next(VTR.S);if(!it)return vtFinish();
   VTR.cur=it;
-  const asked=VTR.asked.length,app=$('#app');
-  app.innerHTML=hdr(t('Vocabulary size'),'vtQuit()')+`<div class="topbar"><div class="pbar"><i style="width:${Math.min(100,asked/(VT_REAL+VT_PS)*100)}%"></i></div><span class="stat">${t('Question')} ${asked+1}</span></div>
-    <div class="vtq"><div class="lbl">${t('What does this word mean?')}</div><div class="w">${esc(it.w)}<button class="spk" aria-label="Pronounce" onclick="speak('${q1(it.w)}','en')">${ic('sound',20)}</button></div></div>
-    <div class="vto">${it.opts.map((r,i)=>`<button class="opt" data-i="${i}">${esc(r[2])}</button>`).join('')}</div>
-    <button class="btn ghost" id="vtdk" style="margin-top:6px">${t('I don’t know')}</button>`;
-  pulse($('.vtq'));
-  const ans=ch=>{vtApply(VTR,it,ch);vtNext();};
-  app.querySelectorAll('.vto .opt').forEach(x=>x.onclick=()=>{x.classList.add('sel');setTimeout(()=>ans(it.opts[+x.dataset.i]),140);});
-  $('#vtdk').onclick=()=>ans(null);
+  const n=VTR.S.nB,app=$('#app'),M=v3Marg(VTR.S.st);
+  const pr=Math.min(98,6+Math.max(n/V3P.MAX,n>=V3P.MIN?Math.min(1,V3P.SD/Math.max(M.sd,.01)):0)*92);
+  const top=hdr(t('Vocabulary size'),'vtQuit()')+`<div class="topbar"><div class="pbar"><i style="width:${pr}%"></i></div><span class="stat">${t('Part 2 of 2')} · ${n+1}</span></div>`;
+  const word=`<div class="w">${esc(it.w)}${it.ps?'':`<button class="spk" aria-label="Pronounce" onclick="speak('${q1(it.w)}','en')">${ic('sound',20)}</button>`}</div>`;
+  if(it.kind==='mc'){
+    const opts=it.ps?vt3PsOpts():vt3Opts(it);it.opts=opts;
+    app.innerHTML=top+`<div class="vtq"><div class="lbl">${t('What does this word mean?')}</div>${word}</div>
+      <div class="vto">${opts.map((r,i)=>`<button class="opt" data-i="${i}"${!it.ps&&r===it.row?' data-ok="1"':''}>${esc(r[2])}</button>`).join('')}</div>
+      <button class="btn ghost" id="vtdk" style="margin-top:6px">${t('I don’t know')}</button>`;
+    pulse($('.vtq'));
+    const ans=o=>{v3Answer(VTR.S,it,o);vtNext();};
+    app.querySelectorAll('.vto .opt').forEach(x=>x.onclick=()=>{x.classList.add('sel');const r=opts[+x.dataset.i];setTimeout(()=>ans(!it.ps&&r===it.row?'ok':'bad'),140);});
+    $('#vtdk').onclick=()=>ans('dk');
+  }else{
+    app.innerHTML=top+`<div class="vtq"><div class="lbl">${t('Do you know this word?')}</div>${word}<div class="hint" style="margin-top:8px">${t('“Yes” means you could translate or explain it.')}</div></div>
+      <div class="row2" style="display:flex;gap:8px"><button class="btn" id="vtno" style="flex:1">${t('No')}</button><button class="btn pri" id="vtyes" style="flex:1">${t('Yes, I know it')}</button></div>`;
+    pulse($('.vtq'));
+    $('#vtyes').onclick=()=>{v3Answer(VTR.S,it,'yes');vtNext();};
+    $('#vtno').onclick=()=>{v3Answer(VTR.S,it,'no');vtNext();};
+  }
 }
+/* options for an invented word: four real translations of different words */
+function vt3PsOpts(){const bank=VT3.bank.mc,out=[],seen=new Set();for(const r of shuffle(bank)){if(out.length>=4)break;if(r[3]>8000)continue;const tk=vtToks(r[2]);if(tk.some(x=>seen.has(x)))continue;tk.forEach(x=>seen.add(x));out.push(r);}return out;}
+const VT_BD=[0,1000,2000,3000,5000,7000,10000,14000,20000];
 function vtFinish(){
-  const p=vtEst(),v=vtSt(),bank=VT.bank,e=Math.max(100,Math.round(vtSE()*1.5/50)*50);
-  const n=Math.round(p.reduce((s,x)=>s+x*1000,0)/50)*50;
-  const now=Date.now();
-  v.h.push({t:now,n,b:p.map(x=>Math.round(x*100)),q:VTR.asked.length,m:2,e,pn:VTR.pn,pf:VTR.pf});if(v.h.length>24)v.h=v.h.slice(-24);
-  VTR.asked.forEach(a=>{if(a.ps)return;const u=v.u[a.b]||(v.u[a.b]=[]);if(u.indexOf(a.i)<0)u.push(a.i);if(u.length>400)u.splice(0,u.length-400);});
-  v.k=VTR.asked.filter(a=>!a.ps&&!a.ok&&a.b<=6).sort((x,y)=>x.b-y.b).map(a=>[bank[a.b][a.i][0],bank[a.b][a.i][2]]).slice(0,40);v.kt=now;
+  const S3=VTR.S,R=v3Result(S3.st),v=vtSt(),now=Date.now(),r50=x=>Math.round(x/50)*50;
+  const n=r50(R.n),lo=r50(R.lo),hi=r50(R.hi);
+  const bars=[];for(let i=0;i+1<VT_BD.length;i++){const a=Math.max(1,VT_BD[i]),b=VT_BD[i+1];bars.push(Math.round(R.known(Math.sqrt(a*b))*100));}
+  const lg=S3.st.log,ps=lg.filter(x=>x[2]==null),pf=ps.filter(x=>x[3]==='yes'||x[3]==='bad').length;
+  v.h.push({t:now,n,lo,hi,e:Math.round((hi-lo)/2/50)*50,b:bars,bd:VT_BD,q:S3.st.n,m:3,pn:ps.length,pf,gh:Math.round(R.h*100),yb:Math.round(R.q*100)});
+  if(v.h.length>24)v.h=v.h.slice(-24);
+  const u=Array.isArray(v.u3)?v.u3:[];lg.forEach(x=>{if(x[0]&&u.indexOf(x[0])<0)u.push(x[0]);});v.u3=u.slice(-700);v.u={};v.bv=3;
+  v.c3=lg.slice(-80);                          /* this test's answers: used later to correct word difficulties */
+  const mcMap=new Map(VT3.bank.mc.map(r=>[r[0],r]));
+  v.k=lg.filter(x=>x[1]==='mc'&&x[2]!=null&&(x[3]==='dk'||x[3]==='bad')&&mcMap.has(x[0])&&mcMap.get(x[0])[3]<=8000).sort((a,b)=>a[2]-b[2]).map(x=>[x[0],mcMap.get(x[0])[2]]).slice(0,40);v.kt=now;
   v.dis=0;S.stats.upd=now;VTR=null;save();
   go('vtres',{});
 }
-function vtBars(b){
-  const L=['1–1000','1–2 '+t('k'),'2–3 '+t('k'),'3–4 '+t('k'),'4–5 '+t('k'),'5–6 '+t('k'),'6–7 '+t('k'),'7–8 '+t('k'),'8–9 '+t('k'),'9–10 '+t('k')];
+function vtBars(b,bd){
+  const k=x=>x?(x/1000)+'':'0';
+  const L=Array.isArray(bd)?bd.slice(0,-1).map((x,i)=>i?k(x)+'–'+k(bd[i+1])+' '+t('k'):'1–'+vtFmt(bd[1])):['1–1000','1–2 '+t('k'),'2–3 '+t('k'),'3–4 '+t('k'),'4–5 '+t('k'),'5–6 '+t('k'),'6–7 '+t('k'),'7–8 '+t('k'),'8–9 '+t('k'),'9–10 '+t('k')];
   return `<div class="vtb">${(b||[]).map((x,i)=>`<span class="l">${L[i]}</span><span class="tr"><i style="width:${x}%"${x<50?' class="lo"':''}></i></span><b>${x}%</b>`).join('')}</div>`;
 }
-Object.assign(RU_DICT,{"k":"тыс.","Some words in the test do not exist. If you choose a translation for them, the result goes down.":"В тесте есть выдуманные слова, которых не существует. Если выберете для них перевод, результат снизится.","You often chose a translation for words that do not exist, so this result is less reliable. Next time tap “I don’t know” when unsure.":"Вы часто выбирали перевод для несуществующих слов, поэтому результат менее надёжен. В следующий раз нажимайте «Не знаю», если не уверены.","The test is now more accurate":"Тест стал точнее","Retake: the test is more accurate now":"Пройдите заново: тест стал точнее","This result is from the earlier, less accurate version of the test and is too high. Take the test again.":"Этот результат получен прежней, менее точной версией теста и завышен. Пройдите тест заново.","earlier version of the test, too high":"прежняя версия теста, завышено"});
+Object.assign(RU_DICT,{"Two parts, about 8 minutes.":"Две части, около 8 минут.","First mark the words you know on one screen. Then answer one word at a time: the test adapts to you and stops as soon as the result is precise.":"Сначала отметьте знакомые слова на одном экране. Потом отвечайте по одному слову: тест подстраивается под вас и заканчивается, как только результат станет точным.","Some words in the test do not exist. Honest “I don’t know” gives the most accurate result — guesses are noticed and do not help.":"В тесте есть выдуманные слова. Честное «Не знаю» даёт самый точный результат: угадывание тест замечает, и оно не помогает.","Part 1 of 2":"Часть 1 из 2","Part 2 of 2":"Часть 2 из 2","Tap the words you know — you could translate or explain them":"Отметьте слова, которые знаете — можете перевести или объяснить","Some of these words do not exist. Do not mark a word just because it looks familiar.":"Некоторых из этих слов не существует. Не отмечайте слово только потому, что оно кажется знакомым.","Do you know this word?":"Вы знаете это слово?","“Yes” means you could translate or explain it.":"«Да» — если можете перевести или объяснить его.","Yes, I know it":"Да, знаю","most likely between":"скорее всего от","No":"Нет","the share of words you know in each group":"доля знакомых слов в каждой группе (по частотности)","Which words you know: from the most common to rare":"Какую долю слов вы знаете — от самых частых к редким","and":"до","k":"тыс.","Some words in the test do not exist. If you choose a translation for them, the result goes down.":"В тесте есть выдуманные слова, которых не существует. Если выберете для них перевод, результат снизится.","You often chose a translation for words that do not exist, so this result is less reliable. Next time tap “I don’t know” when unsure.":"Вы часто выбирали перевод для несуществующих слов, поэтому результат менее надёжен. В следующий раз нажимайте «Не знаю», если не уверены.","The test is now more accurate":"Тест стал точнее","Retake: the test is more accurate now":"Пройдите заново: тест стал точнее","This result is from the earlier, less accurate version of the test and is too high. Take the test again.":"Этот результат получен прежней, менее точной версией теста и завышен. Пройдите тест заново.","earlier version of the test, too high":"прежняя версия теста, завышено"});
 let VTX=false;
 VIEWS.vtres=function(app){
   const v=vtSt(),h=v.h,last=h[h.length-1];if(!last)return go('me');
@@ -9841,8 +9985,8 @@ VIEWS.vtres=function(app){
     return;
   }
   app.innerHTML=hdr(t('Vocabulary size'),"go('today')")+`<div class="vtres"><div class="k">${t('Your vocabulary')}</div><div class="n">≈ ${vtFmt(last.n)}</div>
-     <div class="m">${last.e?'± '+vtFmt(last.e)+' · ':''}${t('words')} · ${t('level')} <span class="chip">${vtLevel(last.n)}</span></div>${prev&&d?`<div class="d ${d>0?'up':'down'}">${d>0?'+':''}${vtFmt(d)} ${t('since')} ${vtDate(prev.t)}</div>`:''}</div>
-    <div class="ancard"><div class="vth">${t('How many words you know in each thousand')}</div><div class="vts">${t('from the most common to rare ones')}</div>${vtBars(last.b)}<div class="vts" style="margin-top:10px">${t('Level is approximate.')}</div>${vtGuessNote(last)}</div>`+
+     <div class="m">${last.lo?t('most likely between')+' '+vtFmt(last.lo)+' '+t('and')+' '+vtFmt(last.hi):last.e?'± '+vtFmt(last.e):''}</div><div class="m">${t('level')} <span class="chip">${vtLevel(last.n)}</span></div>${prev&&d?`<div class="d ${d>0?'up':'down'}">${d>0?'+':''}${vtFmt(d)} ${t('since')} ${vtDate(prev.t)}</div>`:''}</div>
+    <div class="ancard"><div class="vth">${t('Which words you know: from the most common to rare')}</div><div class="vts">${t('the share of words you know in each group')}</div>${vtBars(last.b,last.bd)}<div class="vts" style="margin-top:10px">${t('Level is approximate.')}</div>${vtGuessNote(last)}</div>`+
     (k.length?`<div class="ancard"><div class="vth" style="display:flex;align-items:center"><span style="flex:1">${t('Worth learning first')} · ${k.length}</span><button class="lnk" onclick="VTX=true;render()">${t('All')}${ic('down',15)}</button></div>
       <div class="vtk">${k.slice(0,6).map(x=>`<span class="chip">${esc(x[0])}</span>`).join('')}${k.length>6?`<span class="chip more">+${k.length-6}</span>`:''}</div></div>
       <button class="btn pri" onclick="vtAdd(true)">${ic('plus',18)}${t('Add {n} words to the dictionary').replace('{n}',k.length)}</button><div style="height:9px"></div>`:'')+
@@ -9858,7 +10002,7 @@ function vtAdd(all){
   pick.slice().reverse().forEach(x=>s.words.unshift(newWord(x[0],x[1])));
   save();VTX=false;toast(t('Added to the list')+' ✓');go('set',{id:s.id});
 }
-const vtNew=x=>x&&x.m>=2?x:null;
+const vtNew=x=>x&&x.m>=3?x:null;
 function vtGuessNote(x){return x&&x.pn>=5&&x.pf/x.pn>=.5?`<div class="vts" style="margin-top:8px">${t('You often chose a translation for words that do not exist, so this result is less reliable. Next time tap “I don’t know” when unsure.')}</div>`:'';}
 function vtLast(st){const v=st&&st.vt;const h=v&&Array.isArray(v.h)?v.h:[];return h[h.length-1]||null;}
 function vtTodayCard(lg){
@@ -9897,7 +10041,7 @@ function anVtHtml(D){
     const prev=vtNew(h[h.length-2]),d=prev?last.n-prev.n:0,old=!vtNew(last);
     out+=`<div class="vtc1"><div><div class="vth">${t('Vocabulary size')}</div><div class="n"${old?' style="opacity:.45"':''}>≈ ${vtFmt(last.n)}${last.e?` <small style="font-size:.5em;opacity:.7">± ${vtFmt(last.e)}</small>`:''}</div></div><span class="chip">${vtLevel(last.n)}</span></div>`+
       (old?`<p class="hint" style="margin:6px 0 0">${t('This result is from the earlier, less accurate version of the test and is too high. Take the test again.')}</p>`:'')+vtGuessNote(last)+
-      (prev&&d?`<div class="vtd ${d>0?'up':'down'}">${d>0?'+':''}${vtFmt(d)} ${t('since')} ${vtDate(prev.t)}</div>`:'')+vtBars(last.b)+
+      (prev&&d?`<div class="vtd ${d>0?'up':'down'}">${d>0?'+':''}${vtFmt(d)} ${t('since')} ${vtDate(prev.t)}</div>`:'')+vtBars(last.b,last.bd)+
       `<div class="vth" style="margin-top:14px">${t('History')}</div><div class="vthist">${h.slice().reverse().slice(0,8).map(x=>`<div${vtNew(x)?'':' style="opacity:.45"'}><span>${vtDate(x.t)}</span><b>${vtFmt(x.n)}${vtNew(x)?'':'*'}</b><em>${vtLevel(x.n)}</em></div>`).join('')}</div>${h.some(x=>!vtNew(x))?`<div class="vts" style="margin-top:6px">* ${t('earlier version of the test, too high')}</div>`:''}`;
   }else out+=`<div class="vth">${t('Vocabulary size')}</div><p class="hint" style="margin:6px 0 0">${t('The test has not been taken yet.')}</p>`;
   out+='</div>';
