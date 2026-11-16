@@ -213,6 +213,28 @@ await check('восстановление пароля по коду из пис
   return JSON.stringify(calls);
 }, SEED.toString()));
 
+await check('смена пароля в аккаунте', async pg => pg.evaluate(async (seed) => {
+  eval('(' + seed + ')()');
+  const calls = [];
+  AUTH = { user: { id: 'u1', email: 'me@example.com' }, profile: { id: 'u1', role: 'student', display_name: 'Me' }, ready: true, students: [] };
+  sb = { auth: { signInWithPassword: async o => { calls.push(['check', o.password]); return o.password === 'oldpass12' ? { error: null } : { error: { message: 'Invalid login credentials' } }; },
+    updateUser: async o => { calls.push(['set', o.password]); return { error: null }; },
+    resetPasswordForEmail: async e => { calls.push(['reset', e]); return { error: null }; } } };
+  acctSheet(); await sleep(60);
+  assert([...document.querySelectorAll('#scrim button')].some(b => /Сменить пароль|Change password/.test(b.textContent)), 'нет кнопки «Сменить пароль»');
+  passSheet(); await sleep(60);
+  const fill = (o, a, b) => { document.querySelector('#cpOld').value = o; document.querySelector('#npA').value = a; document.querySelector('#npB').value = b; };
+  fill('wrong', 'newpass123', 'newpass123'); await passSave(); await sleep(30);
+  assert(/неверный|wrong/i.test(document.querySelector('#npErr').textContent), 'нет ошибки для неверного текущего пароля');
+  assert(!calls.some(c => c[0] === 'set'), 'пароль сменился при неверном текущем');
+  fill('oldpass12', 'newpass123', 'newpass123'); await passSave(); await sleep(300);
+  assert(calls.some(c => c[0] === 'set' && c[1] === 'newpass123'), 'пароль не сменился');
+  passSheet(); await sleep(60); await passForgot(); await sleep(60);
+  assert(document.querySelector('#cdCode') && calls.some(c => c[0] === 'reset' && c[1] === 'me@example.com'), '«Не помню пароль» не отправил код');
+  closeSheet();
+  return JSON.stringify(calls);
+}, SEED.toString()));
+
 await check('серия: разные тексты и реакции', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
   const heads = new Set(), reacts = new Set();

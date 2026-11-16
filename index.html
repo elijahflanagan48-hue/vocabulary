@@ -3051,8 +3051,56 @@ function acctSheet(){
      ${unsentN()||pushErr?`<div class="err" style="margin:0 0 6px">${t('Not sent to the cloud')}: ${unsentN()}${pushErr?' — '+esc(pushErr):''}</div>`:''}
      ${prefsErr?`<div class="err" style="margin:0 0 6px">${t('Streak/settings not synced')}: ${esc(prefsErr)}</div>`:''}
      <button class="btn" onclick="manualSync()">${ic('cloud')}${t('Sync now')}</button>
+     <button class="btn" onclick="passSheet()">${ic('key')}${t('Change password')}</button>
      <button class="btn ghost" onclick="doSignOut()">${ic('exit',18)}${t('Sign out')}</button></div>`);
 }
+/* change the password while signed in: the current one is checked first; if it is forgotten, a code is sent to the e-mail */
+function passSheet(){
+  const u=AUTH.user;if(!u)return;
+  sheet(`<h2>${t('Change password')}</h2>
+   <div class="field"><label>${t('Current password')}</label><input class="inp" id="cpOld" type="password" autocomplete="current-password"></div>
+   <div class="field"><label>${t('New password')}</label><input class="inp" id="npA" type="password" autocomplete="new-password" placeholder="${t('At least 8 characters')}"></div>
+   <div class="field"><label>${t('Repeat password')}</label><input class="inp" id="npB" type="password" autocomplete="new-password"></div>
+   <div class="err" id="npErr"></div>
+   <button class="btn pri" id="npBtn" onclick="passSave()">${t('Save password')}</button>
+   <div style="height:9px"></div>
+   <button class="btn ghost" id="cpForgot" onclick="passForgot()">${t('I don’t remember the current password')}</button>`);
+  setTimeout(()=>{const e=$('#cpOld');if(e)e.focus();},60);
+}
+async function passSave(){
+  const old=($('#cpOld')||{}).value||'',a=($('#npA')||{}).value||'',b=($('#npB')||{}).value||'',err=$('#npErr'),btn=$('#npBtn');
+  err.textContent='';
+  if(!old){err.textContent=t('Enter your current password.');return;}
+  if(a.length<8){err.textContent=t('Password must be at least 8 characters.');return;}
+  if(a!==b){err.textContent=t('Passwords don’t match');return;}
+  if(a===old){err.textContent=t('The new password is the same as the current one.');return;}
+  const label=btn.textContent;btn.disabled=true;btn.textContent=t('Please wait…');
+  try{
+    const email=AUTH.user&&AUTH.user.email;
+    const chk=await sb.auth.signInWithPassword({email,password:old});
+    if(chk.error){const e=new Error(/invalid login/i.test(chk.error.message||'')?'OLD_BAD':chk.error.message);throw e;}
+    const {error}=await sb.auth.updateUser({password:a});
+    if(error)throw error;
+    closeSheet();toast(t('Password changed ✓'));
+  }catch(e){
+    err.textContent=(e&&e.message)==='OLD_BAD'?t('The current password is wrong.'):authErrMsg(e);
+    btn.disabled=false;btn.textContent=label;
+  }
+}
+async function passForgot(){
+  const email=AUTH.user&&AUTH.user.email,btn=$('#cpForgot'),err=$('#npErr');if(!email)return;
+  if(btn){btn.disabled=true;btn.textContent=t('Please wait…');}
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+    if(error)throw error;
+    FG_EMAIL=email;codeSheet(true);
+  }catch(e){
+    if(err)err.textContent=/rate|security purposes|too many|after \d+ seconds/i.test((e&&e.message)||'')?t('A letter was sent a moment ago. Wait a minute and try again, or use the code from that letter.'):authErrMsg(e);
+    if(btn){btn.disabled=false;btn.textContent=t('I don’t remember the current password');}
+  }
+}
+Object.assign(RU_DICT,{"Change password":"Сменить пароль","Current password":"Текущий пароль","I don’t remember the current password":"Не помню текущий пароль",
+ "Enter your current password.":"Введите текущий пароль.","The current password is wrong.":"Текущий пароль неверный.","The new password is the same as the current one.":"Новый пароль совпадает с текущим."});
 function unsentN(){let n=S.sets.filter(x=>!x.synced).length;S.sets.forEach(x=>x.words.forEach(w=>{if(!w.synced)n++;}));return n;}
 async function manualSync(){
   if(!cloudEnabled())return toast(t('Not signed in'));
