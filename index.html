@@ -2477,7 +2477,12 @@ function mergeStats(r){
       if(!okId(k))return;const b=r.asg[k];if(!b||typeof b!=='object')return;const a=la[k];
       const bd=+b.d||0,ad=a?+a.d||0:0;
       const nb={b:Math.max(+b.b||0,a?+a.b||0:0),n:Math.max(+b.n||0,a?+a.n||0:0),d:(bd&&ad)?Math.min(bd,ad):(bd||ad),u:Math.max(+b.u||0,a?+a.u||0:0)};
-      if(!a||nb.b!==a.b||nb.n!==a.n||nb.d!==a.d||nb.u!==a.u){la[k]=nb;ch=true;}
+      let tch=false;
+      if((b.t&&typeof b.t==='object'&&!Array.isArray(b.t))||(a&&a.t)){
+        const T={};[a&&a.t,b.t].forEach(o=>{if(o&&typeof o==='object'&&!Array.isArray(o))Object.keys(o).slice(0,15).forEach(i=>{if(/^\d{1,4}$/.test(i))T[i]=Math.max(T[i]||0,Math.min(100,+o[i]||0));});});
+        nb.t=T;tch=!a||JSON.stringify(T)!==JSON.stringify(a.t||{});
+      }
+      if(!a||tch||nb.b!==a.b||nb.n!==a.n||nb.d!==a.d||nb.u!==a.u){la[k]=nb;ch=true;}
     });
   }
   /* v139: vocabulary test history (union by time), words already asked (union), the latest unknown words; bosses — newer entry wins */
@@ -5595,7 +5600,7 @@ VIEWS.wftask=function(app){
   studyBusy=true;tabWanted=false;
   if(WFT.res)return wfShowResult(app);
   const x=WF.packs[WFT.lv][WFT.idx],R=wfRows(x.x);
-  app.innerHTML=hdr(t('Word formation'),"if(!document.querySelector('.wfg input')||confirm(t('Exit this text?')))go('wf')")+
+  app.innerHTML=hdr(t('Word formation'),"if(!document.querySelector('.wfg input')||confirm(t('Exit this text?')))"+wfBackJs())+
    `<div class="wfcard"><h2>${esc(x.t)}</h2>${R.intro?`<div class="wfintro">${esc(R.intro)}</div>`:''}
     ${R.rows.map((r,i)=>`<div class="wfr" id="wfr${i}" data-k="${r.k.join(',')}"><div class="wfx">${wfFill(r.t,wfGapIn)}</div><div class="wfb">${r.k.map(k=>`<span data-k="${k}">${esc(x.g[k-1][0])}</span>`).join('')}</div></div>`).join('')}</div>
     <div style="height:14px"></div><button class="btn pri" style="width:100%" onclick="wfCheck()">${t('Check')}</button><div style="height:120px"></div>
@@ -5658,6 +5663,8 @@ function wfCheck(){
   const A=wfLog(WFT.lv);A[WFT.idx]={t:Date.now(),a:res.map(r=>r.ok?'':String(r.got).slice(0,40))};wfLogCap(A);
   S.stats.upd=Date.now();save();
   WFT.res={res,sp,fm,ok:res.filter(r=>r.ok).length};
+  const A0=WFT.asg?asgMine().find(z=>z.id===WFT.asg):null;
+  WFT.ar=(A0&&A0.kind==='wf'&&A0.meta.texts.indexOf(WFT.idx)>=0)?asgWfRecord(A0,WFT.idx,Math.round(WFT.res.ok/n*100)):null;
   render();window.scrollTo(0,0);
 }
 function wfAnn(x,res){return wfFill(x.x,k=>{const g=x.g[k-1],r=res[k-1]||{ok:false,got:''};
@@ -5669,12 +5676,15 @@ function wfShowResult(app){
   const x=WF.packs[WFT.lv][WFT.idx],R=WFT.res,n=x.g.length,pct=Math.round(R.ok/n*100);
   const err=[R.sp?`${t('spelling')} — ${R.sp}`:'',R.fm?`${t('word form')} — ${R.fm}`:''].filter(Boolean).join(', ');
   const ann=wfAnn(x,R.res);
-  app.innerHTML=hdr(t('Word formation'),"go('wf')")+
+  const A=WFT.asg?asgMine().find(z=>z.id===WFT.asg):null,AR=A&&WFT.ar;
+  app.innerHTML=hdr(t('Word formation'),wfBackJs())+
     celHero('test',{pct,title:scoreTitle(pct),sub:`${R.ok} / ${n}${err?' · '+t('Mistakes')+': '+err:''}`})+
     `<div class="wfcard"><h2>${esc(x.t)}</h2><div class="wfres">${ann}</div></div>`+
     wfGapCards(x,R.res)+
+    (AR?(AR.pass?asgResultHtml(A,AR.avg,true):`<div class="banner" style="margin:12px 0 4px"><span class="ib" style="color:var(--acc)">${ic('target',19,2)}</span><div><b>${esc(t('Texts: {a} of {b}').replace('{a}',AR.done).replace('{b}',AR.n))}</b> · ${t('Average')}: ${AR.avg}%${AR.done>=AR.n?' · '+esc(t('You need {n}% — review the words and try again.').replace('{n}',A.pct)):''}</div></div>`):'')+
+    (AR?`<div style="height:16px"></div><button class="btn pri" style="width:100%" onclick="go('asg',{id:'${A.id}'})">${t('Back to the assignment')}</button><div style="height:24px"></div>`:
     `<div style="height:16px"></div><button class="btn pri" style="width:100%" onclick="wfStart('${WFT.lv}')">${t('Next text')}</button>
-     <div style="height:9px"></div><button class="btn ghost" style="width:100%" onclick="go('wfprog')">${t('Progress by type')}</button><div style="height:24px"></div>`;
+     <div style="height:9px"></div><button class="btn ghost" style="width:100%" onclick="go('wfprog')">${t('Progress by type')}</button><div style="height:24px"></div>`);
   window.scrollTo(0,0);celPlay();
 }
 VIEWS.wfprog=function(app){
@@ -8108,6 +8118,7 @@ function rdAdd(){
 
 /* ================= Assignments: a task with a deadline ================= */
 Object.assign(RU_DICT,{"Open to this student":"Открыто этому ученику","Assignments":"Задания","Assignment":"Задание","New assignment":"Новое задание","Assign":"Назначить","Assign to":"Кому","Word list":"Список слов","Due date":"Срок","Pass mark, %":"Проходной балл, %","Library":"Библиотека","My lists":"Мои списки","Choose a list":"Выберите список","Pick a due date":"Укажите срок","Pick at least one student":"Выберите хотя бы одного ученика","Assigned ✓":"Назначено ✓","Run the SQL file first (the assignments table is missing).":"Сначала выполните SQL-файл (в базе нет таблицы заданий).","Overdue":"Просрочено","Due today":"Срок — сегодня","Due tomorrow":"Срок — завтра","Due":"Срок","Passed":"Сдано","Not started":"Не начато","Best":"Лучший","Attempts":"Попыток","Learn these words":"Выучить слова","Take the test":"Пройти тест","Take the test again":"Пройти тест заново","Typed answers only — every word of the list. You need at least {n}%.":"Только ввод ответа — все слова списка. Нужно набрать не меньше {n}%.","Typed answers only — {q} random words of the list each time. You need at least {n}%.":"Только ввод ответа — каждый раз {q} случайных слов из списка. Нужно набрать не меньше {n}%.","Assignment complete!":"Задание выполнено!","Not passed yet":"Пока не сдано","You need {n}% — review the words and try again.":"Нужно {n}% — повторите слова и попробуйте ещё раз.","Words in this assignment":"Слова задания","Assignment not found":"Задание не найдено","Delete assignment":"Удалить задание","Delete this assignment?":"Удалить это задание?","Assignment deleted":"Задание удалено","overdue":"просрочено","open":"в работе","all done":"всё сдано","Too many words (max 400)":"Слишком много слов (максимум 400)","The list is empty":"В списке нет слов","Added to your dictionary":"Добавлено в словарь","Student’s lists":"Списки ученика","Result":"Результат","Passed on":"Сдано","Title":"Название","Not saved":"Не сохранено"});
+Object.assign(RU_DICT,{"Assignment type":"Тип задания","Level":"Уровень","Number of texts":"Количество текстов","Texts are picked for each student separately, from the ones he has not done yet.":"Тексты подбираются каждому ученику отдельно — из тех, что он ещё не решал.","Texts: {a} of {b}":"Текстов: {a} из {b}","Average":"Средний результат","Do every text. You need an average of at least {n}%.":"Выполните все тексты. Нужен средний результат не меньше {n}%.","Text":"Текст","Start":"Начать","Redo":"Ещё раз","Back to the assignment":"К заданию"});
 const ASG_KEY='noeon.asg.v1';
 let ASG={list:[],at:0,uid:'',err:''};
 try{const c=JSON.parse(localStorage.getItem(ASG_KEY)||'null');if(c&&Array.isArray(c.list)){ASG.list=c.list;ASG.uid=c.uid||'';}}catch(e){}
@@ -8119,7 +8130,14 @@ function asgNorm(r){
   const due=+new Date(r.due);if(!(due>0))return null;
   const ws=(Array.isArray(r.words)?r.words:[]).filter(w=>w&&typeof w.en==='string'&&w.en.trim()).slice(0,400)
     .map(w=>({en:String(w.en).slice(0,200),ru:String(w.ru==null?'':w.ru).slice(0,300)}));
-  return {id:r.id,teacher_id:r.teacher_id,student_id:r.student_id,title:String(r.title||'').slice(0,120),lang:okLang(r.lang)?r.lang:'en',
+  /* v180: kind 'wf' = a few word-formation texts: meta {lv, texts:[indexes in that level's pack]} */
+  let kind='words',meta={};
+  if(r.kind==='wf'&&r.meta&&typeof r.meta==='object'){
+    const tx=(Array.isArray(r.meta.texts)?r.meta.texts:[]).map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<5000).slice(0,15);
+    if(!tx.length)return null;
+    kind='wf';meta={lv:['a2','b2','c1'].indexOf(r.meta.lv)>=0?r.meta.lv:'b2',texts:tx};
+  }
+  return {kind,meta,id:r.id,teacher_id:r.teacher_id,student_id:r.student_id,title:String(r.title||'').slice(0,120),lang:okLang(r.lang)?r.lang:'en',
     words:ws,due,pct:Math.min(100,Math.max(1,Math.round(+r.pct||85))),at:+new Date(r.created_at)||0};
 }
 /* a student gets his own assignments, a teacher the ones he gave; true = something changed */
@@ -8129,7 +8147,7 @@ async function asgLoad(force){
   ASG.at=Date.now();
   try{
     await ensureAuth();
-    let q=sb.from('assignments').select('id,teacher_id,student_id,title,lang,words,due,pct,created_at').eq('deleted',false).order('due',{ascending:true});
+    let q=sb.from('assignments').select('id,teacher_id,student_id,title,lang,words,due,pct,created_at,kind,meta').eq('deleted',false).order('due',{ascending:true});
     q=asgIsT()?q.eq('teacher_id',AUTH.user.id):q.eq('student_id',AUTH.user.id);
     const {data,error}=await q;
     if(error)throw error;
@@ -8155,6 +8173,25 @@ function asgRecord(a,pct){
   S.stats.upd=now;save();
   return pass;
 }
+const asgSize=a=>a.kind==='wf'?(a.meta.texts.length+' '+wfPlural(a.meta.texts.length)):nWords(a.words.length);
+/* word-formation assignment: r.t = {text index: best %}; passed when every text is done and the average is high enough */
+function asgWfProg(a,r){
+  const T=(r&&r.t&&typeof r.t==='object')?r.t:{},ix=a.meta.texts,done=ix.filter(i=>(+T[i]||0)>0||(i in T));
+  const avg=done.length?Math.round(done.reduce((q,i)=>q+(+T[i]||0),0)/done.length):0;
+  return {n:ix.length,done:done.length,avg,T};
+}
+function asgWfRecord(a,idx,pct){
+  const R=asgRes(),r=R[a.id]||(R[a.id]={b:0,n:0,d:0,u:0}),now=Date.now();
+  if(!r.t||typeof r.t!=='object'||Array.isArray(r.t))r.t={};
+  r.t[idx]=Math.max(+r.t[idx]||0,pct);
+  const P=asgWfProg(a,r);
+  r.n=(+r.n||0)+1;r.b=Math.max(+r.b||0,P.avg);r.u=now;
+  const pass=P.done>=P.n&&P.avg>=a.pct;if(pass&&!r.d)r.d=now;
+  const ks=Object.keys(R);
+  if(ks.length>80){ks.sort((x,y)=>(R[x].u||0)-(R[y].u||0)).slice(0,ks.length-80).forEach(k=>delete R[k]);}
+  S.stats.upd=now;save();
+  return {pass,done:P.done,n:P.n,avg:P.avg};
+}
 const asgDay=ts=>new Date(ts).toLocaleDateString(uiEn()?'en-GB':'ru-RU',{weekday:'short',day:'numeric',month:'short'});
 const asgMid=ts=>{const d=new Date(ts);return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();};
 function asgDueTxt(a){
@@ -8178,7 +8215,7 @@ function asgToday(){
   return `<div class="subhead"><span class="t">${t('Assignments')}</span></div>`+list.map(({a,s})=>{
     const col=s.done?'var(--ok)':s.late?'var(--bad)':'var(--acc)';
     const meta=s.done?`${t('Passed')} · ${s.best}%`
-      :`${asgDueTxt(a)} · ${nWords(a.words.length)}${s.best?` · ${t('Best')} ${s.best}%`:''}`;
+      :`${asgDueTxt(a)} · ${asgSize(a)}${s.best?` · ${t('Best')} ${s.best}%`:''}`;
     return `<div class="setcard" onclick="go('asg',{id:'${a.id}'})"${s.late?' style="border-color:var(--bad)"':''}>
       <div class="arch-ic" style="color:${col}">${ic(s.done?'check':'clock',22,2)}</div>
       <div class="t"><div class="nm">${esc(a.title)}</div><div class="meta" style="color:${s.late?'var(--bad)':'var(--mut)'};font-weight:${s.late?650:500}">${esc(meta)}</div></div>
@@ -8187,6 +8224,7 @@ function asgToday(){
 VIEWS.asg=function(app){
   const a=asgMine().find(x=>x.id===view.id);
   if(!a){app.innerHTML=hdr(t('Assignment'),"go('today')")+`<div class="empty"><p>${t('Assignment not found')}</p></div>`;return;}
+  if(a.kind==='wf')return asgWfView(app,a);
   const s=asgStateOf(a,asgRes()[a.id]);
   const col=s.done?'var(--ok)':s.late?'var(--bad)':'var(--tx)';
   app.innerHTML=hdr(a.title,"go('today')")+
@@ -8204,6 +8242,35 @@ VIEWS.asg=function(app){
     <div class="wlist">`+a.words.map(w=>`<div class="item"><div class="t"><div class="en">${esc(w.en)}</div><div class="ru">${esc(w.ru)}</div></div>
       <button class="spk" aria-label="Pronounce" onclick="event.stopPropagation();speak('${q1(w.en)}','${a.lang}')">${ic('sound',17)}</button></div>`).join('')+'</div>';
 };
+/* ---- v180: a word-formation assignment (student) ---- */
+function asgWfView(app,a){
+  const R=asgRes()[a.id],s=asgStateOf(a,R),P=asgWfProg(a,R);
+  const col=s.done?'var(--ok)':s.late?'var(--bad)':'var(--tx)';
+  app.innerHTML=hdr(a.title,"go('today')")+
+   `<div class="daycard" style="align-items:flex-start"><div class="t">
+      <div class="lbl"><span style="color:${col}">${s.done?esc(t('Passed')+' · '+asgDay(s.doneAt)):esc(asgDueTxt(a))}</span><b>${esc(asgSize(a))}</b></div>
+      <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:6px;line-height:1.5">${esc(t('Do every text. You need an average of at least {n}%.').replace('{n}',a.pct))}</div>
+      <div class="meta" style="color:var(--mut);font-size:13.5px;margin-top:6px">${esc(t('Texts: {a} of {b}').replace('{a}',P.done).replace('{b}',P.n))}${P.done?` · ${t('Average')}: <b style="color:var(--tx)">${P.avg}%</b>`:''}</div>
+    </div></div>
+    ${s.done?asgResultHtml(a,P.avg,true):''}
+    <div class="subhead" style="margin-top:14px"><span class="t">${t('Word formation')}</span></div>
+    <div class="wlist" id="asgWfL"></div>
+    <div class="hint" style="margin:8px 2px 12px">${t('Change the word in capitals so that it fits the gap in meaning and grammar.')}</div>`;
+  const draw=()=>{const el=$('#asgWfL');if(!el||view.name!=='asg'||view.id!==a.id)return;
+    const pk=WF.packs[a.meta.lv]||[],T=P.T;
+    el.innerHTML=a.meta.texts.map((i,k)=>{const x=pk[i],has=(i in T),pc=+T[i]||0;
+      return `<div class="item" onclick="asgWfOpen('${a.id}',${i})"><span class="chk" style="color:${has?'var(--ok)':'var(--mut)'}">${ic(has?'check':'pen',16,2)}</span>
+        <div class="t"><div class="en">${esc(t('Text'))} ${k+1}${x?' · '+esc(x.t):''}</div><div class="ru" style="color:${has?'var(--ok)':'var(--mut)'}">${has?esc(t('Best')+' '+pc+'%'):esc(t('Not started'))}</div></div>
+        <span class="numx" style="min-width:auto">${has?t('Redo'):t('Start')}</span></div>`;}).join('');};
+  draw();wfLoad(a.meta.lv).then(draw).catch(()=>{});
+}
+async function asgWfOpen(id,idx){
+  const a=asgMine().find(x=>x.id===id);if(!a||a.kind!=='wf')return;
+  try{await wfLoad(a.meta.lv);}catch(e){return toast(t('Couldn’t load the texts — check the internet connection and try again.'));}
+  if(!(WF.packs[a.meta.lv]||[])[idx])return toast(t('Not saved'));
+  WFT={lv:a.meta.lv,idx,ans:[],res:null,asg:id};go('wftask');
+}
+const wfBackJs=()=>WFT&&WFT.asg?`go('asg',{id:'${WFT.asg}'})`:"go('wf')";
 /* the words go into the student's own dictionary as a list, to be learned the usual way */
 function asgLearn(id){
   const a=asgMine().find(x=>x.id===id);if(!a)return;
@@ -8241,6 +8308,13 @@ function asgResultHtml(a,pct,pass){
 /* ---- teacher: a student's assignments with the status of each ---- */
 function asgStuLine(a,r){
   const s=asgStateOf(a,r);
+  if(a.kind==='wf'){
+    const P=asgWfProg(a,r),tx=t('Texts: {a} of {b}').replace('{a}',P.done).replace('{b}',P.n);
+    if(s.done)return {c:'var(--ok)',ic:'check',tx:`${t('Passed')} ${P.avg}% · ${asgDay(s.doneAt)}`};
+    if(s.late)return {c:'var(--bad)',ic:'clock',tx:`${t('Overdue')} · ${P.done?tx+' · '+t('Average')+' '+P.avg+'%':t('Not started')}`};
+    if(P.done)return {c:'var(--acc)',ic:'clock',tx:`${tx} · ${t('Average')} ${P.avg}% · ${asgDueTxt(a)}`};
+    return {c:'var(--mut)',ic:'clock',tx:`${t('Not started')} · ${asgDueTxt(a)}`};
+  }
   if(s.done)return {c:'var(--ok)',ic:'check',tx:`${t('Passed')} ${s.best}% · ${asgDay(s.doneAt)}`};
   if(s.late)return {c:'var(--bad)',ic:'clock',tx:`${t('Overdue')} · ${s.tries?t('Best')+' '+s.best+'%':t('Not started')}`};
   if(s.tries)return {c:'var(--acc)',ic:'clock',tx:`${t('Best')} ${s.best}% · ${t('Attempts')}: ${s.tries} · ${asgDueTxt(a)}`};
@@ -8320,8 +8394,16 @@ async function asgSheet(sid){
   let pct=85;try{pct=+localStorage.getItem('noeon.asg.pct')||85;}catch(e){}
   const studs=(AUTH.students||[]);
   ASGI=asgItems(sid);
+  let wpct=70;try{wpct=+localStorage.getItem('noeon.asg.pct.wf')||70;}catch(e){}
+  window._asgPct={words:pct,wf:wpct};
   sheet(`<h2>${t('New assignment')}</h2>
-   <div class="field"><label>${t('Word list')}</label><input type="hidden" id="asgSrc" value="">
+   <div class="field"><label>${t('Assignment type')}</label><input type="hidden" id="asgK" value="words">
+     <div class="sel-opt"><button id="asgK1" class="on" onclick="asgKind('words')">${t('Word list')}</button><button id="asgK2" onclick="asgKind('wf')">${t('Word formation')}</button></div></div>
+   <div id="asgF" style="display:none"><div class="field"><label>${t('Level')}</label><input type="hidden" id="asgLv" value="b2">
+     <div class="wf-lv" id="asgLvB">${WF_LVS.map(x=>`<button class="${x[0]==='b2'?'on':''}" data-lv="${x[0]}" onclick="asgWfLv('${x[0]}')"><b>${x[0]==='a2'?'A2–B1':x[0]==='b2'?'B1–B2':'B2–C1'}</b><span>${t(x[2])}</span></button>`).join('')}</div></div>
+     <div class="field"><label>${t('Number of texts')}</label><input class="inp" type="number" inputmode="numeric" id="asgN" min="1" max="10" value="3" oninput="asgWfTitle()"></div>
+     <div class="hint" style="margin:-4px 2px 12px">${t('Texts are picked for each student separately, from the ones he has not done yet.')}</div></div>
+   <div class="field" id="asgW"><label>${t('Word list')}</label><input type="hidden" id="asgSrc" value="">
      <div class="hint" id="asgSel" style="margin:0 0 8px;font-weight:650;color:var(--tx)">${t('Choose a list')}</div>
      <input class="inp" id="asgQ" placeholder="${t('Search')}" oninput="asgList()" ${NOASSIST}>
      <div class="wlist" id="asgRes" style="max-height:30vh;overflow:auto;margin-top:6px"></div></div>
@@ -8333,7 +8415,52 @@ async function asgSheet(sid){
    <button class="btn pri" id="asgBtn" onclick="asgCreate('${sid}')">${t('Assign')}</button>`);
   asgList();
 }
+function asgKind(k){
+  const o=$('#asgK');if(!o||o.value===k)return;
+  const P=$('#asgP');if(P){window._asgPct=window._asgPct||{};window._asgPct[o.value]=+P.value||0;P.value=(window._asgPct[k]||(k==='wf'?70:85));}
+  o.value=k;$('#asgK1').classList.toggle('on',k==='words');$('#asgK2').classList.toggle('on',k==='wf');
+  $('#asgW').style.display=k==='wf'?'none':'';$('#asgF').style.display=k==='wf'?'':'none';
+  const T=$('#asgT');if(T&&!T.dataset.d){T.value='';}
+  if(k==='wf')asgWfTitle();else{const v=($('#asgSrc')||{}).value,x=ASGI.find(z=>z.v===v);if(T&&!T.dataset.d&&x)T.value=x.t;}
+}
+function asgWfLv(lv){
+  $('#asgLv').value=lv;$$('#asgLvB button').forEach(b=>b.classList.toggle('on',b.dataset.lv===lv));asgWfTitle();
+}
+function asgWfTitle(){
+  const T=$('#asgT');if(!T||T.dataset.d||($('#asgK')||{}).value!=='wf')return;
+  const lv=$('#asgLv').value,n=Math.min(10,Math.max(1,Math.round(+$('#asgN').value||3)));
+  T.value=t('Word formation')+' · '+(lv==='a2'?'A2–B1':lv==='b2'?'B1–B2':'B2–C1')+' · '+n+' '+wfPlural(n);
+}
+async function asgCreateWf(sid){
+  const err=m=>{$('#asgErr').textContent=m;};
+  const lv=$('#asgLv').value;if(['a2','b2','c1'].indexOf(lv)<0)return err(t('Not saved'));
+  const n=Math.min(10,Math.max(1,Math.round(+$('#asgN').value||3)));
+  const ds=($('#asgD')||{}).value;if(!/^\d{4}-\d{2}-\d{2}$/.test(ds||''))return err(t('Pick a due date'));
+  const [y,m,d]=ds.split('-').map(Number),due=new Date(y,m-1,d,23,59,0);
+  const pct=Math.min(100,Math.max(1,Math.round(+($('#asgP')||{}).value||70)));
+  let ids=$$('.asgS').filter(x=>x.checked).map(x=>x.value);
+  if(!$$('.asgS').length)ids=[sid];
+  if(!ids.length)return err(t('Pick at least one student'));
+  const btn=$('#asgBtn');btn.disabled=true;
+  let pack;try{pack=await wfLoad(lv);}catch(e){btn.disabled=false;return err(t('Couldn’t load the texts — check the internet connection and try again.'));}
+  if(!pack.length){btn.disabled=false;return err(t('The list is empty'));}
+  const title=(($('#asgT')||{}).value||'').trim().slice(0,120)||(t('Word formation')+' · '+n+' '+wfPlural(n));
+  try{localStorage.setItem('noeon.asg.pct.wf',String(pct));}catch(e){}
+  await ensureAuth();
+  const rows=ids.map(id=>{
+    const stu=(AUTH.students||[]).find(x=>x.id===id),dn=(stu&&stu.stats&&stu.stats.wf&&stu.stats.wf.d&&stu.stats.wf.d[lv])||{};
+    const fresh=[],old=[];for(let i=0;i<pack.length;i++)((i in dn)?old:fresh).push(i);
+    const pick=shuffle(fresh.slice()).slice(0,n);
+    if(pick.length<n)old.sort((a,b)=>(+dn[a]||0)-(+dn[b]||0)).slice(0,n-pick.length).forEach(i=>pick.push(i));
+    return {teacher_id:AUTH.user.id,student_id:id,title,lang:'en',words:[],due:due.toISOString(),pct,kind:'wf',meta:{lv,texts:pick}};});
+  const {error}=await sb.from('assignments').insert(rows);
+  btn.disabled=false;
+  if(error){err(String(error.message||error.code).slice(0,140));return;}
+  closeSheet();toast(t('Assigned ✓'));
+  await asgTRefresh(sid);
+}
 async function asgCreate(sid){
+  if(($('#asgK')||{}).value==='wf')return asgCreateWf(sid);
   const err=m=>{$('#asgErr').textContent=m;};
   const v=($('#asgSrc')||{}).value;if(!v)return err(t('Choose a list'));
   const src=asgSrcWords(v,sid);if(!src||!src.words.length)return err(t('The list is empty'));
@@ -8361,7 +8488,8 @@ function asgEdit(id){
   const l=asgStuLine(a,R[a.id]);
   sheet(`<h2>${esc(a.title)}</h2>
    <div class="hint" style="color:${l.c};font-weight:650">${esc(l.tx)}</div>
-   <div class="hint">${nWords(a.words.length)}</div>
+   <div class="hint">${esc(asgSize(a))}${a.kind==='wf'?' · '+esc(WF_LVS.find(z=>z[0]===a.meta.lv)?t(WF_LVS.find(z=>z[0]===a.meta.lv)[1]):''):''}</div>
+   ${a.kind==='wf'?(()=>{const T=(R[a.id]&&R[a.id].t)||{};return '<div class="hint" style="line-height:1.6">'+a.meta.texts.map((i,k)=>`${t('Text')} ${k+1}: <b style="color:${(i in T)?'var(--ok)':'var(--mut)'}">${(i in T)?(+T[i]||0)+'%':'—'}</b>`).join(' · ')+'</div>';})():''}
    <div class="field"><label>${t('Title')}</label><input class="inp" id="asgT" maxlength="120" value="${esc(a.title)}"></div>
    <div class="field"><label>${t('Due date')}</label><input class="inp" type="date" id="asgD" value="${asgYMD(a.due)}"></div>
    <div class="field"><label>${t('Pass mark, %')}</label><input class="inp" type="number" inputmode="numeric" id="asgP" min="1" max="100" value="${a.pct}"></div>

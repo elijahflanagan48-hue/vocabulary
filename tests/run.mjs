@@ -194,6 +194,46 @@ await check('обновление: применяется само только 
   return 'ok';
 }, SEED.toString()));
 
+await check('задания по словообразованию: назначить, пройти тексты, сдать', async pg => pg.evaluate(async () => {
+
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));const log=[];
+  AUTH.user={id:'11111111-1111-1111-1111-111111111111'};AUTH.profile={id:AUTH.user.id,role:'teacher',display_name:'T'};
+  const SID='22222222-2222-2222-2222-222222222222';
+  AUTH.students=[{id:SID,display_name:'Ученик',stats:{wf:{d:{b2:{0:5,1:5,2:5}}}}}];
+  let rows=null;window.ensureAuth=async()=>true;
+  sb={from:()=>({insert:async r=>{rows=r;return{error:null}},select(){return this},eq(){return this},order(){return Promise.resolve({data:[],error:null})}})};
+  await asgSheet(SID);await sleep(100);
+  asgKind('wf');await sleep(50);
+  log.push('title='+$('#asgT').value, 'pct='+$('#asgP').value);
+  $('#asgN').value=3;asgWfTitle();$('#asgD').value=asgYMD(Date.now()+3*DAY);
+  await asgCreate(SID);await sleep(300);
+  if(!rows)throw new Error('задание не создалось');
+  const r0=rows[0];log.push(JSON.stringify({kind:r0.kind,meta:r0.meta,pct:r0.pct,title:r0.title,n:rows.length}));
+  if(r0.meta.texts.some(i=>[0,1,2].includes(i)))log.push('BAD: picked done text');
+  // student
+  AUTH.profile={id:SID,role:'student',display_name:'S'};AUTH.user={id:SID};
+  const a=asgNorm(Object.assign({id:'33333333-3333-3333-3333-333333333333',created_at:new Date().toISOString()},r0));
+  if(!a)throw new Error('задание не прочиталось');
+  ASG.list=[a];ASG.uid=SID;
+  go('asg',{id:a.id});await sleep(300);
+  log.push('view:'+document.querySelector('#app').innerText.replace(/\n+/g,' | ').slice(0,300));
+  for(const i of a.meta.texts){
+    await asgWfOpen(a.id,i);await sleep(200);
+    const x=WF.packs[a.meta.lv][i];
+    x.g.forEach((g,k)=>{WFT.ans[k]=(k===0&&i===a.meta.texts[0])?'zzzz':g[1][0];});
+    wfCheck();await sleep(200);
+    log.push('res '+i+' '+JSON.stringify(WFT.ar));
+    go('asg',{id:a.id});await sleep(150);
+  }
+  const R=asgRes()[a.id];log.push('rec='+JSON.stringify(R));
+  log.push('line='+asgStuLine(a,R).tx);
+  log.push('view2:'+document.querySelector('#app').innerText.replace(/\n+/g,' | ').slice(0,260));
+  if (log.some(l => /^BAD/.test(l))) throw new Error('выбран уже пройденный текст');
+  if (!asgRes()[a.id].d) throw new Error('задание не засчитано как сданное');
+  if (!/Сдано 9\d%/.test(asgStuLine(a, R).tx)) throw new Error('учитель не видит результат: ' + asgStuLine(a, R).tx);
+  return log[2];
+}));
+
 await check('восстановление пароля по коду из письма', async pg => pg.evaluate(async (seed) => {
   eval('(' + seed + ')()');
   const calls = []; const auth0 = sb && sb.auth;
