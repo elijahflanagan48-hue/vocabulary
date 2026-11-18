@@ -3157,7 +3157,16 @@ function go(name,p={}){
 let studyBusy=false;
 function hhSync(){try{const h=document.querySelector('header');if(h)document.documentElement.style.setProperty('--hh',h.offsetHeight+'px');}catch(e){}}
 addEventListener('resize',hhSync);
-function render(){if(inl)inlineCommit();studyBusy=false;tabWanted=false;(VIEWS[view.name]||VIEWS.today)($('#app'));syncTabs();hhSync();}
+/* v181: redrawing the screen you are already on (after editing a word, say) keeps the scroll position; go() to another screen still starts at the top */
+let _rk='';
+function render(){
+  if(inl)inlineCommit();studyBusy=false;tabWanted=false;
+  const app=$('#app'),k=view.name+'|'+(view.id||view.lang||view.sid||''),same=k===_rk&&!softMode,y=window.scrollY;
+  _rk=k;
+  if(same&&app)app.style.minHeight=app.offsetHeight+'px';
+  (VIEWS[view.name]||VIEWS.today)(app);syncTabs();hhSync();
+  if(same&&app){window.scrollTo(0,y);requestAnimationFrame(()=>{app.style.minHeight='';});}
+}
 /* background refreshes (sync, tab focus) must never throw the student out of a session,
    and must be invisible: identical markup is not touched, scroll position is kept */
 let softMode=false;
