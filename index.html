@@ -4281,7 +4281,7 @@ async function tBulkArch(toArch){
       const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?st:0,mark:0,updated_at:new Date().toISOString()})).in('id',ids.slice(i,i+100)));
       if(error)throw error;
     }
-    tClearSel();toast((toArch?t('Moved to Archive ✓'):t('Moved back to learning'))+': '+ids.length);tBack();
+    tClearSel();toast((toArch?t('Moved to Archive ✓'):t('Moved back to learning'))+': '+ids.length);tBack(true);
     if(toArch)tDupSoon(ids);
   }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
 }
@@ -4320,7 +4320,7 @@ async function tMvDo(tid){
     }
     const set=new Set(go1);(TV.words||[]).forEach(w=>{if(set.has(w.id))w.set_id=tid;});
     const dn=((TV.sets||[]).find(x=>x.id===tid)||{}).name||'';
-    closeSheet();tClearSel();tBack();
+    closeSheet();tClearSel();tBack(true);
     toast(t('Moved')+': '+go1.length+' → '+dn+(dup?' · '+t('already there')+': '+dup:''));
   }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
 }
@@ -4332,7 +4332,7 @@ async function tBulkDelete(){
       const {error}=await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).in('id',ids.slice(i,i+100));
       if(error)throw error;
     }
-    tClearSel();toast(t('Deleted')+': '+nWords(ids.length));tBack();
+    tClearSel();toast(t('Deleted')+': '+nWords(ids.length));tBack(true);
   }catch(e){toast(srvMsg(e,t('Couldn’t delete')));}
 }
 /* remove one of the student's lists, with everything in it */
@@ -4414,10 +4414,15 @@ async function tSaveSetName(){
     go('twords',{sid:TV.sid,sname:TV.sname,setId:TV.setId,setName:n});
   }catch(e){if(err)err.textContent=srvMsg(e,t('Couldn’t save — check your connection'));btn.disabled=false;}
 }
-function tBack(){
+function tBack(keep){
   tClearSel();
+  const y=window.scrollY,nm=view.name;
   if(TV.setId)go('twords',{sid:TV.sid,sname:TV.sname,setId:TV.setId,setName:TV.setName});
   else go('tsets',{sid:TV.sid,sname:TV.sname});
+  /* v182: after editing / moving / deleting a word the list stays where it was (the screen fills in asynchronously, so retry a few times) */
+  if(keep&&y>40&&nm===view.name)[0,80,300,700,1400].forEach(ms=>setTimeout(()=>{
+    if(view.name!==nm||Math.abs(window.scrollY-y)<3||document.body.scrollHeight<y+innerHeight*0.5)return;
+    window.scrollTo(0,y);},ms));
 }
 /* the hidden archive holder of one of the student's languages — created when first needed */
 async function tHolderId(lg){
@@ -4546,7 +4551,7 @@ async function tSaveWord(id){
       ruTouched=false;const f=$('#tEn');if(f)f.focus();
       return;
     }
-    closeSheet();toast(t('Saved ✓'));tBack();
+    closeSheet();toast(t('Saved ✓'));tBack(true);
   }catch(e){
     err.textContent=srvMsg(e,t('Couldn’t save — check your connection'));btn.disabled=false;btn.textContent=id?t('Save'):t('Add');
   }
@@ -4555,7 +4560,7 @@ async function tToggleArch(id,toArch){
   try{
     const {error}=await aatRetry(()=>sb.from('words').update(withAat({arch:toArch,box:toArch?3:2,aat:toArch?Date.now():0,mark:0,updated_at:new Date().toISOString()})).eq('id',id));
     if(error)throw error;
-    closeSheet();toast(toArch?t('Moved to Archive ✓'):t('Moved back to learning'));tBack();
+    closeSheet();toast(toArch?t('Moved to Archive ✓'):t('Moved back to learning'));tBack(true);
     if(toArch)tDupSoon([id]);
   }catch(e){toast(srvMsg(e,t('Couldn’t update')));}
 }
@@ -4564,7 +4569,7 @@ async function tDelWord(id){
   try{
     const {error}=await sb.from('words').update({deleted:true,updated_at:new Date().toISOString()}).eq('id',id);
     if(error)throw error;
-    closeSheet();toast(t('Deleted'));tBack();
+    closeSheet();toast(t('Deleted'));tBack(true);
   }catch(e){toast(srvMsg(e,t('Couldn’t delete')));}
 }
 /* say what the server actually refused, instead of blaming the connection */
